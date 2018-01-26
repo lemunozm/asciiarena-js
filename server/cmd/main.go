@@ -10,24 +10,24 @@ func main() {
 
 	portFlag := cli.UintFlag{
 		Name:  "port",
-		Usage: "Set the UDP `port number` for connecting to the server",
+		Usage: "Set the UDP port number for connecting to the server",
 		Value: 3000,
 	}
 
 	playersFlag := cli.StringFlag{
 		Name:  "players, p",
-		Usage: "Set the `number of players` for the match",
+		Usage: "Set the number of players for the match",
 	}
 
 	waitMatchFlag := cli.UintFlag{
 		Name:  "wait-match",
-		Usage: "Waiting in `milliseconds` to initialize the match once all players are connected",
+		Usage: "Waiting in milliseconds to initialize the match once all players are connected",
 		Value: 3000,
 	}
 
 	mapSeedFlag := cli.UintFlag{
 		Name:  "map-seed, s",
-		Usage: "`Seed` for generate a map. 0 means that the maps will be generated randomly",
+		Usage: "Seed for generate a map. 0 means that the maps will be generated randomly",
 		Value: 0,
 	}
 

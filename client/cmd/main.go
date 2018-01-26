@@ -10,12 +10,12 @@ func main() {
 
 	hostFlag := cli.StringFlag{
 		Name:  "host",
-		Usage: "Set the server `address`",
+		Usage: "Set the server address",
 	}
 	portFlag := cli.UintFlag{
 		Name:  "port",
 		Value: 3000,
-		Usage: "Set the UDP port `number` for connecting to the server",
+		Usage: "Set the UDP port number for connecting to the server",
 	}
 
 	commandApp.CustomAppHelpTemplate = common.HelpCliTemplate()
