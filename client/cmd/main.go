@@ -2,6 +2,7 @@ package main
 
 import "os"
 import "github.com/urfave/cli"
+import "github.com/lemunozm/ASCIIArena/common"
 import "github.com/lemunozm/ASCIIArena/client"
 
 func main() {
@@ -12,27 +13,18 @@ func main() {
 		Usage: "Set the server `address`",
 	}
 	portFlag := cli.UintFlag{
-		Name:  "port, p",
+		Name:  "port",
 		Value: 3000,
 		Usage: "Set the UDP port `number` for connecting to the server",
 	}
 
-	commandApp.CustomAppHelpTemplate = helpTemplate()
+	commandApp.CustomAppHelpTemplate = common.HelpCliTemplate()
 	commandApp.Name = "ASCIIArena-client"
-	commandApp.Version = "0.0.0"
+	commandApp.Version = common.GetVersion()
 	commandApp.Usage = "Run the ASCIIArena client side"
 	commandApp.Flags = []cli.Flag{hostFlag, portFlag}
 	commandApp.Action = onLoad
 	commandApp.Run(os.Args)
-}
-
-func helpTemplate() string {
-	var name string = "NAME:\n    {{.Name}} - {{.Usage}}\n\n"
-	var version string = "VERSION\n    {{.Version}}\n\n"
-	var usage string = "USAGE:\n    {{.HelpName}} {{if .VisibleFlags}}[options]{{end}}\n    {{if len .Commands}}\n"
-	var options string = "OPTIONS:\n    {{range .VisibleFlags}}{{.}}\n    {{end}}{{end}}{{if .Copyright }}\n"
-	var endTemplate string = "{{end}}"
-	return name + version + usage + options + endTemplate
 }
 
 func onLoad(context *cli.Context) error {
