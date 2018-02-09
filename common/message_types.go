@@ -2,23 +2,8 @@ package common
 
 import "encoding/gob"
 
-type ReaderCallback func(Deserializable)
-
-type Data struct {
-	object interface{}
-}
-
 type VersionData struct {
 	Version string
-}
-
-type VersionCheckedData struct {
-	version    string
-	Validation bool
-}
-
-type LogInData struct {
-	Player int8
 }
 
 type LogInStatus uint8
@@ -28,6 +13,15 @@ const (
 	LOG_IN_STATUS_PLAYER_ALREADY_EXISTS
 	LOG_IN_STATUS_PLAYER_LIMIT_REACHED
 )
+
+type VersionCheckedData struct {
+	version    string
+	Validation bool
+}
+
+type LogInData struct {
+	Player int8
+}
 
 type LogInStatusData struct {
 	LogInStatus       LogInStatus
@@ -52,11 +46,12 @@ type LoadMatchData struct {
 	MapData             MapData
 }
 
-func read(dec *gob.Decoder, callback ReaderCallback) {
-	var data Deserializable
-	err := dec.Decode(data)
-	if err != nil {
-		log.Fatal("decode: ", err)
-	}
-	callback(data)
+func registerMessageTypes(){
+    gob.Register(VersionData{})
+    gob.Register(VersionCheckedData{})
+    gob.Register(LogInData{})
+    gob.Register(LogInStatusData{})
+    gob.Register(PlayerConnectionData{})
+    gob.Register(MapData{})
+    gob.Register(LoadMatchData{})
 }
