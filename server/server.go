@@ -1,53 +1,47 @@
 package server
 
-import "bytes"
 import "fmt"
 import "net"
 import "github.com/lemunozm/ASCIIArena/common"
+import "github.com/lemunozm/ASCIIArena/common/communication"
 
 type Server struct {
-	port string
+	connection *communication.Connection
 }
 
-func NewServer() Server {
-	serializer := &common.NewSerializer()
-	deserializer := &common.NewDeserializer()
-	deserializer.RegisterCallback(common.VersionData{}, s.VersionDataReceived)
-
-	return Server{}
-}
-
-func (s *Server) Run(port uint) {
+func NewServer(port uint) *Server {
 	fmt.Printf("Server listening on: %d\n", port)
 
-	localAddress, err := net.ResolveUDPAddr("udp", ":"+port)
-	connection, err := net.ListenUDP("udp", localAddress)
-	defer connection.Close()
+	connection := communication.NewServerConnection(port)
+	return &Server{connection}
+}
+
+func (s *Server) Run() {
+	s.connection.RegisterReceiverData(communication.VersionData{}, s.VersionDataReceived)
 
 	for {
-		length, remoteAddress, err := connection.ReadFromUDP(deserializer.Buffer())
-		deserializer.Deserialize()
+		s.connection.Listen()
 	}
-
-	var network bytes.Buffer
-
-	message := common.NewMessage(&network)
-
-	versionData := common.VersionData{"0.0.0"}
-	message.Write(versionData)
-
-	message.RegisterCallback(common.VersionData{}, s.VersionDataReceived)
-
-	message.Read()
 }
 
-func (s *Server) VersionDataReceived(data interface{}) {
-	if versionData, ok := data.(common.VersionData); ok {
-		fmt.Println("Received VersionData:", versionData)
-	}
-	//add address to the arguments??? Implicaria que el mensaje supiese del network. Creo que mejor no, (diferencias entre cliente y servidor)
+func (s *Server) Close() {
+	s.connection.Close()
 }
 
-func (s *Server) SendVersionCheckedData(data *common.VersionCheckedData) {
-	//add address to the arguments
+func (s *Server) VersionDataReceived(data interface{}, from *net.UDPAddr) {
+	if versionData, ok := data.(communication.VersionData); ok {
+		fmt.Println("Recv VersionData:", versionData, "from:", from)
+
+		versionCheckedData := communication.VersionCheckedData{common.GetVersion(), true}
+		s.SendVersionCheckedData(&versionCheckedData, from)
+	}
+}
+
+func (s *Server) SendVersionCheckedData(data *communication.VersionCheckedData, to *net.UDPAddr) {
+	s.connection.Send(data, to)
+	fmt.Println("Send VersionCheckedData:", *data, "to:", to)
+}
+
+func (s *Server) SendState(data* communication.State) {
+	s.udpConnection.Send(data, to)
 }

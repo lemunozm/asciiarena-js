@@ -1,4 +1,4 @@
-package common
+package communication
 
 import "encoding/gob"
 
@@ -15,7 +15,7 @@ const (
 )
 
 type VersionCheckedData struct {
-	version    string
+	Version    string
 	Validation bool
 }
 

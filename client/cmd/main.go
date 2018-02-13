@@ -32,8 +32,9 @@ func onLoad(context *cli.Context) error {
 		return cli.NewExitError("You must specify a host", 0)
 	}
 
-	clientApp := client.NewClient()
-	clientApp.Run(context.String("host"), context.Uint("port"))
+	clientApp := client.NewClient(context.String("host"), context.Uint("port"))
+	clientApp.Run()
+	clientApp.Close()
 
 	return nil
 }

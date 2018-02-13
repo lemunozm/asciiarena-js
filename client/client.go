@@ -3,42 +3,41 @@ package client
 import "fmt"
 import "net"
 import "github.com/lemunozm/ASCIIArena/common"
+import "github.com/lemunozm/ASCIIArena/common/communication"
 
 type Client struct {
-	message *common.Message
+	connection *communication.Connection
 }
 
-func NewClient() Client {
-	message := &common.NewMessage()
-
-	return Client{message}
-}
-
-func (c *Client) Run(host string, port uint) {
+func NewClient(host string, port uint) *Client {
 	fmt.Printf("Connect to server on: %s:%d\n", host, port)
 
-	localAddress, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
-	remoteAddress, err := net.ResolveUDPAddr("udp", host+":"+port)
-	connection, err := net.DialUDP("udp", localAddress, remoteAddress)
-	defer connection.Close()
+	connection := communication.NewClientConnection(host, port)	
+	return &Client{connection}
+}
 
-	versionData := VersionData{"0.0.0"}
-	c.SendVersionData(&versionData)
+func (c *Client) Run() {
+	c.connection.RegisterReceiverData(communication.VersionCheckedData{}, c.VersionCheckedDataReceived, communucation.UDP)
 
+	versionData := communication.VersionData{common.GetVersion()}
+	c.SendVersionData(&versionData, c.connection.GetRemoteAddress())
+	
 	for {
-		length, err := connection.Read(message.Buffer())
-		data := message.Deserialize()
-		networkDataCallback.give(data, remoteAddress)
+		c.connection.Listen()
 	}
 }
 
-func (c *Client) VersionCheckedDataReceived(data interface{}) {
-	if versionCheckedData, ok := data.(common.VersionCheckedData); ok {
-		fmt.Println("Received VersionCheckedData:", versionCheckedData)
+func (c *Client) Close() {
+	c.connection.Close()
+}
+
+func (c *Client) VersionCheckedDataReceived(data interface{}, from *net.UDPAddr) {
+	if versionCheckedData, ok := data.(communication.VersionCheckedData); ok {
+		fmt.Println("Recv VersionCheckedData:", versionCheckedData, "from:", from)
 	}
 }
 
-func (c *Client) SendVersionData(data *common.VersionData) {
-	message.Serialize(data)
-	connection.Write(message.Buffer())
+func (c *Client) SendVersionData(data *communication.VersionData, to *net.UDPAddr) {
+	c.connection.Send(data, to, communication.UDP)
+	fmt.Println("Send VersionData:", *data, "to:", to)
 }
