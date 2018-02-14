@@ -46,7 +46,7 @@ type LoadMatchData struct {
 	MapData             MapData
 }
 
-func registerMessageTypes(){
+func registerSerializationTypes(){
     gob.Register(VersionData{})
     gob.Register(VersionCheckedData{})
     gob.Register(LogInData{})
