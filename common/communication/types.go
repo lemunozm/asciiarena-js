@@ -46,12 +46,12 @@ type LoadMatchData struct {
 	MapData             MapData
 }
 
-func registerSerializationTypes(){
-    gob.Register(VersionData{})
-    gob.Register(VersionCheckedData{})
-    gob.Register(LogInData{})
-    gob.Register(LogInStatusData{})
-    gob.Register(PlayerConnectionData{})
-    gob.Register(MapData{})
-    gob.Register(LoadMatchData{})
+func registerSerializationTypes() {
+	gob.Register(VersionData{})
+	gob.Register(VersionCheckedData{})
+	gob.Register(LogInData{})
+	gob.Register(LogInStatusData{})
+	gob.Register(PlayerConnectionData{})
+	gob.Register(MapData{})
+	gob.Register(LoadMatchData{})
 }

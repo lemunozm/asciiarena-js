@@ -45,9 +45,8 @@ func onLoad(context *cli.Context) error {
 		return cli.NewExitError("You must specify a port", 0)
 	}
 
-	serverApp := server.NewServer(context.Uint("port"))
-	serverApp.Run()
-	serverApp.Close()
+	serverApp := server.NewServer()
+	serverApp.Run(context.Uint("port"))
 
 	return nil
 }
