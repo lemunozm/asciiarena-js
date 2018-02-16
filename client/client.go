@@ -1,6 +1,5 @@
 package client
 
-import "fmt"
 import "net"
 import "log"
 import "strconv"
@@ -8,42 +7,62 @@ import "github.com/lemunozm/ASCIIArena/common"
 import "github.com/lemunozm/ASCIIArena/common/communication"
 
 type Client struct {
+	host          string
+	remoteTCPPort string
+	localUDPPort  string
 }
 
-func NewClient() *Client {
+func NewClient(host string, remoteTCPPort uint, localUDPPort uint) *Client {
 	c := &Client{}
+	c.host = host
+	c.remoteTCPPort = strconv.FormatUint(uint64(remoteTCPPort), 10)
+	c.localUDPPort = strconv.FormatUint(uint64(localUDPPort), 10)
 	return c
 }
 
-func (c *Client) Run(host string, port uint) {
+func (c *Client) Run() {
 
-	tcpSocket, err := net.Dial("tcp", host+":"+strconv.FormatUint(uint64(port), 10))
+	tcpSocket, err := net.Dial("tcp", c.host+":"+c.remoteTCPPort)
 	if err != nil {
 		log.Panic("Connection error: ", err)
 	}
 	defer tcpSocket.Close()
-	fmt.Printf("Connect to server on: %s:%d\n", host, port)
 
-	connection := communication.NewConnection(tcpSocket)
+	connection := communication.NewConnection(tcpSocket, true)
 	connection.RegisterRecvData(communication.VersionCheckedData{}, c.RecvVersionCheckedData)
+	connection.RegisterRecvData(communication.LogInStatusData{}, c.RecvLogInStatusData)
 	connection.RegisterRecvData(communication.LoadMatchData{}, c.RecvLoadMatchData)
 
 	versionData := communication.VersionData{common.GetVersion()}
-	connection.Send(&versionData)
+	connection.Send(versionData)
+	var versionCheckedData communication.VersionCheckedData
+	connection.Receive(&versionCheckedData)
+	connection.Send(communication.LogInData{})
+	var logInStatusData communication.LogInStatusData
+	connection.Receive(&logInStatusData)
+	for {
+		var playerConnectionData communication.PlayerConnectionData
+		connection.Receive(&playerConnectionData)
+	}
+	var loadMatchData communication.LoadMatchData
+	connection.Receive(&loadMatchData)
+
 	connection.ListenLoop()
 }
 
 func (c *Client) RecvVersionCheckedData(data interface{}, connection *communication.Connection) {
-	if versionCheckedData, ok := data.(communication.VersionCheckedData); ok {
-		from := connection.GetSocket().RemoteAddr()
-		fmt.Println("Recv VersionCheckedData:", versionCheckedData, "from:", from)
+	if _, ok := data.(communication.VersionCheckedData); ok {
+		connection.Send(communication.LogInData{})
+	}
+}
+
+func (c *Client) RecvLogInStatusData(data interface{}, connection *communication.Connection) {
+	if _, ok := data.(communication.LogInStatusData); ok {
 	}
 }
 
 func (c *Client) RecvLoadMatchData(data interface{}, connection *communication.Connection) {
-	if LoadMatch, ok := data.(communication.LoadMatchData); ok {
-		from := connection.GetSocket().RemoteAddr()
-		fmt.Println("Recv InitMatchData:", LoadMatch, "from:", from)
+	if _, ok := data.(communication.LoadMatchData); ok {
 
 		/*udpSocket, err := net.Dial("udp", "host:port")
 		if err != nil {

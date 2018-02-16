@@ -3,6 +3,7 @@ package communication
 import "net"
 import "reflect"
 import "log"
+import "fmt"
 import "encoding/gob"
 
 type Connection struct {
@@ -10,6 +11,7 @@ type Connection struct {
 	callbacks map[reflect.Type]OnDataReceived
 	enc       *gob.Encoder
 	dec       *gob.Decoder
+	verbose   bool
 }
 
 type dataWrapper struct {
@@ -18,7 +20,7 @@ type dataWrapper struct {
 
 type OnDataReceived func(interface{}, *Connection)
 
-func NewConnection(socket net.Conn) *Connection {
+func NewConnection(socket net.Conn, verbose bool) *Connection {
 	registerSerializationTypes()
 	gob.Register(dataWrapper{})
 	c := &Connection{}
@@ -26,6 +28,11 @@ func NewConnection(socket net.Conn) *Connection {
 	c.callbacks = map[reflect.Type]OnDataReceived{}
 	c.enc = gob.NewEncoder(socket)
 	c.dec = gob.NewDecoder(socket)
+	c.verbose = verbose
+
+	if c.verbose {
+		fmt.Printf("Connected by %s on: %s:%d\n", socket.RemoteAddr().Network(), socket.RemoteAddr().String())
+	}
 	return c
 }
 
@@ -40,6 +47,11 @@ func (c *Connection) Send(data interface{}) {
 	if err != nil {
 		log.Panic("Encode error: ", err)
 	}
+
+	if c.verbose {
+		to := c.socket.RemoteAddr().String()
+		fmt.Printf("Send %T: %s from: %s\n", wrapper.Data, wrapper.Data, to)
+	}
 }
 
 func (c *Connection) Receive() interface{} {
@@ -48,6 +60,12 @@ func (c *Connection) Receive() interface{} {
 	if err != nil {
 		log.Panic("Decode error: ", err)
 	}
+
+	if c.verbose {
+		from := c.socket.RemoteAddr().String()
+		fmt.Printf("Recv %T: %s from: %s\n", wrapper.Data, wrapper.Data, from)
+	}
+
 	return wrapper.Data
 }
 

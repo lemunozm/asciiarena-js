@@ -12,8 +12,13 @@ func main() {
 		Name:  "host",
 		Usage: "Set the server address",
 	}
-	portFlag := cli.UintFlag{
-		Name:  "port",
+	remoteTCPPortFlag := cli.UintFlag{
+		Name:  "remote-tcp-port, tp",
+		Value: 3000,
+		Usage: "Set the TCP port number for connecting to the server",
+	}
+	localUDPPortFlag := cli.UintFlag{
+		Name:  "local-udp-port, lp",
 		Value: 3000,
 		Usage: "Set the UDP port number for connecting to the server",
 	}
@@ -22,18 +27,18 @@ func main() {
 	commandApp.Name = "ASCIIArena-client"
 	commandApp.Version = common.GetVersion()
 	commandApp.Usage = "Run the ASCIIArena client side"
-	commandApp.Flags = []cli.Flag{hostFlag, portFlag}
+	commandApp.Flags = []cli.Flag{hostFlag, remoteTCPPortFlag, localUDPPortFlag}
 	commandApp.Action = onLoad
 	commandApp.Run(os.Args)
 }
 
-func onLoad(context *cli.Context) error {
-	if context.String("host") == "" {
+func onLoad(c *cli.Context) error {
+	if c.String("host") == "" {
 		return cli.NewExitError("You must specify a host", 0)
 	}
 
-	clientApp := client.NewClient()
-	clientApp.Run(context.String("host"), context.Uint("port"))
+	clientApp := client.NewClient(c.String("host"), c.Uint("remote-tcp-port"), c.Uint("local-udp_port"))
+	clientApp.Run()
 
 	return nil
 }

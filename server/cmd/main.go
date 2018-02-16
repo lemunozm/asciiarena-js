@@ -9,12 +9,12 @@ func main() {
 	commandApp := cli.NewApp()
 
 	portFlag := cli.UintFlag{
-		Name:  "port",
+		Name:  "local-tcp-port, tp",
 		Usage: "Set the UDP port number for connecting to the server",
 		Value: 3000,
 	}
 
-	playersFlag := cli.StringFlag{
+	playersFlag := cli.UintFlag{
 		Name:  "players, p",
 		Usage: "Set the number of players for the match",
 	}
@@ -40,13 +40,13 @@ func main() {
 	commandApp.Run(os.Args)
 }
 
-func onLoad(context *cli.Context) error {
-	if context.String("port") == "" {
-		return cli.NewExitError("You must specify a port", 0)
+func onLoad(c *cli.Context) error {
+	if c.Uint("players") == 0 {
+		return cli.NewExitError("You must specify a player number", 0)
 	}
 
-	serverApp := server.NewServer()
-	serverApp.Run(context.Uint("port"))
+	serverApp := server.NewServer(c.Uint("local-tcp-port"), c.Uint("players"))
+	serverApp.Run()
 
 	return nil
 }
