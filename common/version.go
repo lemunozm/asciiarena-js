@@ -17,8 +17,8 @@ func GetVersion() string {
 }
 
 func CheckLocalVersionWith(otherVersion string) VersionCompared {
-	local := strings.SplitN(version, ".", -1)
-	other := strings.SplitN(otherVersion, ".", -1)
+	local := strings.Split(version, ".")
+	other := strings.Split(otherVersion, ".")
 
 	if local[0] == other[0] && local[1] == other[1] {
 		if local[2] == other[2] {

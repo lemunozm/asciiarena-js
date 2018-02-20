@@ -29,54 +29,38 @@ func (c *Client) Run() {
 	defer tcpSocket.Close()
 
 	connection := communication.NewConnection(tcpSocket, true)
-	connection.RegisterRecvData(communication.VersionCheckedData{}, c.RecvVersionCheckedData)
-	connection.RegisterRecvData(communication.LogInStatusData{}, c.RecvLogInStatusData)
-	connection.RegisterRecvData(communication.LoadMatchData{}, c.RecvLoadMatchData)
 
+	if c.checkVersion(connection) {
+		c.logIn(connection)
+	}
+
+	/*
+		connection.Send(communication.LogInData{})
+		var logInStatusData communication.LogInStatusData
+		connection.Receive(&logInStatusData)
+		for {
+			var playerConnectionData communication.PlayerConnectionData
+			connection.Receive(&playerConnectionData)
+		}
+		var loadMatchData communication.LoadMatchData
+		connection.Receive(&loadMatchData)
+	*/
+}
+
+func (c *Client) checkVersion(connection *communication.Connection) bool {
 	versionData := communication.VersionData{common.GetVersion()}
 	connection.Send(versionData)
+
 	var versionCheckedData communication.VersionCheckedData
 	connection.Receive(&versionCheckedData)
-	connection.Send(communication.LogInData{})
+
+	return versionCheckedData.Validation
+}
+
+func (c *Client) logIn(connection *communication.Connection) {
+	logInData := communication.LogInData{'A'}
+	connection.Send(logInData)
+
 	var logInStatusData communication.LogInStatusData
 	connection.Receive(&logInStatusData)
-	for {
-		var playerConnectionData communication.PlayerConnectionData
-		connection.Receive(&playerConnectionData)
-	}
-	var loadMatchData communication.LoadMatchData
-	connection.Receive(&loadMatchData)
-
-	connection.ListenLoop()
 }
-
-func (c *Client) RecvVersionCheckedData(data interface{}, connection *communication.Connection) {
-	if _, ok := data.(communication.VersionCheckedData); ok {
-		connection.Send(communication.LogInData{})
-	}
-}
-
-func (c *Client) RecvLogInStatusData(data interface{}, connection *communication.Connection) {
-	if _, ok := data.(communication.LogInStatusData); ok {
-	}
-}
-
-func (c *Client) RecvLoadMatchData(data interface{}, connection *communication.Connection) {
-	if _, ok := data.(communication.LoadMatchData); ok {
-
-		/*udpSocket, err := net.Dial("udp", "host:port")
-		if err != nil {
-			log.Panic("Connection error: ", err)
-		}
-		connection := communication.NewConnection(udpSocket)
-		connection.RegisterReceiverData(communication.StateData{}, s.StateDataReceived)
-		go connection.ListenLoop()*/
-	}
-}
-
-/*func (c *Client) RecvStateData(data interface{}, connection *communication.Connection) {
-	if state, ok := data.(communication.StateData); ok {
-		from := connection.GetSocket().RemoteAddr()
-		fmt.Println("Recv State:", state, "from:", from)
-	}
-}*/
