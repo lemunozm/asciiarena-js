@@ -38,6 +38,7 @@ func (s *Server) Run() {
 func (s *Server) handleConnection(connection *communication.Connection) {
 	if s.checkVersion(connection) {
 		s.logIn(connection)
+		s.waitingMatch(connection)
 	}
 }
 

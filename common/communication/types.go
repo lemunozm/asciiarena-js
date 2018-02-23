@@ -20,11 +20,13 @@ type VersionCheckedData struct {
 }
 
 type LogInData struct {
-	Player int8
+	Player        int8
+	ClientUdpPort uint16
 }
 
 type LogInStatusData struct {
 	LogInStatus       LogInStatus
+	ServerUdpPort     uint16
 	RequiredPlayers   uint32
 	RegisteredPlayers []int8
 }
@@ -44,6 +46,15 @@ type MapData struct {
 type LoadMatchData struct {
 	MillisecondsToStart uint32
 	MapData             MapData
+}
+
+type FrameData struct {
+	FrameId uint32
+}
+
+type PlayerActionData struct {
+	FrameId uint32
+	Action  uint32
 }
 
 func registerSerializationTypes() {
