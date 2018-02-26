@@ -20,7 +20,7 @@ type ClientRegistry struct {
 	clients         map[string]Client
 }
 
-func ClientRegistry() ClientRegistry {
+func ClientRegistry(requiredPlayers uint) ClientRegistry {
 	c := ClientRegistry{}
 	c.requiredPlayers = 0
 	c.clientes = map[string]Client{}
@@ -66,4 +66,8 @@ func (cr *ClientRegistry) GetRequiredPlayers() uint {
 
 func (cr *ClientRegistry) IsComplete() bool {
 	return len(cr.clients) == cr.requiredPlayers
+}
+
+func (cr *ClientRegistry) Clear() {
+	//TODO
 }

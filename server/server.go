@@ -7,18 +7,20 @@ import "github.com/lemunozm/ASCIIArena/common"
 import "github.com/lemunozm/ASCIIArena/common/communication"
 
 type Server struct {
-	localTCPPort    string
-	requiredPlayers uint
+	localTCPPort   string
+	clientRegistry ClientRegistry
 }
 
 func NewServer(localTCPPort uint, requiredPlayers uint) *Server {
 	s := &Server{}
 	s.localTCPPort = strconv.FormatUint(uint64(localTCPPort), 10)
-	s.requiredPlayers = requiredPlayers
+	s.clientRegistry = ClientRegistry(requiredPlayers)
 	return s
 }
 
 func (s *Server) Run() {
+	s.clientRegistry.Clear()
+
 	listening, err := net.Listen("tcp", ":"+s.localTCPPort)
 	if err != nil {
 		log.Panic("Connection error: ", err)
@@ -62,4 +64,8 @@ func (s *Server) logIn(connection *communication.Connection) {
 
 	logInStatusData := communication.LogInStatusData{communication.LOG_IN_STATUS_OK, uint32(s.requiredPlayers), []int8{}}
 	connection.Send(logInStatusData)
+}
+
+func (s *Server) waitingMatch(connection *communication.Connection) {
+	//TODO
 }

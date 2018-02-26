@@ -7,21 +7,19 @@ import "strings"
 import "encoding/gob"
 
 type Connection struct {
-	socket  net.Conn
-	enc     *gob.Encoder
-	dec     *gob.Decoder
-	verbose bool
+	socket net.Conn
+	enc    *gob.Encoder
+	dec    *gob.Decoder
 }
 
-func NewConnection(socket net.Conn, verbose bool) *Connection {
+func NewConnection(socket net.Conn) *Connection {
 	registerSerializationTypes()
 	c := &Connection{}
 	c.socket = socket
 	c.enc = gob.NewEncoder(socket)
 	c.dec = gob.NewDecoder(socket)
-	c.verbose = verbose
 
-	if c.verbose {
+	if true {
 		fmt.Printf("Connected by %s on: %s\n", socket.RemoteAddr().Network(), socket.RemoteAddr().String())
 	}
 	return c
@@ -33,7 +31,7 @@ func (c *Connection) Send(data interface{}) {
 		log.Panic("Encode error: ", err)
 	}
 
-	if c.verbose {
+	if true {
 		to := c.socket.RemoteAddr().String()
 		dataType := strings.Split(fmt.Sprintf("%T", data), ".")[1]
 		fmt.Printf("Send to   %s: %s: %v\n", to, dataType, data)
@@ -46,7 +44,7 @@ func (c *Connection) Receive(data interface{}) {
 		log.Panic("Decode error: ", err)
 	}
 
-	if c.verbose {
+	if true {
 		from := c.socket.RemoteAddr().String()
 		dataType := strings.Split(fmt.Sprintf("%T", data), ".")[1]
 		fmt.Printf("Recv from %s: %s: %v\n", from, dataType, data)

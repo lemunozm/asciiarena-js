@@ -4,6 +4,7 @@ import "net"
 import "log"
 import "strconv"
 import "time"
+import "github.com/nsf/termbox-go"
 import "github.com/lemunozm/ASCIIArena/common"
 import "github.com/lemunozm/ASCIIArena/common/communication"
 
@@ -16,7 +17,13 @@ type Client struct {
 }
 
 func NewClient(host string, remoteTCPPort uint, localUDPPort uint) *Client {
-
+	err := termbox.Init()
+	if err != nil {
+		log.Panic("Termbox error: ", err)
+	}
+	defer termbox.Close()
+	termbox.SetCell(10, 10, 'A', termbox.ColorCyan, termbox.ColorDefault)
+	termbox.Flush()
 	tcpSocket, err := net.Dial("tcp", host+":"+strconv.FormatUint(uint64(remoteTCPPort), 10))
 	if err != nil {
 		log.Panic("Connection error: ", err)
@@ -25,7 +32,7 @@ func NewClient(host string, remoteTCPPort uint, localUDPPort uint) *Client {
 	c := &Client{}
 	c.host = host
 	c.localUDPPort = localUDPPort
-	c.tcpConnection = communication.NewConnection(tcpSocket, true)
+	c.tcpConnection = communication.NewConnection(tcpSocket)
 	c.udpConnection = nil
 	c.frameId = 0
 	return c
@@ -39,9 +46,11 @@ func (c *Client) Destroy() {
 }
 
 func (c *Client) Run() {
+	// load from yaml preferences
+	player := int8('A')
+	playerController := NewPlayerController(player)
+	// configurate control?
 	if c.checkVersion() {
-		player := int8('A')
-		playerController := NewPlayerController(player)
 		logInStatus := c.logIn(player)
 		for {
 			match := c.waitingMatch(&logInStatus)
@@ -81,7 +90,7 @@ func (c *Client) logIn(player int8) communication.LogInStatusData {
 	if err != nil {
 		log.Panic("Connection error: ", err)
 	}
-	c.udpConnection = communication.NewConnection(udpSocket, true)
+	c.udpConnection = communication.NewConnection(udpSocket)
 
 	return logInStatusData
 }
