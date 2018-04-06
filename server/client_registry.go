@@ -1,6 +1,6 @@
 package server
 
-import "communication"
+import "github.com/lemunozm/ASCIIArena/common/communication"
 
 type RegisterStatus uint
 

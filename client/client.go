@@ -1,64 +1,56 @@
 package client
 
+import "fmt"
 import "net"
 import "log"
 import "strconv"
 import "time"
-import "github.com/nsf/termbox-go"
 import "github.com/lemunozm/ASCIIArena/common"
 import "github.com/lemunozm/ASCIIArena/common/communication"
 
 type Client struct {
 	host          string
 	localUDPPort  uint
+	remoteTCPPort uint
 	tcpConnection *communication.Connection
 	udpConnection *communication.Connection
 	frameId       uint
 }
 
 func NewClient(host string, remoteTCPPort uint, localUDPPort uint) *Client {
-	err := termbox.Init()
-	if err != nil {
-		log.Panic("Termbox error: ", err)
-	}
-	defer termbox.Close()
-	termbox.SetCell(10, 10, 'A', termbox.ColorCyan, termbox.ColorDefault)
-	termbox.Flush()
-	tcpSocket, err := net.Dial("tcp", host+":"+strconv.FormatUint(uint64(remoteTCPPort), 10))
-	if err != nil {
-		log.Panic("Connection error: ", err)
-	}
 
 	c := &Client{}
 	c.host = host
 	c.localUDPPort = localUDPPort
-	c.tcpConnection = communication.NewConnection(tcpSocket)
-	c.udpConnection = nil
+	c.remoteTCPPort = remoteTCPPort
 	c.frameId = 0
 	return c
 }
 
-func (c *Client) Destroy() {
-	c.tcpConnection.GetSocket().Close()
-	if c.udpConnection != nil {
-		c.udpConnection.GetSocket().Close()
-	}
-}
-
 func (c *Client) Run() {
-	// load from yaml preferences
-	player := int8('A')
-	playerController := NewPlayerController(player)
+	playerController := NewPlayerController( /* yaml? */ )
 	// configurate control?
+
+	tcpSocket, err := net.Dial("tcp", c.host+":"+strconv.FormatUint(uint64(c.remoteTCPPort), 10))
+	if err != nil {
+		log.Panic("Connection error: ", err)
+	}
+	c.tcpConnection = communication.NewConnection(tcpSocket)
+
 	if c.checkVersion() {
+		player := int8('A')
 		logInStatus := c.logIn(player)
+		// check logInStatus and repeat request player name if it fails
 		for {
 			match := c.waitingMatch(&logInStatus)
 			for !match.IsFinished() {
 				c.userAction(playerController)
 			}
+			match.Destroy()
 		}
+		c.udpConnection.GetSocket().Close()
 	}
+	c.tcpConnection.GetSocket().Close()
 }
 
 func (c *Client) checkVersion() bool {

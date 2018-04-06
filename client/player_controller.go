@@ -4,7 +4,7 @@ type PlayerController struct {
 	//TODO
 }
 
-func NewPlayerController(player int8) *PlayerController {
+func NewPlayerController() *PlayerController {
 	//TODO
 	c := &PlayerController{}
 	return c
