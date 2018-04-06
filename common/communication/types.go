@@ -65,4 +65,6 @@ func registerSerializationTypes() {
 	gob.Register(PlayerConnectionData{})
 	gob.Register(MapData{})
 	gob.Register(LoadMatchData{})
+	gob.Register(FrameData{})
+	gob.Register(PlayerActionData{})
 }
