@@ -1,0 +1,34 @@
+@startuml
+
+title Communication
+actor Player
+
+== Initialization ==
+
+Player -> Client : InitGame
+Client -> Server : Version
+Client <-- Server : CheckedVersion
+
+loop character not allowed
+    Player -> Client : ConfigureCharacter
+    Client -> Server : LogIn
+    Client <-- Server : LogInStatus
+end
+
+== Match ==
+
+Client <- Server : NextMatchStatus
+loop wait all players
+    Client <- Server : PlayerConnection
+end
+Client <- Server : LoadMap
+Player <<- Client : ShowMatch
+
+loop playing the match
+    Client <<- Server : Frame
+    Player <<- Client : Show
+    Player -> Client : Input
+    Client -> Server : PlayerAction
+end
+
+@enduml

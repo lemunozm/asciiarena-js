@@ -1,1 +1,0 @@
-![PlantUML model](ClientServerCommunication.puml)
