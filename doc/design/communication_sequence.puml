@@ -3,11 +3,13 @@
 title Communication
 actor Player
 
-== Initialization ==
+== Connection ==
 
 Player -> Client : InitGame
-Client -> Server : Version
-Client <-- Server : CheckedVersion
+Client -> Server : ServerInfoRequest
+Client <-- Server : ServerInfo
+
+== Log in ==
 
 loop character not allowed
     Player -> Client : ConfigureCharacter
@@ -17,18 +19,17 @@ end
 
 == Match ==
 
-Client <- Server : NextMatchStatus
 loop wait all players
-    Client <- Server : PlayerConnection
+    Client <- Server : NextMatchStatus
 end
 Client <- Server : LoadMap
 Player <<- Client : ShowMatch
 
 loop playing the match
-    Client <<- Server : Frame
+    Client <- Server : Frame
     Player <<- Client : Show
-    Player -> Client : Input
-    Client -> Server : PlayerAction
+    Player ->> Client : Input
+    Client ->> Server : PlayerAction
 end
 
 @enduml

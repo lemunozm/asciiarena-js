@@ -1,0 +1,33 @@
+@startuml
+
+title main_sequence
+
+[-> Server : <<New>>
+Server -> MatchManager : <<New>>
+MatchManager -> PlayerRegistry : <<New>>
+Server -> ServerInfoManager : <<New>>
+
+[-> Server : Run
+activate Server
+Server -> MatchManager : Run
+activate MatchManager
+Server -> ServerInfoManager : Run
+activate ServerInfoManager
+loop
+    MatchManager -> MatchManager : WaitingMatch
+    activate MatchManager
+    deactivate MatchManager
+    MatchManager -> MatchManager : InitializingMatch
+    activate MatchManager
+    deactivate MatchManager
+    MatchManager -> MatchManager : PlayingMatch
+    activate MatchManager
+    deactivate MatchManager
+end
+Server <-- ServerInfoManager : End
+deactivate ServerInfoManager
+Server <-- MatchManager : End
+deactivate MatchManager
+deactivate Server
+
+@enduml

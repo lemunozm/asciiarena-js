@@ -1,0 +1,46 @@
+@startuml
+
+title Match state
+
+== WaitingMatch state ==
+[-> MatchManager : PlayerConnectionRequest
+activate MatchManager
+MatchManager -> PlayerRegistry : AddPlayer
+activate PlayerRegistry
+MatchManager <-- PlayerRegistry : PlayerValidation
+deactivate PlayerRegistry
+[<-- MatchManager : PlayerConnectionStatus
+
+MatchManager -> PlayerRegistry : GetPlayers
+activate PlayerRegistry
+MatchManager <-- PlayerRegistry : RegisteredPlayers
+deactivate PlayerRegistry
+loop for each registered player
+    [<<- MatchManager : NextMatchStatus
+end
+deactivate MatchManager
+
+== InitializingMatch state ==
+MatchManager -> Match : <<New>>
+activate MatchManager
+Match -> Map : <<New>>
+MatchManager -> Match : GetMap
+activate Match
+MatchManager <-- Match : Map
+deactivate Match
+loop for each player
+    [<<- MatchManager : MapInfo
+end
+deactivate MatchManager
+
+== PlayingMatch state ==
+loop frame time
+    [->> MatchManager : PlayerInput
+    MatchManager -> Match : PlayerAction
+end
+MatchManager -> Match : ComputeFrame
+Match -> Map : use
+MatchManager <-- Match : Frame
+[<- MatchManager : Frame
+
+@enduml

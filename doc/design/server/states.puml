@@ -1,0 +1,18 @@
+@startuml
+
+[*] --> Server
+state Server {
+    [*] -> ServingInfo
+    ServingInfo : RequestServerInfo
+    --
+    state Match {
+        [*] -> WaitingMatch
+        WaitingMatch : PlayerConnectionRequest
+        WaitingMatch --> InitializingMatch : lastPlayerConnected
+        InitializingMatch --> PlayingMatch
+        PlayingMatch --> WaitingMatch : endMatch
+        PlayingMatch : PlayerInput
+    }
+}
+
+@enduml
