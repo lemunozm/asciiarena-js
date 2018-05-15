@@ -4,34 +4,28 @@ import "net"
 import "strconv"
 import "log"
 
-type MatchServerConfiguration struct {
-	TCPPort           int
-	TCPPortInfo       int
-	MaxPlayers        int
-	PointsToWin       int
-	InfoServerEnabled bool
-}
-
 type MatchServer struct {
-	port           int
-	pointsToWin    int
-	playerRegistry *PlayerRegistry
-	infoServer     *InfoServer
+	port         int
+	pointsToWin  int
+	matchManager *MatchManager
 }
 
-func NewMatchServer(conf MatchServerConfiguration) *MatchServer {
+func NewMatchServer(tcpPort int, maxPlayers int, pointsToWin int) *MatchServer {
 	s := &MatchServer{
-		port:           conf.TCPPort,
-		pointsToWin:    conf.PointsToWin,
-		playerRegistry: NewPlayerRegistry(conf.MaxPlayers),
-	}
-
-	if conf.InfoServerEnabled {
-		s.infoServer = NewInfoServer(conf.TCPPortInfo, s)
-		go s.infoServer.Run()
+		port:         tcpPort,
+		pointsToWin:  pointsToWin,
+		matchManager: NewMatchManager(maxPlayers),
 	}
 
 	return s
+}
+
+func (s MatchServer) Port() int {
+	return s.port
+}
+
+func (s MatchServer) MatchManager() *MatchManager {
+	return s.matchManager
 }
 
 func (s *MatchServer) Run() {
@@ -46,36 +40,18 @@ func (s *MatchServer) Run() {
 	defer listener.Close()
 
 	for {
-		s.waitingPlayers(listener)
-		for /* anyone has points to win */ {
-			s.initializingMatch()
-			s.playingMatch()
-		}
-	}
-
-	//s.infoServer.Close()
-}
-
-func (s *MatchServer) waitingPlayers(listener *net.TCPListener) {
-	for /* Need more players for the match */ {
-		_, err := listener.AcceptTCP()
+		connection, err := listener.AcceptTCP()
 		if err != nil {
 			log.Panic("Error accepting: ", err.Error())
 		}
 
-		//Deserialize
-		//playerRegistry.AddPlayer(connection)
+		s.handlePlayerConnection(connection)
 	}
 }
 
-func (s *MatchServer) initializingMatch() {
+func (s *MatchServer) handlePlayerConnection(connection net.Conn) {
 	//TODO
-}
 
-func (s *MatchServer) playingMatch() {
-	//TODO
-}
-
-func (s MatchServer) PlayerRegistry() *PlayerRegistry {
-	return s.playerRegistry
+	// if the match is ready
+	//    matchManager.Run()
 }

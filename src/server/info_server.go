@@ -55,8 +55,9 @@ func (s *InfoServer) handleVersionRequest(connection net.Conn) bool {
 
 func (s *InfoServer) sendMatchInfo(connection net.Conn) {
 	matchInfo := communication.MatchInfoData{
-		s.matchServer.PlayerRegistry().CurrentPlayers(),
-		s.matchServer.PlayerRegistry().MaxPlayers(),
+		s.matchServer.Port(),
+		s.matchServer.MatchManager().PlayerRegistry().CurrentPlayers(),
+		s.matchServer.MatchManager().PlayerRegistry().MaxPlayers(),
 	}
 
 	communication.Send(connection, matchInfo)

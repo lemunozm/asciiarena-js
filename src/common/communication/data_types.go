@@ -20,10 +20,11 @@ func (d CheckedVersionData) String() string {
 }
 
 type MatchInfoData struct {
+	Port           int
 	CurrentPlayers int
 	MaxPlayers     int
 }
 
 func (d MatchInfoData) String() string {
-	return fmt.Sprintf("%s | %d | %d", "MATCH_INFO", d.CurrentPlayers, d.MaxPlayers)
+	return fmt.Sprintf("%s | %d | %d | %d", "MATCH_INFO", d.Port, d.CurrentPlayers, d.MaxPlayers)
 }
