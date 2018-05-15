@@ -2,32 +2,30 @@
 
 title main_sequence
 
-[-> Server : <<New>>
-Server -> MatchManager : <<New>>
-MatchManager -> PlayerRegistry : <<New>>
-Server -> ServerInfoManager : <<New>>
+actor main
 
-[-> Server : Run
-activate Server
-Server -> MatchManager : Run
-activate MatchManager
-Server -> ServerInfoManager : Run
-activate ServerInfoManager
+[-> MatchServer : <<New>>
+MatchServer -> PlayerRegistry : <<New>>
+MatchServer -> InfoServer : <<New>>
+
+[-> MatchServer : Run
+activate MatchServer
+MatchServer -> InfoServer : Run
+activate InfoServer
 loop
-    MatchManager -> MatchManager : WaitingMatch
-    activate MatchManager
-    deactivate MatchManager
-    MatchManager -> MatchManager : InitializingMatch
-    activate MatchManager
-    deactivate MatchManager
-    MatchManager -> MatchManager : PlayingMatch
-    activate MatchManager
-    deactivate MatchManager
+    MatchServer -> MatchServer : WaitingMatch
+    activate MatchServer
+    deactivate MatchServer
+    MatchServer -> MatchServer : InitializingMatch
+    activate MatchServer
+    deactivate MatchServer
+    MatchServer -> MatchServer : PlayingMatch
+    activate MatchServer
+    deactivate MatchServer
 end
-Server <-- ServerInfoManager : End
-deactivate ServerInfoManager
-Server <-- MatchManager : End
-deactivate MatchManager
-deactivate Server
+MatchServer <-- InfoServer : End
+deactivate InfoServer
+[<-- MatchServer : End
+deactivate MatchServer
 
 @enduml
