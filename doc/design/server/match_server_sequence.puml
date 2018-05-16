@@ -1,0 +1,73 @@
+@startuml
+
+title Match server
+
+actor Client
+participant Server
+participant MatchServer
+participant MatchManager
+participant PlayerRegistry
+participant Match
+
+Server -> MatchServer : <<new>>
+Server -> MatchServer : run
+activate MatchServer
+MatchServer -> MatchManager : <<new>>
+MatchManager -> PlayerRegistry : <<new>>
+loop
+    Client ->> MatchServer : newPlayerMessage
+    MatchServer -> MatchServer : handlePlayerConnection
+    activate MatchServer
+    MatchServer -> MatchManager : registerPlayer
+    activate MatchManager
+    MatchManager -> PlayerRegistry : addPlayer
+    activate PlayerRegistry
+    MatchManager <-- PlayerRegistry : status
+    deactivate PlayerRegistry
+    MatchServer <-- MatchManager : status
+    deactivate MatchManager
+    Client <<-- MatchServer : playerConnectionStatusMessage
+    Client <<-- MatchServer : playersInfoMessage (to all)
+    MatchServer -> MatchManager : run
+    activate MatchManager
+    deactivate MatchServer
+    loop until one player reaches the points to win
+        MatchManager -> Match : <<new>>
+        MatchManager -> MatchManager : init
+        activate MatchManager
+        MatchManager -> Match : generateMap
+        activate Match
+        MatchManager <-- Match : map
+        deactivate Match
+        Client <<-- MatchManager : matchInfoMessage (to all)
+        deactivate MatchManager
+        MatchManager -> MatchManager : play
+        activate MatchManager
+        loop until only one player alive
+            MatchManager -> Match : computeFrame
+            activate Match
+            MatchManager <-- Match : frameData
+            deactivate Match
+            Client <<-- MatchManager : frameMessage (to all)
+            Client ->> MatchManager : playerActionMessage (from all)
+            MatchManager -> PlayerRegistry : checkAction
+            activate PlayerRegistry
+            MatchManager <-- PlayerRegistry
+            deactivate PlayerRegistry
+            MatchManager -> Match : userAction
+            activate Match
+            MatchManager <-- Match
+            deactivate Match
+        end
+        deactivate MatchManager
+    end
+        MatchManager -> PlayerRegistry : removePlayers
+        activate PlayerRegistry
+        MatchManager <-- PlayerRegistry
+        deactivate PlayerRegistry
+    deactivate MatchManager
+end
+Server <-- MatchServer
+deactivate MatchServer
+
+@enduml
