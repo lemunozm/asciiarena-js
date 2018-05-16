@@ -19,12 +19,12 @@ func (d CheckedVersionData) String() string {
 	return fmt.Sprintf("%s | %s | %t", "CHECKED_VERSION", d.Version, d.Validation)
 }
 
-type MatchInfoData struct {
+type ServerInfoData struct {
 	Port           int
 	CurrentPlayers int
 	MaxPlayers     int
 }
 
-func (d MatchInfoData) String() string {
-	return fmt.Sprintf("%s | %d | %d | %d", "MATCH_INFO", d.Port, d.CurrentPlayers, d.MaxPlayers)
+func (d ServerInfoData) String() string {
+	return fmt.Sprintf("%s | %d | %d | %d", "SERVER_INFO", d.Port, d.CurrentPlayers, d.MaxPlayers)
 }

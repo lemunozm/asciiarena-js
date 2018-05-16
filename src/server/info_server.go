@@ -1,11 +1,11 @@
 package main
 
 import "../common/communication"
+import "../common/version"
+import "../common/log"
 
 import "net"
 import "strconv"
-import "log"
-import "strings"
 
 type InfoServer struct {
 	port        int
@@ -23,53 +23,55 @@ func NewInfoServer(port int, matchServer *MatchServer) *InfoServer {
 func (s *InfoServer) Run() {
 	address, err := net.ResolveTCPAddr("tcp", ":"+strconv.Itoa(s.port))
 	if err != nil {
-		log.Panic("Error resolving tcp address: ", err.Error())
+		log.PrintfPanic("Error resolving tcp address: ", err.Error())
 	}
 	listener, err := net.ListenTCP("tcp", address)
 	if err != nil {
-		log.Panic("Error listening from tcp: ", err.Error())
+		log.PrintfPanic("Error listening from tcp: ", err.Error())
 	}
 
 	for {
 		connection, err := listener.AcceptTCP()
 		if err != nil {
-			log.Panic("Error accepting: ", err.Error())
+			log.PrintfPanic("Error accepting: ", err.Error())
 		}
 
-		sameVersion := s.handleVersionRequest(connection)
-		if sameVersion {
-			s.sendMatchInfo(connection)
+		compatibleVersions := s.handleVersionRequest(connection)
+		if compatibleVersions {
+			s.sendServerInfo(connection)
 		}
 	}
 }
 
 func (s *InfoServer) handleVersionRequest(connection net.Conn) bool {
-	var version communication.VersionData
-	communication.Receive(connection, &version)
+	var clientVersion communication.VersionData
+	communication.Receive(connection, &clientVersion)
 
-	checkedVersion := s.checkVersion(version)
+	compatibility := version.CheckCompatibility(clientVersion.Version, version.Current)
+	var validation bool
+	switch compatibility {
+	case version.INCOMPATIBLE:
+		validation = false
+		log.PrintfError("Incompatible versions: client is %s, and server is %s", clientVersion.Version, version.Current)
+	case version.COMPATIBLE_WARNING:
+		validation = true
+		log.PrintfError("Compatible version, but are not the same: client is %s, and server is %s", clientVersion.Version, version.Current)
+	case version.COMPATIBLE:
+		validation = true
+	}
 
+	checkedVersion := communication.CheckedVersionData{version.Current, validation}
 	communication.Send(connection, &checkedVersion)
+
 	return checkedVersion.Validation
 }
 
-func (s *InfoServer) sendMatchInfo(connection net.Conn) {
-	matchInfo := communication.MatchInfoData{
+func (s *InfoServer) sendServerInfo(connection net.Conn) {
+	serverInfo := communication.ServerInfoData{
 		s.matchServer.Port(),
 		s.matchServer.MatchManager().PlayerRegistry().CurrentPlayers(),
 		s.matchServer.MatchManager().PlayerRegistry().MaxPlayers(),
 	}
 
-	communication.Send(connection, matchInfo)
-}
-
-func (s *InfoServer) checkVersion(versionData communication.VersionData) communication.CheckedVersionData {
-	const currentVersion string = "0.1.0" //TODO: initialize externally
-
-	significantCurrentVersion := currentVersion[:strings.LastIndex(currentVersion, ".")]
-	significantClientVersion := versionData.Version[:strings.LastIndex(versionData.Version, ".")]
-
-	validation := significantCurrentVersion == significantClientVersion
-
-	return communication.CheckedVersionData{currentVersion, validation}
+	communication.Send(connection, serverInfo)
 }

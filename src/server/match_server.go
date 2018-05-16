@@ -1,8 +1,9 @@
 package main
 
+import "../common/log"
+
 import "net"
 import "strconv"
-import "log"
 
 type MatchServer struct {
 	port         int
@@ -31,18 +32,18 @@ func (s MatchServer) MatchManager() *MatchManager {
 func (s *MatchServer) Run() {
 	address, err := net.ResolveTCPAddr("tcp", ":"+strconv.Itoa(s.port))
 	if err != nil {
-		log.Panic("Error resolving tcp address: ", err.Error())
+		log.PrintfPanic("Error resolving tcp address: ", err.Error())
 	}
 	listener, err := net.ListenTCP("tcp", address)
 	if err != nil {
-		log.Panic("Error listening from tcp: ", err.Error())
+		log.PrintfPanic("Error listening from tcp: ", err.Error())
 	}
 	defer listener.Close()
 
 	for {
 		connection, err := listener.AcceptTCP()
 		if err != nil {
-			log.Panic("Error accepting: ", err.Error())
+			log.PrintfPanic("Error accepting: ", err.Error())
 		}
 
 		s.handlePlayerConnection(connection)

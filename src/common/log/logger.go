@@ -6,32 +6,32 @@ import "sync"
 import "os"
 import "time"
 
-type COLOR string
+type Color string
 
 const (
-	RESET_COLOR = COLOR("\x1B[0m")
+	RESET_COLOR = Color("\x1B[0m")
 
-	BLACK       = COLOR("\x1B[0;30m")
-	RED_DARK    = COLOR("\x1B[0;31m")
-	GREEN_DARK  = COLOR("\x1B[0;32m")
-	YELLOW_DARK = COLOR("\x1B[0;33m")
-	BLUE_DARK   = COLOR("\x1B[0;34m")
-	PURPLE_DARK = COLOR("\x1B[0;35m")
-	CYAN_DARK   = COLOR("\x1B[0;35m")
-	GREY_LIGHT  = COLOR("\x1B[0;37m")
-	GREY_DARK   = COLOR("\x1B[1;30m")
-	RED         = COLOR("\x1B[1;31m")
-	GREEN       = COLOR("\x1B[1;32m")
-	YELLOW      = COLOR("\x1B[1;33m")
-	BLUE        = COLOR("\x1B[1;34m")
-	PURPLE      = COLOR("\x1B[1;35m")
-	CYAN        = COLOR("\x1B[1;36m")
-	WHITE       = COLOR("\x1B[1;37m")
+	BLACK       = Color("\x1B[0;30m")
+	RED_DARK    = Color("\x1B[0;31m")
+	GREEN_DARK  = Color("\x1B[0;32m")
+	YELLOW_DARK = Color("\x1B[0;33m")
+	BLUE_DARK   = Color("\x1B[0;34m")
+	PURPLE_DARK = Color("\x1B[0;35m")
+	CYAN_DARK   = Color("\x1B[0;35m")
+	GREY_LIGHT  = Color("\x1B[0;37m")
+	GREY_DARK   = Color("\x1B[1;30m")
+	RED         = Color("\x1B[1;31m")
+	GREEN       = Color("\x1B[1;32m")
+	YELLOW      = Color("\x1B[1;33m")
+	BLUE        = Color("\x1B[1;34m")
+	PURPLE      = Color("\x1B[1;35m")
+	CYAN        = Color("\x1B[1;36m")
+	WHITE       = Color("\x1B[1;37m")
 )
 
 type output struct {
 	name    string
-	color   COLOR
+	color   Color
 	writers []io.Writer
 }
 
@@ -108,6 +108,16 @@ func PrintfWarning(format string, v ...interface{}) {
 }
 
 func PrintfError(format string, v ...interface{}) {
+	if len(l.errorOutputs.writers) != 0 {
+		l.mutex.Lock()
+		defer l.mutex.Unlock()
+
+		s := fmt.Sprintf(format, v...)
+		writeOutput(l.errorOutputs, s)
+	}
+}
+
+func PrintfPanic(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
 	if len(l.errorOutputs.writers) != 0 {
 		l.mutex.Lock()
