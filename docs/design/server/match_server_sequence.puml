@@ -15,19 +15,20 @@ activate MatchServer
 MatchServer -> MatchManager : <<new>>
 MatchManager -> PlayerRegistry : <<new>>
 loop
-    Client ->> MatchServer : newPlayerMessage
+    Client ->> MatchServer : <<new connection>>
     MatchServer -> MatchServer : handlePlayerConnection
     activate MatchServer
     MatchServer -> MatchManager : registerPlayer
     activate MatchManager
+    Client ->> MatchManager : newPlayerMessage
     MatchManager -> PlayerRegistry : addPlayer
     activate PlayerRegistry
     MatchManager <-- PlayerRegistry : status
     deactivate PlayerRegistry
+    Client <<-- MatchManager : playerConnectionStatusMessage
+    Client <<-- MatchManager : playersInfoMessage (to all)
     MatchServer <-- MatchManager : status
     deactivate MatchManager
-    Client <<-- MatchServer : playerConnectionStatusMessage
-    Client <<-- MatchServer : playersInfoMessage (to all)
     MatchServer -> MatchManager : run
     activate MatchManager
     deactivate MatchServer

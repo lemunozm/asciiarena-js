@@ -1,9 +1,10 @@
 package main
 
+import "github.com/lemunozm/ascii-arena/pkg/logger"
+import "github.com/lemunozm/ascii-arena/pkg/comm"
+
 import "net"
 import "strconv"
-
-import "github.com/lemunozm/ascii-arena/pkg/logger"
 
 type MatchServer struct {
 	port         int
@@ -41,18 +42,20 @@ func (s *MatchServer) Run() {
 	defer listener.Close()
 
 	for {
-		connection, err := listener.AcceptTCP()
+		tcpConnection, err := listener.AcceptTCP()
 		if err != nil {
 			logger.PrintfPanic("Error accepting => %s", err.Error())
 		}
+		connection := comm.NewConnection(tcpConnection)
 
 		s.handlePlayerConnection(connection)
 	}
 }
 
-func (s *MatchServer) handlePlayerConnection(connection net.Conn) {
-	//TODO
+func (s *MatchServer) handlePlayerConnection(connection *comm.Connection) {
+	s.matchManager.RegisterPlayer(connection)
 
-	// if the match is ready
-	//    matchManager.Run()
+	if s.MatchManager().IsReadyToStartMatch() {
+		go s.matchManager.Run()
+	}
 }

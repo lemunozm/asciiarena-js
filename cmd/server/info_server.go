@@ -1,8 +1,8 @@
 package main
 
-import "github.com/lemunozm/ascii-arena/pkg/communication"
-import "github.com/lemunozm/ascii-arena/pkg/version"
 import "github.com/lemunozm/ascii-arena/pkg/logger"
+import "github.com/lemunozm/ascii-arena/pkg/version"
+import "github.com/lemunozm/ascii-arena/pkg/comm"
 
 import "net"
 import "strconv"
@@ -31,10 +31,11 @@ func (s *InfoServer) Run() {
 	}
 
 	for {
-		connection, err := listener.AcceptTCP()
+		tcpConnection, err := listener.AcceptTCP()
 		if err != nil {
 			logger.PrintfPanic("Error accepting => %s", err.Error())
 		}
+		connection := comm.NewConnection(tcpConnection)
 
 		compatibleVersions := s.handleVersionRequest(connection)
 		if compatibleVersions {
@@ -43,35 +44,35 @@ func (s *InfoServer) Run() {
 	}
 }
 
-func (s *InfoServer) handleVersionRequest(connection net.Conn) bool {
-	var clientVersion communication.VersionData
-	communication.Receive(connection, &clientVersion)
+func (s *InfoServer) handleVersionRequest(connection *comm.Connection) bool {
+	clientVersionMessage := comm.VersionMessage{}
+	connection.Receive(&clientVersionMessage)
 
-	compatibility := version.CheckCompatibility(clientVersion.Version, version.Current)
 	var validation bool
+	compatibility := version.CheckCompatibility(clientVersionMessage.Version, version.Current)
 	switch compatibility {
 	case version.INCOMPATIBLE:
 		validation = false
-		logger.PrintfError("Incompatible versions: client is %s, and server is %s", clientVersion.Version, version.Current)
+		logger.PrintfError("Incompatible versions: client is %s, and server is %s", clientVersionMessage.Version, version.Current)
 	case version.COMPATIBLE_WARNING:
 		validation = true
-		logger.PrintfError("Compatible version, but are not the same: client is %s, and server is %s", clientVersion.Version, version.Current)
+		logger.PrintfError("Compatible version, but are not the same: client is %s, and server is %s", clientVersionMessage.Version, version.Current)
 	case version.COMPATIBLE:
 		validation = true
 	}
 
-	checkedVersion := communication.CheckedVersionData{version.Current, validation}
-	communication.Send(connection, &checkedVersion)
+	checkedVersionMessage := comm.CheckedVersionMessage{version.Current, validation}
+	connection.Send(checkedVersionMessage)
 
-	return checkedVersion.Validation
+	return checkedVersionMessage.Validation
 }
 
-func (s *InfoServer) sendServerInfo(connection net.Conn) {
-	serverInfo := communication.ServerInfoData{
+func (s *InfoServer) sendServerInfo(connection *comm.Connection) {
+	serverInfoMessage := comm.ServerInfoMessage{
 		s.matchServer.Port(),
 		s.matchServer.MatchManager().PlayerRegistry().CurrentPlayers(),
 		s.matchServer.MatchManager().PlayerRegistry().MaxPlayers(),
 	}
 
-	communication.Send(connection, serverInfo)
+	connection.Send(serverInfoMessage)
 }
