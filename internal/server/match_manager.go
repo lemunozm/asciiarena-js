@@ -1,6 +1,8 @@
-package main
+package server
 
-import "github.com/lemunozm/ascii-arena/pkg/comm"
+import "github.com/lemunozm/ascii-arena/internal/server/match"
+import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
+
 import "fmt"
 
 type MatchManager struct {
@@ -75,22 +77,27 @@ func (s *MatchManager) notifyPlayers(connection *comm.Connection, loginStatus co
 
 func (s *MatchManager) Run() {
 	s.startedMatch = true
-	fmt.Println("Initializing match!")
+
 	for !s.playerRegistry.HasWinner() {
-		s.initializingMatch()
-		s.playingMatch()
+		arena := s.initializingMatch()
+		s.playingMatch(arena)
 	}
+
 	s.startedMatch = false
 }
 
-func (s *MatchManager) initializingMatch() {
+func (s *MatchManager) initializingMatch() *match.Arena {
 	//TODO
-	//Add match entity.
-	NewMap(32, 32, s.mapSeed)
+	fmt.Println("Initializing match!")
+
+	arena := match.NewArena(32, 32, s.mapSeed /*, players*/)
+	// player origins
+	// send to clients
+	return m
 }
 
-func (s *MatchManager) playingMatch() {
+func (s *MatchManager) playingMatch(m *match.Arena) {
+	//TODO
 	for true {
 	}
-	//TODO
 }

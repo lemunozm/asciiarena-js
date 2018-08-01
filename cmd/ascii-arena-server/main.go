@@ -1,7 +1,9 @@
 package main
 
+import "github.com/lemunozm/ascii-arena/internal/server"
+
 func main() {
-	server := Server{
+	s := server.Server{
 		TCPPortMatch:      3000,
 		TCPPortInfo:       3001,
 		MaxPlayers:        1,
@@ -10,5 +12,5 @@ func main() {
 		InfoServerEnabled: true,
 	}
 
-	server.Run()
+	s.Run()
 }

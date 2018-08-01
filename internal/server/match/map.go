@@ -1,15 +1,15 @@
-package main
+package match
 
 import "hash/crc64"
 import "math/rand"
 
 type Map struct {
-	width  uint
-	height uint
+	width  int
+	height int
 	seed   string
 }
 
-func NewMap(width uint, height uint, seed string) *Map {
+func NewMap(width int, height int, seed string) *Map {
 	m := &Map{
 		width:  width,
 		height: height,
@@ -21,11 +21,11 @@ func NewMap(width uint, height uint, seed string) *Map {
 	return m
 }
 
-func (m Map) Width() uint {
+func (m Map) Width() int {
 	return m.width
 }
 
-func (m Map) Height() uint {
+func (m Map) Height() int {
 	return m.height
 }
 

@@ -1,7 +1,7 @@
 package main
 
-import "github.com/lemunozm/ascii-arena/pkg/comm"
-import "github.com/lemunozm/ascii-arena/pkg/logger"
+import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
+import "github.com/lemunozm/ascii-arena/internal/pkg/logger"
 
 import "strconv"
 import "net"

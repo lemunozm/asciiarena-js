@@ -1,6 +1,6 @@
-package main
+package server
 
-import "github.com/lemunozm/ascii-arena/pkg/comm"
+import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
 
 type Player struct {
 	character  byte
