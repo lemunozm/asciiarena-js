@@ -8,15 +8,13 @@ import "strconv"
 
 type MatchServer struct {
 	port         int
-	pointsToWin  int
 	matchManager *MatchManager
 }
 
-func NewMatchServer(tcpPort int, maxPlayers int, pointsToWin int) *MatchServer {
+func NewMatchServer(tcpPort int, maxPlayers int, pointsToWin int, mapSeed string) *MatchServer {
 	s := &MatchServer{
 		port:         tcpPort,
-		pointsToWin:  pointsToWin,
-		matchManager: NewMatchManager(maxPlayers),
+		matchManager: NewMatchManager(maxPlayers, pointsToWin, mapSeed),
 	}
 
 	return s

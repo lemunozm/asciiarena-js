@@ -11,14 +11,16 @@ const (
 )
 
 type PlayerRegistry struct {
-	maxPlayers int
-	players    []*Player
+	maxPlayers  int
+	pointsToWin int
+	players     []*Player
 }
 
-func NewPlayerRegistry(maxPlayers int) *PlayerRegistry {
+func NewPlayerRegistry(maxPlayers int, pointsToWin int) *PlayerRegistry {
 	return &PlayerRegistry{
-		maxPlayers: maxPlayers,
-		players:    []*Player{},
+		maxPlayers:  maxPlayers,
+		pointsToWin: pointsToWin,
+		players:     []*Player{},
 	}
 }
 
@@ -58,4 +60,13 @@ func (r PlayerRegistry) Full() bool {
 
 func (r PlayerRegistry) Players() []*Player {
 	return r.players
+}
+
+func (r PlayerRegistry) HasWinner() bool {
+	for _, p := range r.players {
+		if p.Points() >= r.pointsToWin {
+			return true
+		}
+	}
+	return false
 }

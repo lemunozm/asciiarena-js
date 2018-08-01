@@ -5,12 +5,14 @@ import "fmt"
 
 type MatchManager struct {
 	playerRegistry *PlayerRegistry
+	mapSeed        string
 	startedMatch   bool
 }
 
-func NewMatchManager(maxPlayers int) *MatchManager {
+func NewMatchManager(maxPlayers int, pointsToWin int, mapSeed string) *MatchManager {
 	m := &MatchManager{
-		playerRegistry: NewPlayerRegistry(maxPlayers),
+		playerRegistry: NewPlayerRegistry(maxPlayers, pointsToWin),
+		mapSeed:        mapSeed,
 		startedMatch:   false,
 	}
 
@@ -74,7 +76,7 @@ func (s *MatchManager) notifyPlayers(connection *comm.Connection, loginStatus co
 func (s *MatchManager) Run() {
 	s.startedMatch = true
 	fmt.Println("Initializing match!")
-	for /* anyone has points to win */ {
+	for !s.playerRegistry.HasWinner() {
 		s.initializingMatch()
 		s.playingMatch()
 	}
@@ -83,8 +85,12 @@ func (s *MatchManager) Run() {
 
 func (s *MatchManager) initializingMatch() {
 	//TODO
+	//Add match entity.
+	NewMap(32, 32, s.mapSeed)
 }
 
 func (s *MatchManager) playingMatch() {
+	for true {
+	}
 	//TODO
 }
