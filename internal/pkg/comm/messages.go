@@ -1,5 +1,6 @@
 package comm
 
+import "github.com/lemunozm/ascii-arena/internal/pkg/def"
 import "fmt"
 import "strings"
 
@@ -108,10 +109,10 @@ func (m PlayersInfoMessage) String() string {
 type MatchInfoMessage struct {
 	Width   int
 	Height  int
-	MapSeed int
-	MapData []byte
+	MapSeed string
+	MapData []def.Wall
 }
 
 func (m MatchInfoMessage) String() string {
-	return fmt.Sprintf("%s | %d | %d | %d", "MATCH_INFO", m.Width, m.MapSeed, m.MapSeed)
+	return fmt.Sprintf("%s | %d | %d | %s", "MATCH_INFO", m.Width, m.Width, m.MapSeed)
 }

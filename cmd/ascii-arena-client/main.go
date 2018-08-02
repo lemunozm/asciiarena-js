@@ -1,5 +1,6 @@
 package main
 
+import "github.com/lemunozm/ascii-arena/internal/pkg/def"
 import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
 import "github.com/lemunozm/ascii-arena/internal/pkg/logger"
 
@@ -56,6 +57,27 @@ func main() {
 			}
 
 			logger.PrintfInfo("%s", "Start game")
+			matchInfoMessage := comm.MatchInfoMessage{}
+			connectionMatch.Receive(&matchInfoMessage)
+
+			for y := 0; y < matchInfoMessage.Height; y++ {
+				for x := 0; x < matchInfoMessage.Width; x++ {
+					fmt.Printf("%c ", drawWall(matchInfoMessage.MapData[matchInfoMessage.Width*y+x]))
+				}
+				fmt.Printf("\n")
+			}
 		}
 	}
+}
+
+func drawWall(wallCode def.Wall) byte {
+	switch wallCode {
+	case def.WALL_EMPTY:
+		return ' '
+	case def.WALL_BASIC:
+		return 'x'
+	case def.WALL_BORDER:
+		return 'X'
+	}
+	return '?'
 }

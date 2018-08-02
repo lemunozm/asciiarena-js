@@ -66,9 +66,7 @@ func (s *GameManager) notifyPlayers(connection *comm.Connection, loginStatus com
 	playersInfoMessage := comm.PlayersInfoMessage{s.playerRegistry.GetCharacters()}
 
 	if loginStatus == comm.LOGIN_SUCCESSFUL {
-		for _, p := range s.playerRegistry.GetPlayers() {
-			p.GetConnection().Send(playersInfoMessage)
-		}
+		s.sendToAllPlayers(playersInfoMessage)
 	} else {
 		connection.Send(playersInfoMessage)
 	}
@@ -90,10 +88,26 @@ func (s *GameManager) startMatch() {
 	//TODO
 	logger.PrintfInfo("Start match")
 
-	match.NewArena(5, 5, s.mapSeed, s.playerRegistry.GetCharacters())
-	// send to clients
+	const WIDTH int = 5
+	const HEIGHT int = 5
+	arena := match.NewArena(WIDTH, HEIGHT, s.mapSeed, s.playerRegistry.GetCharacters())
+
+	matchInfoMessage := comm.MatchInfoMessage{
+		Width:   arena.GetMap().GetWidth(),
+		Height:  arena.GetMap().GetHeight(),
+		MapSeed: arena.GetMap().GetSeed(),
+		MapData: arena.GetMap().GetData(),
+	}
+	s.sendToAllPlayers(matchInfoMessage)
 
 	for true {
 	}
+
 	logger.PrintfInfo("Finish match")
+}
+
+func (s *GameManager) sendToAllPlayers(message interface{}) {
+	for _, p := range s.playerRegistry.GetPlayers() {
+		p.GetConnection().Send(message)
+	}
 }

@@ -8,7 +8,7 @@ func main() {
 		TCPPortInfo:       3001,
 		MaxPlayers:        1,
 		PointsToWin:       1,
-		MapSeed:           "example",
+		MapSeed:           "match-seed",
 		InfoServerEnabled: true,
 	}
 
