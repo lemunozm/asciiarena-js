@@ -21,15 +21,15 @@ func NewMap(width int, height int, seed string) *Map {
 	return m
 }
 
-func (m Map) Width() int {
+func (m Map) GetWidth() int {
 	return m.width
 }
 
-func (m Map) Height() int {
+func (m Map) GetHeight() int {
 	return m.height
 }
 
-func (m Map) Seed() string {
+func (m Map) GetSeed() string {
 	return m.seed
 }
 

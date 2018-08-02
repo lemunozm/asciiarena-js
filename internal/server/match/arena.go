@@ -4,7 +4,7 @@ type Arena struct {
 	arenaMap *Map
 }
 
-func NewArena(width int, height int, seed string) *Arena {
+func NewArena(width int, height int, seed string, characters []byte) *Arena {
 	a := &Arena{
 		arenaMap: NewMap(width, height, seed),
 	}
@@ -12,6 +12,6 @@ func NewArena(width int, height int, seed string) *Arena {
 	return a
 }
 
-func (a Arena) Map() *Map {
+func (a Arena) GetMap() *Map {
 	return a.arenaMap
 }

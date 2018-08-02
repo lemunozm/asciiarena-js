@@ -29,7 +29,6 @@ func main() {
 	connectionInfo.Receive(&checkedVersionMessage)
 
 	if checkedVersionMessage.Validation {
-
 		serverInfoMessage := comm.ServerInfoMessage{}
 		connectionInfo.Receive(&serverInfoMessage)
 
@@ -56,7 +55,7 @@ func main() {
 				currentPlayers = len(playersInfoMessage.Characters)
 			}
 
-			fmt.Println("Initializing match!")
+			logger.PrintfInfo("%s", "Start game")
 		}
 	}
 }

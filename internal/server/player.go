@@ -16,12 +16,16 @@ func NewPlayer(character uint8, connection *comm.Connection) *Player {
 	}
 }
 
-func (p Player) Character() uint8 {
+func (p Player) GetCharacter() uint8 {
 	return p.character
 }
 
-func (p Player) Connection() *comm.Connection {
+func (p Player) GetConnection() *comm.Connection {
 	return p.connection
+}
+
+func (p Player) GetPoints() int {
+	return p.points
 }
 
 func (p *Player) AddPoints(points int) int {
@@ -31,8 +35,4 @@ func (p *Player) AddPoints(points int) int {
 
 func (p *Player) ResetPoints() {
 	p.points = 0
-}
-
-func (p Player) Points() int {
-	return p.points
 }

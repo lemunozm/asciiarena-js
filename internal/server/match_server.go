@@ -20,11 +20,11 @@ func NewMatchServer(tcpPort int, maxPlayers int, pointsToWin int, mapSeed string
 	return s
 }
 
-func (s MatchServer) Port() int {
+func (s MatchServer) GetPort() int {
 	return s.port
 }
 
-func (s MatchServer) MatchManager() *MatchManager {
+func (s MatchServer) GetMatchManager() *MatchManager {
 	return s.matchManager
 }
 
@@ -53,7 +53,7 @@ func (s *MatchServer) Run() {
 func (s *MatchServer) handlePlayerConnection(connection *comm.Connection) {
 	s.matchManager.RegisterPlayer(connection)
 
-	if s.MatchManager().IsReadyToStartMatch() {
-		go s.matchManager.Run()
+	if s.matchManager.IsReadyToStartGame() {
+		go s.matchManager.StartGame()
 	}
 }

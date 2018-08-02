@@ -30,7 +30,7 @@ func (r *PlayerRegistry) Add(character byte, connection *comm.Connection) Regist
 	}
 
 	for _, p := range r.players {
-		if p.Character() == character {
+		if p.GetCharacter() == character {
 			return REGISTRY_ALREADY_EXISTS
 		}
 	}
@@ -46,25 +46,33 @@ func (r *PlayerRegistry) Remove(player *Player) error {
 	return nil
 }
 
-func (r PlayerRegistry) MaxPlayers() int {
+func (r PlayerRegistry) GetMaxPlayers() int {
 	return r.maxPlayers
 }
 
-func (r PlayerRegistry) CurrentPlayers() int {
+func (r PlayerRegistry) GetCurrentPlayers() int {
 	return len(r.players)
 }
 
-func (r PlayerRegistry) Full() bool {
-	return r.MaxPlayers() == r.CurrentPlayers()
+func (r PlayerRegistry) GetCharacters() []byte {
+	characters := make([]byte, r.GetCurrentPlayers())
+	for i, p := range r.players {
+		characters[i] = p.GetCharacter()
+	}
+	return characters
 }
 
-func (r PlayerRegistry) Players() []*Player {
+func (r PlayerRegistry) IsFull() bool {
+	return r.GetMaxPlayers() == r.GetCurrentPlayers()
+}
+
+func (r PlayerRegistry) GetPlayers() []*Player {
 	return r.players
 }
 
 func (r PlayerRegistry) HasWinner() bool {
 	for _, p := range r.players {
-		if p.Points() >= r.pointsToWin {
+		if p.GetPoints() >= r.pointsToWin {
 			return true
 		}
 	}
