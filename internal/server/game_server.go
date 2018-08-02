@@ -6,29 +6,29 @@ import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
 import "net"
 import "strconv"
 
-type MatchServer struct {
-	port         int
-	matchManager *MatchManager
+type GameServer struct {
+	port        int
+	gameManager *GameManager
 }
 
-func NewMatchServer(tcpPort int, maxPlayers int, pointsToWin int, mapSeed string) *MatchServer {
-	s := &MatchServer{
-		port:         tcpPort,
-		matchManager: NewMatchManager(maxPlayers, pointsToWin, mapSeed),
+func NewGameServer(tcpPort int, maxPlayers int, pointsToWin int, mapSeed string) *GameServer {
+	s := &GameServer{
+		port:        tcpPort,
+		gameManager: NewGameManager(maxPlayers, pointsToWin, mapSeed),
 	}
 
 	return s
 }
 
-func (s MatchServer) GetPort() int {
+func (s GameServer) GetPort() int {
 	return s.port
 }
 
-func (s MatchServer) GetMatchManager() *MatchManager {
-	return s.matchManager
+func (s GameServer) GetGameManager() *GameManager {
+	return s.gameManager
 }
 
-func (s *MatchServer) Run() {
+func (s *GameServer) Run() {
 	address, err := net.ResolveTCPAddr("tcp", ":"+strconv.Itoa(s.port))
 	if err != nil {
 		logger.PrintfPanic("Error resolving tcp address => %s", err.Error())
@@ -50,10 +50,10 @@ func (s *MatchServer) Run() {
 	}
 }
 
-func (s *MatchServer) handlePlayerConnection(connection *comm.Connection) {
-	s.matchManager.RegisterPlayer(connection)
+func (s *GameServer) handlePlayerConnection(connection *comm.Connection) {
+	s.gameManager.RegisterPlayer(connection)
 
-	if s.matchManager.IsReadyToStartGame() {
-		go s.matchManager.StartGame()
+	if s.gameManager.IsReadyToStartGame() {
+		go s.gameManager.StartGame()
 	}
 }

@@ -1,7 +1,7 @@
 package server
 
 type Server struct {
-	TCPPortMatch      int
+	TCPPortGame       int
 	TCPPortInfo       int
 	MaxPlayers        int
 	PointsToWin       int
@@ -10,11 +10,11 @@ type Server struct {
 }
 
 func (s *Server) Run() {
-	matchServer := NewMatchServer(s.TCPPortMatch, s.MaxPlayers, s.PointsToWin, s.MapSeed)
-	go matchServer.Run()
+	gameServer := NewGameServer(s.TCPPortGame, s.MaxPlayers, s.PointsToWin, s.MapSeed)
+	go gameServer.Run()
 
 	if s.InfoServerEnabled {
-		infoServer := NewInfoServer(s.TCPPortInfo, matchServer)
+		infoServer := NewInfoServer(s.TCPPortInfo, gameServer)
 		infoServer.Run()
 	}
 }

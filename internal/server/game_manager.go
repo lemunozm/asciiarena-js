@@ -4,14 +4,14 @@ import "github.com/lemunozm/ascii-arena/internal/server/match"
 import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
 import "github.com/lemunozm/ascii-arena/internal/pkg/logger"
 
-type MatchManager struct {
+type GameManager struct {
 	playerRegistry *PlayerRegistry
 	mapSeed        string
 	startedGame    bool
 }
 
-func NewMatchManager(maxPlayers int, pointsToWin int, mapSeed string) *MatchManager {
-	m := &MatchManager{
+func NewGameManager(maxPlayers int, pointsToWin int, mapSeed string) *GameManager {
+	m := &GameManager{
 		playerRegistry: NewPlayerRegistry(maxPlayers, pointsToWin),
 		mapSeed:        mapSeed,
 		startedGame:    false,
@@ -20,19 +20,19 @@ func NewMatchManager(maxPlayers int, pointsToWin int, mapSeed string) *MatchMana
 	return m
 }
 
-func (s MatchManager) GetPlayerRegistry() *PlayerRegistry {
+func (s GameManager) GetPlayerRegistry() *PlayerRegistry {
 	return s.playerRegistry
 }
 
-func (s MatchManager) IsGameStarted() bool {
+func (s GameManager) IsGameStarted() bool {
 	return s.startedGame
 }
 
-func (s MatchManager) IsReadyToStartGame() bool {
+func (s GameManager) IsReadyToStartGame() bool {
 	return !s.IsGameStarted() && s.playerRegistry.IsFull()
 }
 
-func (s *MatchManager) RegisterPlayer(connection *comm.Connection) {
+func (s *GameManager) RegisterPlayer(connection *comm.Connection) {
 	var loginStatus comm.LoginStatus
 	if s.IsGameStarted() {
 		loginStatus = comm.LOGIN_ERR_GAME_STARTED
@@ -62,7 +62,7 @@ func (s *MatchManager) RegisterPlayer(connection *comm.Connection) {
 	s.notifyPlayers(connection, loginStatus)
 }
 
-func (s *MatchManager) notifyPlayers(connection *comm.Connection, loginStatus comm.LoginStatus) {
+func (s *GameManager) notifyPlayers(connection *comm.Connection, loginStatus comm.LoginStatus) {
 	playersInfoMessage := comm.PlayersInfoMessage{s.playerRegistry.GetCharacters()}
 
 	if loginStatus == comm.LOGIN_SUCCESSFUL {
@@ -74,7 +74,7 @@ func (s *MatchManager) notifyPlayers(connection *comm.Connection, loginStatus co
 	}
 }
 
-func (s *MatchManager) StartGame() {
+func (s *GameManager) StartGame() {
 	s.startedGame = true
 	logger.PrintfInfo("Start game")
 
@@ -86,7 +86,7 @@ func (s *MatchManager) StartGame() {
 	s.startedGame = false
 }
 
-func (s *MatchManager) startMatch() {
+func (s *GameManager) startMatch() {
 	//TODO
 	logger.PrintfInfo("Start match")
 

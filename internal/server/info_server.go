@@ -8,14 +8,14 @@ import "net"
 import "strconv"
 
 type InfoServer struct {
-	port        int
-	matchServer *MatchServer
+	port       int
+	gameServer *GameServer
 }
 
-func NewInfoServer(port int, matchServer *MatchServer) *InfoServer {
+func NewInfoServer(port int, gameServer *GameServer) *InfoServer {
 	s := &InfoServer{
-		port:        port,
-		matchServer: matchServer,
+		port:       port,
+		gameServer: gameServer,
 	}
 	return s
 }
@@ -69,9 +69,9 @@ func (s *InfoServer) handleVersionRequest(connection *comm.Connection) bool {
 
 func (s *InfoServer) sendServerInfo(connection *comm.Connection) {
 	serverInfoMessage := comm.ServerInfoMessage{
-		s.matchServer.GetPort(),
-		s.matchServer.GetMatchManager().GetPlayerRegistry().GetCurrentPlayers(),
-		s.matchServer.GetMatchManager().GetPlayerRegistry().GetMaxPlayers(),
+		s.gameServer.GetPort(),
+		s.gameServer.GetGameManager().GetPlayerRegistry().GetCurrentPlayers(),
+		s.gameServer.GetGameManager().GetPlayerRegistry().GetMaxPlayers(),
 	}
 
 	connection.Send(serverInfoMessage)
