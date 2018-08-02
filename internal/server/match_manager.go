@@ -90,7 +90,7 @@ func (s *MatchManager) startMatch() {
 	//TODO
 	logger.PrintfInfo("Start match")
 
-	match.NewArena(32, 32, s.mapSeed, s.playerRegistry.GetCharacters())
+	match.NewArena(5, 5, s.mapSeed, s.playerRegistry.GetCharacters())
 	// send to clients
 
 	for true {
