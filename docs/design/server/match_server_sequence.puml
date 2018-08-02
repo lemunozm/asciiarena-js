@@ -1,74 +1,71 @@
 @startuml
 
-title Match server
+title Game server
 
 actor Client
 participant Server
-participant MatchServer
-participant MatchManager
+participant GameServer
+participant GameManager
 participant PlayerRegistry
-participant Match
+participant Arena
 
-Server -> MatchServer : <<new>>
-Server -> MatchServer : run
-activate MatchServer
-MatchServer -> MatchManager : <<new>>
-MatchManager -> PlayerRegistry : <<new>>
+Server -> GameServer : <<new>>
+Server -> GameServer : run
+activate GameServer
+GameServer -> GameManager : <<new>>
+GameManager -> PlayerRegistry : <<new>>
 loop
-    Client ->> MatchServer : <<new connection>>
-    MatchServer -> MatchServer : handlePlayerConnection
-    activate MatchServer
-    MatchServer -> MatchManager : registerPlayer
-    activate MatchManager
-    Client ->> MatchManager : newPlayerMessage
-    MatchManager -> PlayerRegistry : addPlayer
+    Client ->> GameServer : <<new connection>>
+    GameServer -> GameServer : handlePlayerConnection
+    activate GameServer
+    GameServer -> GameManager : registerPlayer
+    activate GameManager
+    Client ->> GameManager : newPlayerMessage
+    GameManager -> PlayerRegistry : addPlayer
     activate PlayerRegistry
-    MatchManager <-- PlayerRegistry : status
+    GameManager <-- PlayerRegistry : status
     deactivate PlayerRegistry
-    Client <<-- MatchManager : playerConnectionStatusMessage
-    Client <<-- MatchManager : playersInfoMessage (to all)
-    MatchServer <-- MatchManager : status
-    deactivate MatchManager
-    MatchServer -> MatchManager : run
-    activate MatchManager
-    deactivate MatchServer
+    Client <<-- GameManager : playerConnectionStatusMessage
+    Client <<-- GameManager : playersInfoMessage (to all)
+    GameServer <-- GameManager : status
+    deactivate GameManager
+    GameServer -> GameManager : startGame
+    activate GameManager
+    deactivate GameServer
     loop until one player reaches the points to win
-        MatchManager -> Match : <<new>>
-        MatchManager -> MatchManager : init
-        activate MatchManager
-        MatchManager -> Match : generateMap
-        activate Match
-        MatchManager <-- Match : map
-        deactivate Match
-        Client <<-- MatchManager : matchInfoMessage (to all)
-        deactivate MatchManager
-        MatchManager -> MatchManager : play
-        activate MatchManager
+        GameManager -> Arena : <<new>>
+        GameManager -> GameManager : init
+        activate GameManager
+        GameManager -> Arena : generateMap
+        activate Arena
+        GameManager <-- Arena : map
+        deactivate Arena
+        Client <<-- GameManager : matchInfoMessage (to all)
         loop until only one player alive
-            MatchManager -> Match : computeFrame
-            activate Match
-            MatchManager <-- Match : frameData
-            deactivate Match
-            Client <<-- MatchManager : frameMessage (to all)
-            Client ->> MatchManager : playerActionMessage (from all)
-            MatchManager -> PlayerRegistry : checkAction
+            GameManager -> Arena : computeFrame
+            activate Arena
+            GameManager <-- Arena : frameData
+            deactivate Arena
+            Client <<-- GameManager : frameMessage (to all)
+            Client ->> GameManager : playerActionMessage (from all)
+            GameManager -> PlayerRegistry : checkAction
             activate PlayerRegistry
-            MatchManager <-- PlayerRegistry
+            GameManager <-- PlayerRegistry
             deactivate PlayerRegistry
-            MatchManager -> Match : userAction
-            activate Match
-            MatchManager <-- Match
-            deactivate Match
+            GameManager -> Arena : userAction
+            activate Arena
+            GameManager <-- Arena
+            deactivate Arena
         end
-        deactivate MatchManager
+        deactivate GameManager
     end
-        MatchManager -> PlayerRegistry : removePlayers
-        activate PlayerRegistry
-        MatchManager <-- PlayerRegistry
-        deactivate PlayerRegistry
-    deactivate MatchManager
+    GameManager -> PlayerRegistry : removePlayers
+    activate PlayerRegistry
+    GameManager <-- PlayerRegistry
+    deactivate PlayerRegistry
+    deactivate GameManager
 end
-Server <-- MatchServer
-deactivate MatchServer
+Server <-- GameServer
+deactivate GameServer
 
 @enduml

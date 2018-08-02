@@ -6,10 +6,10 @@ actor Client
 participant Server
 participant InfoServer
 participant VersionChecker
-participant MatchServer
+participant GameServer
 
 Server -> VersionChecker : <<new>>
-Server -> MatchServer : <<new>>
+Server -> GameServer : <<new>>
 Server -> InfoServer : <<new>>
 Server -> InfoServer : run
 activate InfoServer
@@ -22,10 +22,10 @@ loop
     InfoServer <- VersionChecker : checkCompatibility
     deactivate VersionChecker
     Client <<-- InfoServer : checkVersionMessage
-    InfoServer -> MatchServer : getMatchInfo
-    activate MatchServer
-    InfoServer <-- MatchServer
-    deactivate MatchServer
+    InfoServer -> GameServer : getGameInfo
+    activate GameServer
+    InfoServer <-- GameServer
+    deactivate GameServer
     Client <<-- InfoServer : serverInfoMessage
     deactivate InfoServer
 end
