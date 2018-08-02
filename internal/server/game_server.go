@@ -11,10 +11,10 @@ type GameServer struct {
 	gameManager *GameManager
 }
 
-func NewGameServer(tcpPort int, maxPlayers int, pointsToWin int, mapSeed string) *GameServer {
+func NewGameServer(tcpPort int, maxPlayers int, pointsToWin int, mapConfig MapConfig) *GameServer {
 	s := &GameServer{
 		port:        tcpPort,
-		gameManager: NewGameManager(maxPlayers, pointsToWin, mapSeed),
+		gameManager: NewGameManager(maxPlayers, pointsToWin, mapConfig),
 	}
 
 	return s

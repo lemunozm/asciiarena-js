@@ -6,14 +6,14 @@ import "github.com/lemunozm/ascii-arena/internal/pkg/logger"
 
 type GameManager struct {
 	playerRegistry *PlayerRegistry
-	mapSeed        string
+	mapConfig      MapConfig
 	startedGame    bool
 }
 
-func NewGameManager(maxPlayers int, pointsToWin int, mapSeed string) *GameManager {
+func NewGameManager(maxPlayers int, pointsToWin int, mapConfig MapConfig) *GameManager {
 	m := &GameManager{
 		playerRegistry: NewPlayerRegistry(maxPlayers, pointsToWin),
-		mapSeed:        mapSeed,
+		mapConfig:      mapConfig,
 		startedGame:    false,
 	}
 
@@ -88,9 +88,7 @@ func (s *GameManager) startMatch() {
 	//TODO
 	logger.PrintfInfo("Start match")
 
-	const WIDTH int = 5
-	const HEIGHT int = 5
-	arena := match.NewArena(WIDTH, HEIGHT, s.mapSeed, s.playerRegistry.GetCharacters())
+	arena := match.NewArena(s.mapConfig.Width, s.mapConfig.Height, s.mapConfig.Seed, s.playerRegistry.GetCharacters())
 
 	matchInfoMessage := comm.MatchInfoMessage{
 		Width:   arena.GetMap().GetWidth(),

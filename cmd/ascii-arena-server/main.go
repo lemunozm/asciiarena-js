@@ -8,8 +8,12 @@ func main() {
 		TCPPortInfo:       3001,
 		MaxPlayers:        1,
 		PointsToWin:       1,
-		MapSeed:           "match-seed",
 		InfoServerEnabled: true,
+		Map: server.MapConfig{
+			Width:  5,
+			Height: 5,
+			Seed:   "arena-seed",
+		},
 	}
 
 	s.Run()
