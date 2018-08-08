@@ -1,5 +1,6 @@
 package comm
 
+import "github.com/lemunozm/ascii-arena/internal/pkg/spatial"
 import "github.com/lemunozm/ascii-arena/internal/pkg/def"
 import "fmt"
 import "strings"
@@ -92,27 +93,37 @@ func (m PlayerLoginStatusMessage) String() string {
 // ===============================================================================
 
 type PlayersInfoMessage struct {
-	Characters []byte
+	Players []byte
 }
 
 func (m PlayersInfoMessage) String() string {
-	characters := string(m.Characters)
-	characters = strings.Replace(characters, "", " ", -1)
-	characters = characters[1 : len(characters)-1]
-	return fmt.Sprintf("%s | {%v}", "PLAYERS_INFO", characters)
+	players := string(m.Players)
+	players = strings.Replace(players, "", " ", -1)
+	players = players[1 : len(players)-1]
+	return fmt.Sprintf("%s | {%v}", "PLAYERS_INFO", players)
 }
 
 // ===============================================================================
 //                             MATCH INFO MESSAGE
 // ===============================================================================
+type CharacterInfo struct {
+	Representation byte
+	Position       spatial.Vector2
+}
 
 type MatchInfoMessage struct {
-	Width   int
-	Height  int
-	MapSeed string
-	MapData []def.Wall
+	Width      int
+	Height     int
+	MapSeed    string
+	MapData    []def.Wall
+	Characters []CharacterInfo
 }
 
 func (m MatchInfoMessage) String() string {
-	return fmt.Sprintf("%s | %d | %d | %s", "MATCH_INFO", m.Width, m.Width, m.MapSeed)
+	characters := ""
+	for _, c := range m.Characters {
+		characters = fmt.Sprintf("%s%c: %v, ", characters, c.Representation, c.Position)
+	}
+	characters = characters[0 : len(characters)-2]
+	return fmt.Sprintf("%s | %d | %d | %s | {%v}", "MATCH_INFO", m.Width, m.Width, m.MapSeed, characters)
 }

@@ -85,20 +85,26 @@ func (s *GameManager) StartGame() {
 }
 
 func (s *GameManager) startMatch() {
-	//TODO
 	logger.PrintfInfo("Start match")
 
 	arena := match.NewArena(s.mapConfig.Width, s.mapConfig.Height, s.mapConfig.Seed, s.playerRegistry.GetCharacters())
 
+	charactersInfo := make([]comm.CharacterInfo, 0, len(arena.GetCharacters()))
+	for _, c := range arena.GetCharacters() {
+		charactersInfo = append(charactersInfo, comm.CharacterInfo{c.GetRepresentation(), c.GetPosition()})
+	}
+
 	matchInfoMessage := comm.MatchInfoMessage{
-		Width:   arena.GetMap().GetWidth(),
-		Height:  arena.GetMap().GetHeight(),
-		MapSeed: arena.GetMap().GetSeed(),
-		MapData: arena.GetMap().GetData(),
+		Width:      arena.GetMap().GetWidth(),
+		Height:     arena.GetMap().GetHeight(),
+		MapSeed:    arena.GetMap().GetSeed(),
+		MapData:    arena.GetMap().GetData(),
+		Characters: charactersInfo,
 	}
 	s.sendToAllPlayers(matchInfoMessage)
 
 	for true {
+		//TODO
 	}
 
 	logger.PrintfInfo("Finish match")

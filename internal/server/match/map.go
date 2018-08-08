@@ -1,8 +1,8 @@
 package match
 
+import "github.com/lemunozm/ascii-arena/internal/pkg/spatial"
 import "github.com/lemunozm/ascii-arena/internal/pkg/def"
 import "hash/crc64"
-import "math/rand"
 
 type Map struct {
 	width  int
@@ -21,6 +21,7 @@ func NewMap(width int, height int, seed string) *Map {
 
 	m.clean()
 	m.buildBorder()
+	m.generate()
 	return m
 }
 
@@ -40,16 +41,12 @@ func (m Map) GetData() []def.Wall {
 	return m.data
 }
 
-func (m Map) getBox(x int, y int) def.Wall {
-	return m.data[m.width*y+x]
+func (m Map) GetBox(position spatial.Vector2) def.Wall { //To Vector
+	return m.data[m.width*position.Y+position.X]
 }
 
-func (m *Map) setBox(x int, y int, box def.Wall) {
-	m.data[m.width*y+x] = box
-}
-
-func (m *Map) ComputePlayerOrigins(players []def.Wall, rand *rand.Rand) {
-	//TODO
+func (m *Map) SetBox(position spatial.Vector2, box def.Wall) {
+	m.data[m.width*position.Y+position.X] = box
 }
 
 func (m *Map) clean() {
@@ -60,19 +57,20 @@ func (m *Map) clean() {
 
 func (m *Map) buildBorder() {
 	for x := 0; x < m.width; x++ {
-		m.setBox(x, 0, def.WALL_BORDER)
+		m.SetBox(spatial.Vector2{x, 0}, def.WALL_BORDER) //comprobar la inicializacion rapida del vector
 	}
 	for x := 0; x < m.width; x++ {
-		m.setBox(x, m.height-1, def.WALL_BORDER)
+		m.SetBox(spatial.Vector2{x, m.height - 1}, def.WALL_BORDER)
 	}
 	for y := 1; y < m.height-1; y++ {
-		m.setBox(0, y, def.WALL_BORDER)
+		m.SetBox(spatial.Vector2{0, y}, def.WALL_BORDER)
 	}
 	for y := 1; y < m.height-1; y++ {
-		m.setBox(m.width-1, y, def.WALL_BORDER)
+		m.SetBox(spatial.Vector2{m.width - 1, y}, def.WALL_BORDER)
 	}
 }
 
 func (m *Map) generate() {
 	crc64.Checksum([]byte(m.seed), crc64.MakeTable(crc64.ECMA))
+	//TODO
 }

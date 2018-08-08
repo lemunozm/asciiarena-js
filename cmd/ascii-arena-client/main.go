@@ -53,7 +53,7 @@ func main() {
 					return
 				}
 
-				currentPlayers = len(playersInfoMessage.Characters)
+				currentPlayers = len(playersInfoMessage.Players)
 			}
 
 			logger.PrintfInfo("%s", "Start game")
@@ -62,7 +62,14 @@ func main() {
 
 			for y := 0; y < matchInfoMessage.Height; y++ {
 				for x := 0; x < matchInfoMessage.Width; x++ {
-					fmt.Printf("%c ", drawWall(matchInfoMessage.MapData[matchInfoMessage.Width*y+x]))
+					drawing := drawWall(matchInfoMessage.MapData[matchInfoMessage.Width*y+x])
+					for _, c := range matchInfoMessage.Characters {
+						if x == c.Position.X && y == c.Position.Y {
+							drawing = c.Representation
+						}
+					}
+
+					fmt.Printf("%c ", drawing)
 				}
 				fmt.Printf("\n")
 			}
