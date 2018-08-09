@@ -22,10 +22,10 @@ func NewArena(width int, height int, seed string, characters []byte) *Arena {
 	}
 
 	characterPortion := (width * height) / len(characters)
-	minDistanceBetweenCharacters := int(math.Sqrt(float64(characterPortion)))/2 - 1
+	minDistanceBetweenCharacters := int(math.Sqrt(float64(characterPortion)))
 
 	for _, c := range characters {
-		position, err := a.FindRandomCharacterPosition(a.random, minDistanceBetweenCharacters)
+		position, err := a.FindRandomFreeCharacterPosition(a.random, minDistanceBetweenCharacters)
 		if err != nil {
 			logger.PrintfError("At create initial character position %c: => %s", c, err.Error())
 		}
@@ -44,7 +44,7 @@ func (a Arena) GetCharacters() map[int]*Character {
 	return a.characters
 }
 
-func (a Arena) FindRandomCharacterPosition(rand *rand.Rand, separation int) (spatial.Vector2, error) {
+func (a Arena) FindRandomFreeCharacterPosition(rand *rand.Rand, separation int) (spatial.Vector2, error) {
 	mapSize := len(a.arenaMap.GetData())
 	mapData := make([]def.Wall, mapSize)
 	copy(mapData, a.arenaMap.GetData())

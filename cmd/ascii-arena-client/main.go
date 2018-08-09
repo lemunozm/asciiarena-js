@@ -1,90 +1,58 @@
 package main
 
-import "github.com/lemunozm/ascii-arena/internal/pkg/def"
-import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
-import "github.com/lemunozm/ascii-arena/internal/pkg/logger"
+import "github.com/lemunozm/ascii-arena/internal/client"
+import "github.com/lemunozm/ascii-arena/internal/pkg/version"
 
-import "strconv"
-import "net"
+import "gopkg.in/urfave/cli.v1"
 import "os"
+
 import "fmt"
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Please, choose a valid character.")
-		return
+	commandApp := cli.NewApp()
+
+	hostFlag := cli.StringFlag{
+		Name:  "host, ip",
+		Usage: "Server address ip",
 	}
 
-	character := os.Args[1][0]
-
-	tcpConnectionInfo, err := net.Dial("tcp", "127.0.0.1:3001")
-	if err != nil {
-		logger.PrintfPanic("Error at create connection => %s", err.Error())
+	TCPPortFlag := cli.IntFlag{
+		Name:  "port, p",
+		Value: 3001,
+		Usage: "Server port",
 	}
-	connectionInfo := comm.NewConnection(tcpConnectionInfo)
 
-	versionMessage := comm.VersionMessage{"0.1.0"}
-	connectionInfo.Send(versionMessage)
+	characterFlag := cli.StringFlag{
+		Name:  "character, c",
+		Usage: "Select the character to play",
+	}
 
-	checkedVersionMessage := comm.CheckedVersionMessage{}
-	connectionInfo.Receive(&checkedVersionMessage)
-
-	if checkedVersionMessage.Validation {
-		serverInfoMessage := comm.ServerInfoMessage{}
-		connectionInfo.Receive(&serverInfoMessage)
-
-		tcpConnectionMatch, err := net.Dial("tcp", "127.0.0.1:"+strconv.Itoa(serverInfoMessage.Port))
-		if err != nil {
-			logger.PrintfPanic("Error at create connection => %s", err.Error())
+	commandApp.CustomAppHelpTemplate = HelpCliTemplate()
+	commandApp.Name = "ASCIIArena-client"
+	commandApp.Version = version.Current
+	commandApp.Usage = "Run the ASCIIArena client side"
+	commandApp.Flags = []cli.Flag{hostFlag, TCPPortFlag, characterFlag}
+	commandApp.Action = func(context *cli.Context) error {
+		if context.String("host") == "" {
+			return cli.NewExitError("You must to specify the server host", 1)
 		}
-		connectionMatch := comm.NewConnection(tcpConnectionMatch)
-
-		newPlayerMessage := comm.NewPlayerMessage{character}
-		connectionMatch.Send(&newPlayerMessage)
-
-		playerLoginStatusMessage := comm.PlayerLoginStatusMessage{}
-		connectionMatch.Receive(&playerLoginStatusMessage)
-
-		if playerLoginStatusMessage.LoginStatus == comm.LOGIN_SUCCESSFUL {
-			currentPlayers := serverInfoMessage.CurrentPlayers
-			for currentPlayers < serverInfoMessage.MaxPlayers {
-				playersInfoMessage := comm.PlayersInfoMessage{}
-				if !connectionMatch.Receive(&playersInfoMessage) {
-					return
-				}
-
-				currentPlayers = len(playersInfoMessage.Players)
-			}
-
-			logger.PrintfInfo("%s", "Start game")
-			matchInfoMessage := comm.MatchInfoMessage{}
-			connectionMatch.Receive(&matchInfoMessage)
-
-			for y := 0; y < matchInfoMessage.Height; y++ {
-				for x := 0; x < matchInfoMessage.Width; x++ {
-					drawing := drawWall(matchInfoMessage.MapData[matchInfoMessage.Width*y+x])
-					for _, c := range matchInfoMessage.Characters {
-						if x == c.Position.X && y == c.Position.Y {
-							drawing = c.Representation
-						}
-					}
-
-					fmt.Printf("%c ", drawing)
-				}
-				fmt.Printf("\n")
-			}
+		if context.String("character") == "" {
+			return cli.NewExitError("You must to specify a character", 1)
 		}
+
+		fmt.Printf("%c\n", context.String("character")[0])
+		c := client.NewClient(context.String("host"), context.Int("port"), context.String("character")[0])
+		c.Run()
+		return nil
 	}
+	commandApp.Run(os.Args)
 }
 
-func drawWall(wallCode def.Wall) byte {
-	switch wallCode {
-	case def.WALL_EMPTY:
-		return ' '
-	case def.WALL_BASIC:
-		return 'x'
-	case def.WALL_BORDER:
-		return 'X'
-	}
-	return '?'
+func HelpCliTemplate() string {
+	var name string = "NAME:\n    {{.Name}} - {{.Usage}}\n\n"
+	var version string = "VERSION\n    {{.Version}}\n\n"
+	var usage string = "USAGE:\n    {{.HelpName}} {{if .VisibleFlags}}[options]{{end}}\n    {{if len .Commands}}\n"
+	var options string = "OPTIONS:\n    {{range .VisibleFlags}}{{.}}\n    {{end}}{{end}}{{if .Copyright }}\n"
+	var endTemplate string = "{{end}}"
+	return name + version + usage + options + endTemplate
 }

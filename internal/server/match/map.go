@@ -41,7 +41,7 @@ func (m Map) GetData() []def.Wall {
 	return m.data
 }
 
-func (m Map) GetBox(position spatial.Vector2) def.Wall { //To Vector
+func (m Map) GetBox(position spatial.Vector2) def.Wall {
 	return m.data[m.width*position.Y+position.X]
 }
 
@@ -57,7 +57,7 @@ func (m *Map) clean() {
 
 func (m *Map) buildBorder() {
 	for x := 0; x < m.width; x++ {
-		m.SetBox(spatial.Vector2{x, 0}, def.WALL_BORDER) //comprobar la inicializacion rapida del vector
+		m.SetBox(spatial.Vector2{x, 0}, def.WALL_BORDER)
 	}
 	for x := 0; x < m.width; x++ {
 		m.SetBox(spatial.Vector2{x, m.height - 1}, def.WALL_BORDER)
@@ -71,6 +71,7 @@ func (m *Map) buildBorder() {
 }
 
 func (m *Map) generate() {
+	//generate seed if it is ""
 	crc64.Checksum([]byte(m.seed), crc64.MakeTable(crc64.ECMA))
 	//TODO
 }

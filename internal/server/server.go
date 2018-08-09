@@ -7,20 +7,17 @@ type MapConfig struct {
 }
 
 type Server struct {
-	TCPPortGame       int
-	TCPPortInfo       int
-	MaxPlayers        int
-	PointsToWin       int
-	InfoServerEnabled bool
-	Map               MapConfig
+	GameTCPPort int
+	InfoTCPPort int
+	Players     int
+	PointsToWin int
+	Map         MapConfig
 }
 
 func (s *Server) Run() {
-	gameServer := NewGameServer(s.TCPPortGame, s.MaxPlayers, s.PointsToWin, s.Map)
+	gameServer := NewGameServer(s.GameTCPPort, s.Players, s.PointsToWin, s.Map)
 	go gameServer.Run()
 
-	if s.InfoServerEnabled {
-		infoServer := NewInfoServer(s.TCPPortInfo, gameServer)
-		infoServer.Run()
-	}
+	infoServer := NewInfoServer(s.InfoTCPPort, gameServer)
+	infoServer.Run()
 }
