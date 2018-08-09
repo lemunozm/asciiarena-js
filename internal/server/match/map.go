@@ -71,7 +71,6 @@ func (m *Map) buildBorder() {
 }
 
 func (m *Map) generate() {
-	//generate seed if it is ""
 	crc64.Checksum([]byte(m.seed), crc64.MakeTable(crc64.ECMA))
 	//TODO
 }

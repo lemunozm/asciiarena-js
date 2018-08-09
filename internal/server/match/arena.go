@@ -7,6 +7,7 @@ import "math/rand"
 import "time"
 import "errors"
 import "math"
+import "bytes"
 
 type Arena struct {
 	arenaMap   *Map
@@ -15,6 +16,10 @@ type Arena struct {
 }
 
 func NewArena(width int, height int, seed string, characters []byte) *Arena {
+	if seed == "" {
+		seed = generateRandomSeed()
+	}
+
 	a := &Arena{
 		arenaMap:   NewMap(width, height, seed),
 		random:     rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -22,7 +27,7 @@ func NewArena(width int, height int, seed string, characters []byte) *Arena {
 	}
 
 	characterPortion := (width * height) / len(characters)
-	minDistanceBetweenCharacters := int(math.Sqrt(float64(characterPortion)))
+	minDistanceBetweenCharacters := int(math.Sqrt(float64(characterPortion))) / 2
 
 	for _, c := range characters {
 		position, err := a.FindRandomFreeCharacterPosition(a.random, minDistanceBetweenCharacters)
@@ -72,4 +77,14 @@ func (a Arena) FindRandomFreeCharacterPosition(rand *rand.Rand, separation int) 
 	} else {
 		return spatial.Vector2{-1, -1}, errors.New("Can not find a free position")
 	}
+}
+
+func generateRandomSeed() string {
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	buffer := bytes.Buffer{}
+	for i := 0; i < 20; i++ {
+		buffer.WriteByte(letters[random.Intn(len(letters))])
+	}
+	return buffer.String()
 }

@@ -16,7 +16,6 @@ func NewGameManager(maxPlayers int, pointsToWin int, mapConfig MapConfig) *GameM
 		mapConfig:      mapConfig,
 		startedGame:    false,
 	}
-
 	return m
 }
 
