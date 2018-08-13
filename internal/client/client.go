@@ -1,12 +1,13 @@
 package client
 
-import "github.com/lemunozm/ascii-arena/internal/pkg/def"
 import "github.com/lemunozm/ascii-arena/internal/pkg/comm"
 import "github.com/lemunozm/ascii-arena/internal/pkg/logger"
 
 import "strconv"
 import "net"
 import "fmt"
+import "os"
+import "io"
 
 type Client struct {
 	Host      string
@@ -20,78 +21,50 @@ func NewClient(host string, port int, character byte) *Client {
 		Port:      port,
 		Character: character,
 	}
+
+	file, err := os.Create("log.txt")
+	if err == nil {
+		logger.SetInfoOutputs([]io.Writer{file})
+		logger.SetErrorOutputs([]io.Writer{file})
+		logger.SetWarningOutputs([]io.Writer{file})
+	}
 	return c
 }
 
 func (c *Client) Run() {
-	tcpConnectionInfo, err := net.Dial("tcp", c.Host+":"+strconv.Itoa(c.Port))
-	if err != nil {
-		logger.PrintfPanic("Error at create connection => %s", err.Error())
-	}
-	connectionInfo := comm.NewConnection(tcpConnectionInfo)
+	connectionInfo := c.connectToInfoServer()
+	if connectionInfo != nil {
+		gamePort := InfoStage(connectionInfo)
+		connectionInfo.Close()
 
-	versionMessage := comm.VersionMessage{"0.1.0"}
-	connectionInfo.Send(versionMessage)
-
-	checkedVersionMessage := comm.CheckedVersionMessage{}
-	connectionInfo.Receive(&checkedVersionMessage)
-
-	if checkedVersionMessage.Validation {
-		serverInfoMessage := comm.ServerInfoMessage{}
-		connectionInfo.Receive(&serverInfoMessage)
-
-		tcpConnectionMatch, err := net.Dial("tcp", c.Host+":"+strconv.Itoa(serverInfoMessage.Port))
-		if err != nil {
-			logger.PrintfPanic("Error at create connection => %s", err.Error())
-		}
-		connectionMatch := comm.NewConnection(tcpConnectionMatch)
-
-		newPlayerMessage := comm.NewPlayerMessage{c.Character}
-		connectionMatch.Send(&newPlayerMessage)
-
-		playerLoginStatusMessage := comm.PlayerLoginStatusMessage{}
-		connectionMatch.Receive(&playerLoginStatusMessage)
-
-		if playerLoginStatusMessage.LoginStatus == comm.LOGIN_SUCCESSFUL {
-			currentPlayers := serverInfoMessage.CurrentPlayers
-			for currentPlayers < serverInfoMessage.MaxPlayers {
-				playersInfoMessage := comm.PlayersInfoMessage{}
-				if !connectionMatch.Receive(&playersInfoMessage) {
-					return
+		if gamePort > 0 {
+			connectionGame := c.connectToGameServer(gamePort)
+			if connectionGame != nil {
+				if LogInStage(connectionGame, c.Character) {
+					GameStage(connectionGame)
 				}
-
-				currentPlayers = len(playersInfoMessage.Players)
-			}
-
-			logger.PrintfInfo("%s", "Start game")
-			matchInfoMessage := comm.MatchInfoMessage{}
-			connectionMatch.Receive(&matchInfoMessage)
-
-			for y := 0; y < matchInfoMessage.Height; y++ {
-				for x := 0; x < matchInfoMessage.Width; x++ {
-					drawing := drawWall(matchInfoMessage.MapData[matchInfoMessage.Width*y+x])
-					for _, c := range matchInfoMessage.Characters {
-						if x == c.Position.X && y == c.Position.Y {
-							drawing = c.Representation
-						}
-					}
-
-					fmt.Printf("%c ", drawing)
-				}
-				fmt.Printf("\n")
+				connectionGame.Close()
 			}
 		}
 	}
 }
 
-func drawWall(wallCode def.Wall) byte {
-	switch wallCode {
-	case def.WALL_EMPTY:
-		return ' '
-	case def.WALL_BASIC:
-		return 'x'
-	case def.WALL_BORDER:
-		return 'X'
+func (c *Client) connectToInfoServer() *comm.Connection {
+	tcpConnectionInfo, err := net.Dial("tcp", c.Host+":"+strconv.Itoa(c.Port))
+	if err != nil {
+		logger.PrintfError("Create connection to info server => %s", err.Error())
+		fmt.Printf("Error to connect to info server at %s:%d\n", c.Host, c.Port)
+		return nil
 	}
-	return '?'
+	return comm.NewConnection(tcpConnectionInfo)
+}
+
+func (c *Client) connectToGameServer(gamePort int) *comm.Connection {
+	tcpConnectionGame, err := net.Dial("tcp", c.Host+":"+strconv.Itoa(gamePort))
+	if err != nil {
+		logger.PrintfError("Create connection to game server => %s", err.Error())
+		fmt.Printf("Error to connect to game server at %s:%d\n", c.Host, gamePort)
+		return nil
+	}
+	return comm.NewConnection(tcpConnectionGame)
 }

@@ -6,8 +6,6 @@ import "github.com/lemunozm/ascii-arena/internal/pkg/version"
 import "gopkg.in/urfave/cli.v1"
 import "os"
 
-import "fmt"
-
 func main() {
 	commandApp := cli.NewApp()
 
@@ -40,7 +38,6 @@ func main() {
 			return cli.NewExitError("You must to specify a character", 1)
 		}
 
-		fmt.Printf("%c\n", context.String("character")[0])
 		c := client.NewClient(context.String("host"), context.Int("port"), context.String("character")[0])
 		c.Run()
 		return nil

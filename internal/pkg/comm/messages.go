@@ -60,7 +60,6 @@ type LoginStatus int
 
 const (
 	LOGIN_SUCCESSFUL = LoginStatus(iota)
-	LOGIN_ERR_FULL_PLAYERS
 	LOGIN_ERR_GAME_STARTED
 	LOGIN_ERR_CHARACTER_EXISTS
 )
@@ -69,8 +68,6 @@ func (l LoginStatus) String() string {
 	switch l {
 	case LOGIN_SUCCESSFUL:
 		return "SUCCESSFUL"
-	case LOGIN_ERR_FULL_PLAYERS:
-		return "ERROR_FULL_PLAYERS"
 	case LOGIN_ERR_GAME_STARTED:
 		return "ERROR_GAME_STARTED"
 	case LOGIN_ERR_CHARACTER_EXISTS:
@@ -82,10 +79,11 @@ func (l LoginStatus) String() string {
 
 type PlayerLoginStatusMessage struct {
 	LoginStatus LoginStatus
+	MaxPlayers  int
 }
 
 func (m PlayerLoginStatusMessage) String() string {
-	return fmt.Sprintf("%s | %v", "PLAYER_LOGIN_STATUS", m.LoginStatus)
+	return fmt.Sprintf("%s | %v | %d | %d", "PLAYER_LOGIN_STATUS", m.LoginStatus, m.MaxPlayers)
 }
 
 // ===============================================================================

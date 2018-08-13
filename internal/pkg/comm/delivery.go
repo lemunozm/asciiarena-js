@@ -45,3 +45,7 @@ func (c *Connection) Receive(message interface{}) bool {
 
 	return err == nil
 }
+
+func (c *Connection) Close() {
+	c.connection.Close()
+}

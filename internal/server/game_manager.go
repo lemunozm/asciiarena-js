@@ -35,27 +35,30 @@ func (s *GameManager) RegisterPlayer(connection *comm.Connection) {
 	var loginStatus comm.LoginStatus
 	if s.IsGameStarted() {
 		loginStatus = comm.LOGIN_ERR_GAME_STARTED
-		logger.PrintfInfo("Login error: game started")
+		logger.PrintfWarning("Login attempt when game started")
 	} else {
 		newPlayerMessage := comm.NewPlayerMessage{}
-		connection.Receive(&newPlayerMessage)
-
-		status := s.playerRegistry.Add(newPlayerMessage.Character, connection)
-
-		switch status {
-		case REGISTRY_OK:
-			loginStatus = comm.LOGIN_SUCCESSFUL
-			logger.PrintfInfo("Login succesful (player %c)", newPlayerMessage.Character)
-		case REGISTRY_ALREADY_EXISTS:
-			loginStatus = comm.LOGIN_ERR_CHARACTER_EXISTS
-			logger.PrintfInfo("Login error (player %c): character exists", newPlayerMessage.Character)
-		case REGISTRY_FULL: //teorically, it must not happen
-			loginStatus = comm.LOGIN_ERR_FULL_PLAYERS
-			logger.PrintfInfo("Login error (player %c): full players", newPlayerMessage.Character)
+		if connection.Receive(&newPlayerMessage) {
+			status := s.playerRegistry.Add(newPlayerMessage.Character, connection)
+			switch status {
+			case REGISTRY_OK:
+				loginStatus = comm.LOGIN_SUCCESSFUL
+				logger.PrintfInfo("Login succesful (player %c)", newPlayerMessage.Character)
+			case REGISTRY_ALREADY_EXISTS:
+				loginStatus = comm.LOGIN_ERR_CHARACTER_EXISTS
+				logger.PrintfError("Login with player %c: character exists", newPlayerMessage.Character)
+			case REGISTRY_FULL:
+				loginStatus = comm.LOGIN_ERR_GAME_STARTED
+				logger.PrintfWarning("Login with player %c: full players", newPlayerMessage.Character)
+			}
 		}
 	}
 
-	playerLoginStatusMessage := comm.PlayerLoginStatusMessage{loginStatus}
+	playerLoginStatusMessage := comm.PlayerLoginStatusMessage{
+		LoginStatus: loginStatus,
+		MaxPlayers:  s.playerRegistry.GetMaxPlayers(),
+	}
+
 	connection.Send(playerLoginStatusMessage)
 
 	s.notifyPlayers(connection, loginStatus)
