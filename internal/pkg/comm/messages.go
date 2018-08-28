@@ -115,6 +115,8 @@ type MatchInfoMessage struct {
 	MapSeed    string
 	MapData    []def.Wall
 	Characters []CharacterInfo
+	Countdown  float32
+	GameEnd    bool
 }
 
 func (m MatchInfoMessage) String() string {

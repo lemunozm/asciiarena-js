@@ -82,6 +82,8 @@ func (s *GameManager) StartGame() {
 		s.startMatch()
 	}
 
+	//matchInfoMessage with GameEnd to true
+
 	logger.PrintfInfo("Finish game")
 	s.startedGame = false
 }
@@ -102,6 +104,8 @@ func (s *GameManager) startMatch() {
 		MapSeed:    arena.GetMap().GetSeed(),
 		MapData:    arena.GetMap().GetData(),
 		Characters: charactersInfo,
+		Countdown:  3,
+		GameEnd:    false,
 	}
 	s.sendToAllPlayers(matchInfoMessage)
 
