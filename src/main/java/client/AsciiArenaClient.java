@@ -10,7 +10,7 @@ public class AsciiArenaClient
 {
     public static void main(String[] args) 
     {
-        System.out.println("Hello AsciiArena");
+        System.out.println("AsciiArena Client");
         try
         {
             Socket socket = new Socket("127.0.0.1", 3000);
@@ -19,6 +19,9 @@ public class AsciiArenaClient
             Message.Version versionMessage = new Message.Version();
             versionMessage.version = "1.0.0";
             connection.send(versionMessage);
+
+            Message.CheckedVersion checkedVersionMessage = (Message.CheckedVersion) connection.receive();
+            System.out.println(checkedVersionMessage.validation);
         } 
         catch (IOException e)
         {

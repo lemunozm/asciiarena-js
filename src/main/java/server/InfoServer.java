@@ -21,13 +21,14 @@ public class InfoServer
     {
         try
         {
-            @SuppressWarnings("resource")
-            ServerSocket serverSocket = new ServerSocket(this.port);
-            while (true) 
+            try(ServerSocket serverSocket = new ServerSocket(this.port))
             {
-                Connection connection = new Connection(serverSocket.accept());
-                handleVersionRequest(connection);
-            } 
+                while (true) 
+                {
+                    Connection connection = new Connection(serverSocket.accept());
+                    handleVersionRequest(connection);
+                } 
+            }
         } 
         catch (IOException e)
         {
@@ -37,8 +38,14 @@ public class InfoServer
 
     private boolean handleVersionRequest(Connection connection) 
     {
-        Message.Version versionMessage = (Message.Version) connection.received();
-        System.out.println(versionMessage.version);
-        return false;
+        Message.Version versionMessage = (Message.Version) connection.receive();
+
+        Message.CheckedVersion checkedVersionMessage = new Message.CheckedVersion();
+        checkedVersionMessage.version = versionMessage.version;
+        checkedVersionMessage.validation = true;
+
+        connection.send(checkedVersionMessage);
+
+        return checkedVersionMessage.validation;
     }
 }

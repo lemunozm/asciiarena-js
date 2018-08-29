@@ -20,7 +20,7 @@ public class Connection
         {
             ObjectOutputStream objectOutput = new ObjectOutputStream(socket.getOutputStream());
             objectOutput.writeObject(object); 
-            object.toString();
+            System.out.println(object.toString());
         } 
         catch (IOException e)
         {
@@ -29,13 +29,13 @@ public class Connection
         return false;
     }
 
-    public Object received()
+    public Object receive()
     {
         try
         {
             ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
             Object object = objectInput.readObject();
-            object.toString();
+            System.out.println(object.toString());
 
             return object;
         }
