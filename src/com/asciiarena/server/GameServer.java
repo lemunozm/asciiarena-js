@@ -1,4 +1,4 @@
-package main.java.server;
+package com.asciiarena.server;
 
 public class GameServer
 {

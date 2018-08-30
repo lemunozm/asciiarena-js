@@ -1,9 +1,12 @@
-package main.java.common.communication;
+package com.asciiarena.common.communication;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import com.asciiarena.common.logging.Log;
+import com.asciiarena.common.logging.TermColor;
 
 public class Connection
 {
@@ -20,7 +23,10 @@ public class Connection
         {
             ObjectOutputStream objectOutput = new ObjectOutputStream(socket.getOutputStream());
             objectOutput.writeObject(object); 
-            System.out.println(object.toString());
+
+            String message = TermColor.YELLOW + "[" + object.toString() + "]" + TermColor.RESET;
+            String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
+            Log.info("%s to: %s", message, remote);  
         } 
         catch (IOException e)
         {
@@ -35,7 +41,10 @@ public class Connection
         {
             ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
             Object object = objectInput.readObject();
-            System.out.println(object.toString());
+
+            String message = TermColor.BLUE + "[" + object.toString() + "]" + TermColor.RESET;
+            String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
+            Log.info("%s from: %s", message, remote);  
 
             return object;
         }

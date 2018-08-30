@@ -1,4 +1,4 @@
-package main.java.common.communication;
+package com.asciiarena.common.communication;
 
 import java.io.Serializable;
 
@@ -10,9 +10,15 @@ public class Message
 
         public String version; 
 
+        public Version() {}
+        public Version(String version)
+        {
+            this.version = version;
+        }
+
         public String toString()
         {
-            return version;
+            return String.format("%s | %s", "VERSION", version);
         }
     }
 
@@ -23,9 +29,16 @@ public class Message
         public String version; 
         public boolean validation; 
 
+        public CheckedVersion() {}
+        public CheckedVersion(String version, boolean validation)
+        {
+            this.version = version;
+            this.validation = validation;
+        }
+
         public String toString()
         {
-            return version;
+            return String.format("%s | %s | %b", "CHECKED_VERSION", version, validation);
         }
     }
 }

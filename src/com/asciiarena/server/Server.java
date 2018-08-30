@@ -1,4 +1,6 @@
-package main.java.server;
+package com.asciiarena.server;
+
+import com.asciiarena.common.logging.Log;
 
 public class Server
 {
@@ -7,11 +9,12 @@ public class Server
     public Server(ServerConfig config)
     {
         this.config = config;
+        Log.init();
     }
 
     public void run()
     {
-        GameServer gameServer = new GameServer(this.config.game);
+        GameServer gameServer = new GameServer(config.game);
 
         Runnable gameServerRun = new Runnable() 
         {
@@ -23,7 +26,7 @@ public class Server
         Thread gameServerThread = new Thread(gameServerRun);
         gameServerThread.start();
 
-        InfoServer infoServer = new InfoServer(this.config.info, gameServer);
+        InfoServer infoServer = new InfoServer(config.info, gameServer);
         infoServer.run();
     }
 }

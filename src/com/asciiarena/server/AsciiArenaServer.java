@@ -1,4 +1,4 @@
-package main.java.server;
+package com.asciiarena.server;
 
 public class AsciiArenaServer
 {
@@ -15,7 +15,5 @@ public class AsciiArenaServer
 
         Server server = new Server(config);
         server.run();
-
-        System.out.println("Hello Ascii Arena");
     }
 }
