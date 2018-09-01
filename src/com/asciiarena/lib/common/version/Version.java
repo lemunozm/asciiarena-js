@@ -1,4 +1,4 @@
-package com.asciiarena.common.version;
+package com.asciiarena.lib.common.version;
 
 public class Version
 {

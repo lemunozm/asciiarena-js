@@ -1,12 +1,12 @@
-package com.asciiarena.common.communication;
+package com.asciiarena.lib.common.communication;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import com.asciiarena.common.logging.Log;
-import com.asciiarena.common.logging.TermColor;
+import com.asciiarena.lib.common.logging.Log;
+import com.asciiarena.lib.common.logging.TermColor;
 
 public class Connection
 {

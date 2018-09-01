@@ -1,6 +1,9 @@
-package com.asciiarena.server;
+package com.asciiarena.app.server;
 
-public class AsciiArenaServer
+import com.asciiarena.lib.server.Server;
+import com.asciiarena.lib.server.ServerConfig;
+
+public class AppServer
 {
     public static void main(String[] args) 
     {

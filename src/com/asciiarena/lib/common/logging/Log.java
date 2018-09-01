@@ -1,4 +1,4 @@
-package com.asciiarena.common.logging;
+package com.asciiarena.lib.common.logging;
 
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;

@@ -1,12 +1,12 @@
-package com.asciiarena.server;
+package com.asciiarena.lib.server;
 
-import com.asciiarena.common.logging.Log;
+import com.asciiarena.lib.common.logging.Log;
 
 public class Server
 {
     private ServerConfig config;
 
-    public Server(ServerConfig config)
+    public Server(final ServerConfig config)
     {
         this.config = config;
         Log.init();
@@ -18,15 +18,15 @@ public class Server
 
         Runnable gameServerRun = new Runnable() 
         {
+            @Override
             public void run() {
-                gameServer.run();
+                gameServer.listen();
             }
         };  
 
-        Thread gameServerThread = new Thread(gameServerRun);
-        gameServerThread.start();
+        new Thread(gameServerRun).start();
 
         InfoServer infoServer = new InfoServer(config.info, gameServer);
-        infoServer.run();
+        infoServer.listen();
     }
 }

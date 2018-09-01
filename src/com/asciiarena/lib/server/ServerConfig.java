@@ -1,4 +1,4 @@
-package com.asciiarena.server;
+package com.asciiarena.lib.server;
 
 public class ServerConfig
 {
