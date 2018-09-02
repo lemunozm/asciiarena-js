@@ -1,5 +1,9 @@
+build
 bin
 .classpath
 .project
+.externalToolBuilders
 *.log
+*.log.*
 *.log.lck
+*.log.*.lck

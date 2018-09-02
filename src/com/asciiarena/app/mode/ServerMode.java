@@ -1,11 +1,11 @@
-package com.asciiarena.app.server;
+package com.asciiarena.app.mode;
 
 import com.asciiarena.lib.server.Server;
 import com.asciiarena.lib.server.ServerConfig;
 
-public class AppServer
+public class ServerMode
 {
-    public static void main(String[] args) 
+    public static void start(String[] args)
     {
         ServerConfig config = new ServerConfig();
         config.port = 3000;

@@ -1,12 +1,12 @@
-package com.asciiarena.app.client;
+package com.asciiarena.app.mode;
 
 import org.apache.commons.cli.Options;
 
 import com.asciiarena.lib.client.Client;
 
-public class AppClient
+public class ClientMode
 {
-    public static void main(String[] args) 
+    public static void start(String[] args) 
     {
         Options options = new Options();
         options.addOption("t", false, "display current time");
