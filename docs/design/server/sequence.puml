@@ -8,14 +8,28 @@ participant GameServer
 participant GameManager
 participant PlayerRegistry
 participant Arena
+participant Version
 
+-> Server : listen
 Server -> GameServer : <<new>>
-Server -> GameServer : listen
+activate Server
 activate GameServer
+Client ->> Server : <<new connection>>
+Client ->> Server : versionMessage
+Server -> Version : check
+activate Version
+Server <- Version : compatibility
+deactivate Version
+Client <<-- Server : checkVersionMessage
+Server -> GameServer : getGameInfo
+activate GameServer
+Server <-- GameServer
+deactivate GameServer
+Client <<-- Server : serverInfoMessage
+deactivate Server
 GameServer -> GameManager : <<new>>
 GameManager -> PlayerRegistry : <<new>>
 loop
-    Client ->> GameServer : <<new connection>>
     GameServer -> GameServer : playerConnection
     activate GameServer
     GameServer -> GameManager : registerPlayer

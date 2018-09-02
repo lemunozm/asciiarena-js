@@ -49,22 +49,20 @@ public class Message
     {
         private static final long serialVersionUID = -8246089342165465473L;
 
-        public int port; 
-        public int currentPlayers; 
+        public List<Character> players; 
         public int maxPlayers; 
 
         public ServerInfo() {}
-        public ServerInfo(int port, int currentPlayers, int maxPlayers)
+        public ServerInfo(List<Character> players, int maxPlayers)
         {
-            this.port = port;
-            this.currentPlayers = currentPlayers;
+            this.players = players;
             this.maxPlayers = maxPlayers;
         }
 
         @Override
         public String toString()
         {
-            return String.format("SERVER_INFO | %d | %d | %d", port, currentPlayers, maxPlayers);
+            return String.format("SERVER_INFO | %s | %d", players, maxPlayers);
         }
     }
 
@@ -90,27 +88,19 @@ public class Message
     public static class PlayerLogin implements Serializable
     {
         private static final long serialVersionUID = -7996103842250877133L;
-        public static enum Status
-        {
-            SUCCESSFUL,
-            ERROR_GAME_STARTED,
-            ERROR_CHARACTER_EXISTS;
-        }
-            
-        public Status status;
-        public int maxPlayers;
+
+        public boolean logged;
 
         public PlayerLogin() {}
-        public PlayerLogin(Status status, int maxPlayers)
+        public PlayerLogin(boolean logged)
         {
-            this.status = status;
-            this.maxPlayers = maxPlayers;
+            this.logged = logged;
         }
 
         @Override
         public String toString()
         {
-            return String.format("PLAYER_LOGIN | %s | %d", status, maxPlayers);
+            return String.format("PLAYER_LOGIN | %b", logged);
         }
     }
 
@@ -118,19 +108,18 @@ public class Message
     {
         private static final long serialVersionUID = -3840805373060659823L;
 
-        public List<Character> characters;
+        public List<Character> players;
 
         public PlayersInfo() {}
-        public PlayersInfo(List<Character> characters)
+        public PlayersInfo(List<Character> players)
         {
-            this.characters = characters;
+            this.players = players;
         }
 
         @Override
         public String toString()
         {
-            return String.format("PLAYER_INFO | %s", characters);
+            return String.format("PLAYER_INFO | %s", players);
         }
     }
-
 }

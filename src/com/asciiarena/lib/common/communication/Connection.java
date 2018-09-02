@@ -19,38 +19,40 @@ public class Connection
 
     public boolean send(Object object)
     {
+        String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
         try
         {
             ObjectOutputStream objectOutput = new ObjectOutputStream(socket.getOutputStream());
             objectOutput.writeObject(object); 
 
             String message = TermColor.YELLOW + "[" + object.toString() + "]" + TermColor.RESET;
-            String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
             Log.info("%s to: %s", message, remote);  
+
+            return true;
         } 
         catch (IOException e)
         {
-            e.printStackTrace();
+            Log.error("Connection lost: %s", remote);  
         }
         return false;
     }
 
     public Object receive()
     {
+        String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
         try
         {
             ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
             Object object = objectInput.readObject();
 
             String message = TermColor.BLUE + "[" + object.toString() + "]" + TermColor.RESET;
-            String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
             Log.info("%s from: %s", message, remote);  
 
             return object;
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            Log.error("Connection lost: %s", remote);  
         }
         catch (ClassNotFoundException e)
         {

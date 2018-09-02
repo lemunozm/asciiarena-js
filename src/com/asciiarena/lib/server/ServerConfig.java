@@ -2,26 +2,20 @@ package com.asciiarena.lib.server;
 
 public class ServerConfig
 {
-    public class InfoConfig
-    {
-        public int port;
-    }
-
     public class GameConfig 
     {
         public class MapConfig 
         {
-            public int width;
-            public int height;
-            public String seed;
+            public int width = 30;
+            public int height = 30;
+            public String seed = "";
         }
 
-        public int port;
-        public int players;
-        public int pointsToWin;
+        public int players = 4;
+        public int pointsToWin = 15;
         public MapConfig map = new MapConfig();
     }
 
-    public InfoConfig info = new InfoConfig();
+    public int port = 3000;
     public GameConfig game = new GameConfig();
 }

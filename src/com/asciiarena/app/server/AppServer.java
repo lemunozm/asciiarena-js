@@ -8,8 +8,7 @@ public class AppServer
     public static void main(String[] args) 
     {
         ServerConfig config = new ServerConfig();
-        config.info.port = 3000;
-        config.game.port = 3001;
+        config.port = 3000;
         config.game.players = 4;
         config.game.pointsToWin = 1;
         config.game.map.width = 30;
@@ -17,6 +16,6 @@ public class AppServer
         config.game.map.seed = "";
 
         Server server = new Server(config);
-        server.run();
+        server.listen();
     }
 }

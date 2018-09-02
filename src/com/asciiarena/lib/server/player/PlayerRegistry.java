@@ -82,6 +82,11 @@ public class PlayerRegistry
         return false;
     }
 
+    public boolean isComplete()
+    {
+        return players.size() == maxPlayers;
+    }
+
     public List<Character> getCharacters()
     {
         ArrayList<Character> characters = new ArrayList<Character>(players.size());
