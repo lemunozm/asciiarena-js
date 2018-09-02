@@ -17,7 +17,7 @@ public class LoggerFormatter extends SimpleFormatter
         String logFormat = dateFormat + " " + levelFormat + " %3$s%n" + TermColor.RESET;
 
         Date date = new Date(record.getMillis()); 
-        String level = record.getLevel().toString();
+        String level = (record.getLevel() == Level.SEVERE) ? "ERROR" : record.getLevel().toString();
 
         return String.format(logFormat, date, level, record.getMessage());
     }

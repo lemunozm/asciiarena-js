@@ -19,7 +19,7 @@ public class Client
 
     public Client(String ip, int port)
     {
-        Log.init();
+        Log.init("client.log");
         this.ip = ip;
         this.port = port;
     }
@@ -118,7 +118,7 @@ public class Client
         } 
         catch (IOException e)
         {
-            System.err.printf("Connection error with ip: %s, port: %d\n", ip, port);
+            System.err.printf("Server connection error. ip: %s, port: %d\n", ip, port);
             System.exit(1);
         }     
 
