@@ -33,7 +33,7 @@ public class Client
             connection.close();
             return;
         }
- 
+  
         if(!login(connection))
         {
             connection.close();
