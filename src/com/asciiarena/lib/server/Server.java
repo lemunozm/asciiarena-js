@@ -13,13 +13,11 @@ public class Server
 {
     private final int port;
     private GameManager gameManager;
-    private boolean gameStarted;
 
     public Server(ServerConfig config)
     {
         this.port = config.port;
         this.gameManager = new GameManager(config.game);
-        this.gameStarted = false;
     }
 
     public void listen()
@@ -57,19 +55,15 @@ public class Server
             return;
         }
 
-        Message.NewPlayer newPlayerMessage = (Message.NewPlayer) connection.receive();
-        synchronized(this)
+        if(!gameManager.login(connection))
         {
-            if(!gameManager.login(newPlayerMessage.character, connection))
-            {
-                connection.close();
-                return;
-            }
+            connection.close();
+            return;
+        }
 
-            if(gameManager.getPlayerRegistry().isComplete())
-            {
-                initGame();
-            }
+        if(gameManager.getPlayerRegistry().isComplete())
+        {
+            gameManager.startGame();
         }
     }
 
@@ -123,22 +117,6 @@ public class Server
         connection.send(serverInfoMessage);
     }
 
-    private void initGame()
-    {
-        Runnable gameRun = new Runnable() 
-        {
-            @Override
-            public void run() 
-            {
-                gameStarted = true;
-                gameManager.startGame();
-                gameStarted = false;
-            }
-        };  
-
-        new Thread(gameRun).start();
-    }
-
     public int getPort()
     {
         return port;
@@ -149,8 +127,4 @@ public class Server
         return gameManager;
     }
 
-    public boolean isGameStarted()
-    {
-        return gameStarted;
-    }
 }

@@ -7,29 +7,38 @@ import com.asciiarena.lib.server.player.PlayerRegistry;
 
 public class GameManager
 {
+    private final ServerConfig.GameConfig config;
     private PlayerRegistry playerRegistry;
+    private MatchManager currentMatch;
 
     public GameManager(ServerConfig.GameConfig config)
     {
+        this.config = config;
         this.playerRegistry = new PlayerRegistry(config.players, config.pointsToWin);
+        this.currentMatch = null;
     }
 
-    public boolean login(char character, Connection connection)
+    public boolean login(Connection connection)
     {
+        Message.NewPlayer newPlayerMessage = (Message.NewPlayer) connection.receive();
         Message.PlayerLogin playerLoginMessage = new Message.PlayerLogin(); 
-        playerLoginMessage.logged = registerPlayer(character, connection);
-        connection.send(playerLoginMessage);
 
-        if(playerLoginMessage.logged == true)
+        synchronized(this)
         {
-            Message.PlayersInfo playersInfoMessage = new Message.PlayersInfo(playerRegistry.getCharacters()); 
-            playerRegistry.sendToPlayers(playersInfoMessage);
+            playerLoginMessage.logged = registerPlayer(newPlayerMessage.character, connection);
+            connection.send(playerLoginMessage);
+
+            if(playerLoginMessage.logged == true)
+            {
+                Message.PlayersInfo playersInfoMessage = new Message.PlayersInfo(playerRegistry.getCharacters()); 
+                playerRegistry.sendToPlayers(playersInfoMessage);
+            }
         }
 
         return playerLoginMessage.logged;
     }
 
-    public boolean registerPlayer(char character, Connection connection)
+    private boolean registerPlayer(char character, Connection connection)
     {
         switch(playerRegistry.add(character, connection))
         {
@@ -48,7 +57,26 @@ public class GameManager
     {
         Log.info("Start game");
 
+        while(!playerRegistry.hasWinner())
+        {
+            currentMatch = new MatchManager(config.map, playerRegistry); 
+            currentMatch.startMatch();
+            break; //DELETE 
+        }
+
+        currentMatch = null;
+
         Log.info("Finish game");
+    }
+
+    public boolean isGameStarted()
+    {
+        return currentMatch != null;
+    }
+
+    public MatchManager getCurrentMatch()
+    {
+        return  currentMatch;
     }
 
     public PlayerRegistry getPlayerRegistry()
