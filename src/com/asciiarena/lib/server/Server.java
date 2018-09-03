@@ -17,7 +17,6 @@ public class Server
 
     public Server(ServerConfig config)
     {
-        Log.init(null);
         this.port = config.port;
         this.gameManager = new GameManager(config.game);
         this.gameStarted = false;

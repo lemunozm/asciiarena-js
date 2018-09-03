@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.asciiarena.lib.common.communication.Connection;
 import com.asciiarena.lib.common.communication.Message;
-import com.asciiarena.lib.common.logging.Log;
 import com.asciiarena.lib.common.version.Version;
 
 public class Client
@@ -19,7 +18,6 @@ public class Client
 
     public Client(String ip, int port)
     {
-        Log.init("client.log");
         this.ip = ip;
         this.port = port;
     }

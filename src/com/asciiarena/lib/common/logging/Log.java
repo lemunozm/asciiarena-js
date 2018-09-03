@@ -8,7 +8,7 @@ import java.util.logging.Level;
 
 public final class Log
 {
-    private static java.util.logging.Logger log = java.util.logging.Logger.getLogger("com.asciiarena");
+    private static java.util.logging.Logger log = null;
 
     public static void init(String fileName)
     {
@@ -36,6 +36,8 @@ public final class Log
         }
 
         handler.setFormatter(new LoggerFormatter());
+
+        log = java.util.logging.Logger.getLogger("com.asciiarena");
         log.addHandler(handler);
         log.setUseParentHandlers(false);
         log.setLevel(Level.INFO);
@@ -43,7 +45,7 @@ public final class Log
 
     public static void info(String format, Object... args)
     {
-        if(log.isLoggable(Level.INFO))
+        if(log != null && log.isLoggable(Level.INFO))
         {
             log.info(String.format(format, args)); 
         }
@@ -51,7 +53,7 @@ public final class Log
 
     public static void warning(String format, Object... args)
     {
-        if(log.isLoggable(Level.WARNING))
+        if(log != null && log.isLoggable(Level.WARNING))
         {
             log.warning(String.format(format, args)); 
         }
@@ -59,9 +61,17 @@ public final class Log
 
     public static void error(String format, Object... args)
     {
-        if(log.isLoggable(Level.SEVERE))
+        if(log != null && log.isLoggable(Level.SEVERE))
         {
             log.severe(String.format(format, args)); 
+        }
+    }
+
+    public static void level(Level level)
+    {
+        if(log != null)
+        {
+            log.setLevel(level);
         }
     }
 }
