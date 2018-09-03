@@ -10,16 +10,18 @@ import com.asciiarena.lib.common.version.Version;
 
 public class Client
 {
+    public static final char ASK_FOR_CHARACTER = '\0';
     private String ip;
     private int port;
     private char character;
     private List<Character> players;
     private int maxPlayers;
 
-    public Client(String ip, int port)
+    public Client(String ip, int port, char character)
     {
         this.ip = ip;
         this.port = port;
+        this.character = character;
     }
 
     public void start()
@@ -56,6 +58,10 @@ public class Client
             maxPlayers = serverInfoMessage.maxPlayers;
 
             System.out.printf(getServerGameStateMessage());
+            if(players.size() ==  maxPlayers)
+            {
+                System.out.printf("The game is already started\n");
+            }
 
             return players.size() < maxPlayers;
         }
@@ -65,7 +71,7 @@ public class Client
 
     private boolean login(Connection connection)
     {
-        if(character == '\0' || players.contains(character))
+        if(character == ASK_FOR_CHARACTER || players.contains(character))
         {
             character = askForCharacter();
         }
@@ -125,12 +131,7 @@ public class Client
 
     private String getServerGameStateMessage()
     {
-        String state = (players.size() < maxPlayers) ? "Waiting for players" : "Game complete";
-        return String.format("%s: %d/%d %s\n", state, players.size(), maxPlayers, players);
-    }
-
-    public void setDefaultCharacter(char character)
-    {
-        this.character = character;
+        String state = (players.size() < maxPlayers) ? "Waiting for players..." : "Complete!";
+        return String.format("%s %d/%d %s\n", state, players.size(), maxPlayers, players);
     }
 }

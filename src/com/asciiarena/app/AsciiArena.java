@@ -14,12 +14,12 @@ public class AsciiArena
             String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
             if(args[0].equals("client"))
             {
-                ClientMode.start(subArgs); 
+                new ClientMode(subArgs);
                 return;
             }
             else if(args[0].equals("server"))
             {
-                ServerMode.start(subArgs);
+                new ServerMode(subArgs);
                 return;
             }
         }

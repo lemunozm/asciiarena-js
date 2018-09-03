@@ -20,7 +20,7 @@
 
     <target name="compile" description="build class files" depends="clean">
         <mkdir dir="${class.dir}"/>
-        <javac includeantruntime="false" srcdir="${source.dir}" destdir="${class.dir}">
+        <javac includeantruntime="false" debug="true" srcdir="${source.dir}" destdir="${class.dir}">
             <classpath refid="libraries.path"/>
         </javac>
     </target>
