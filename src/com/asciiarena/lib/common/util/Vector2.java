@@ -63,8 +63,20 @@ public class Vector2 implements Serializable
 
     public void add(Vector2 v)
     {
-        this.x += v.x;
-        this.y += v.y;
+        x += v.x;
+        y += v.y;
+    }
+
+    public void sub(int x, int y)
+    {
+        this.x -= x;
+        this.y -= y;
+    }
+
+    public void sub(Vector2 v)
+    {
+        x -= v.x;
+        y -= v.y;
     }
 
     public int getLength() 
@@ -74,6 +86,8 @@ public class Vector2 implements Serializable
 
     public int getDistanceTo(Vector2 v) 
     {
-        return (int) Math.sqrt(x * v.x + y * v.y);
+        int xDiff = x - v.x;
+        int yDiff = y - v.y;
+        return (int) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     }
 }

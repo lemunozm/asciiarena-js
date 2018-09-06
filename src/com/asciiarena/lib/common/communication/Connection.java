@@ -61,11 +61,6 @@ public class Connection
         }
     }
 
-    public boolean isClosed()
-    {
-        return socket.isClosed();
-    }
-
     private static String formatAddress(Socket socket)
     {
         return TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;

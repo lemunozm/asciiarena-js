@@ -64,7 +64,7 @@ public class Client
         connection.send(versionMessage);
 
         Message.CheckedVersion checkedVersionMessage = (Message.CheckedVersion) connection.receive();
-        System.out.printf("Client version: %s. Server version: %s\n", Version.CURRENT, checkedVersionMessage.version);
+        System.out.printf("Client version: %s - Server version: %s\n", Version.CURRENT, checkedVersionMessage.version);
 
         if(checkedVersionMessage.validation)
         {
