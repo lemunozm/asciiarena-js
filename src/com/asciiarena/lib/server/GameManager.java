@@ -1,6 +1,7 @@
 package com.asciiarena.lib.server;
 
 import com.asciiarena.lib.common.communication.Connection;
+import com.asciiarena.lib.common.communication.ConnectionError;
 import com.asciiarena.lib.common.communication.Message;
 import com.asciiarena.lib.common.logging.Log;
 import com.asciiarena.lib.server.player.PlayerRegistry;
@@ -18,38 +19,44 @@ public class GameManager
         this.currentMatch = null;
     }
 
-    public boolean login(Connection connection)
+    public boolean login(Connection connection) throws ConnectionError
     {
         Message.NewPlayer newPlayerMessage = (Message.NewPlayer) connection.receive();
         Message.PlayerLogin playerLoginMessage = new Message.PlayerLogin(); 
 
         synchronized(this)
         {
-            playerLoginMessage.logged = registerPlayer(newPlayerMessage.character, connection);
+            playerLoginMessage.status = registerPlayer(newPlayerMessage.character, connection);
             connection.send(playerLoginMessage);
 
-            if(playerLoginMessage.logged == true)
+            if(playerLoginMessage.status == Message.PlayerLogin.Status.SUCCESSFUL)
             {
                 Message.PlayersInfo playersInfoMessage = new Message.PlayersInfo(playerRegistry.getCharacters()); 
                 playerRegistry.sendToPlayers(playersInfoMessage);
             }
         }
 
-        return playerLoginMessage.logged;
+        return playerLoginMessage.status == Message.PlayerLogin.Status.SUCCESSFUL;
     }
 
-    private boolean registerPlayer(char character, Connection connection)
+    private Message.PlayerLogin.Status registerPlayer(char character, Connection connection)
     {
         switch(playerRegistry.add(character, connection))
         {
             case OK:
-                Log.info("Login player '%c'", character);
-                return true;
+                Log.info("Login player '%c': successful", character);
+                return Message.PlayerLogin.Status.SUCCESSFUL;
 
             case ALREADY_EXISTS:
                 Log.warning("Login player '%c': character already exists", character);
+                return Message.PlayerLogin.Status.CHARACTER_ALREADY_EXISTS;
+
+            case FULL:
+                Log.warning("Login player '%c': game complete", character);
+                return Message.PlayerLogin.Status.GAME_COMPLETE;
+
             default:
-                return false;
+                return Message.PlayerLogin.Status.GAME_COMPLETE;
         }
     }
 
@@ -61,12 +68,25 @@ public class GameManager
         {
             currentMatch = new MatchManager(config.map, playerRegistry); 
             currentMatch.startMatch();
-            break; //DELETE 
+            try
+            {
+                Thread.sleep(3600000);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            System.exit(1);
         }
 
         currentMatch = null;
 
         Log.info("Finish game");
+    }
+
+    public void reset()
+    {
+        playerRegistry = new PlayerRegistry(config.players, config.pointsToWin);
     }
 
     public boolean isGameStarted()

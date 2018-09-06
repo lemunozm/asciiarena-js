@@ -2,10 +2,11 @@ package com.asciiarena.lib.server.player;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import com.asciiarena.lib.common.communication.Connection;
+import com.asciiarena.lib.common.communication.ConnectionError;
+import com.asciiarena.lib.common.logging.Log;
 
 public class PlayerRegistry
 {
@@ -34,9 +35,9 @@ public class PlayerRegistry
             return Status.FULL;
         }
 
-        for(Iterator<Player> it = players.iterator(); it.hasNext();)
+        for(Player player: players)
         {
-            if(it.next().getCharacter()== character)
+            if(player.getCharacter()== character)
             {
                 return Status.ALREADY_EXISTS;
             }
@@ -47,33 +48,51 @@ public class PlayerRegistry
         return Status.OK;
     }        
 
-    public boolean sendToPlayers(Object object) 
+    public void sendToPlayers(Object object) 
     {
-        boolean sendStatus = true;
-        for(Iterator<Player> it = players.iterator(); it.hasNext();)
+        for(Player player: players)
         {
-            sendStatus &= it.next().getConnection().send(object);
+            try
+            {
+                if(!player.isConnected())
+                {
+                    player.getConnection().send(object);
+                }
+            }
+            catch (ConnectionError e)
+            {
+                player.markAsDisconnected();
+                Log.warning("Player %c disconnected", player.getCharacter());
+            }
         }
-
-        return sendStatus;
     }
 
     public List<Object> receiveFromPlayers() 
     {
         ArrayList<Object> objects = new ArrayList<Object>(players.size());
-        for(Iterator<Player> it = players.iterator(); it.hasNext();)
+        for(int i = 0; i < players.size(); i++)
         {
-            objects.add(it.next().getConnection().receive());
+            try
+            {
+                if(!players.get(i).isConnected())
+                {
+                    objects.set(i, players.get(i).getConnection().receive());
+                }
+            }
+            catch (ConnectionError e)
+            {
+                players.get(i).markAsDisconnected();
+                Log.warning("Player %c disconnected", players.get(i).getCharacter());
+            }
         }
-
         return objects; 
     }
 
     public boolean hasWinner()
     {
-        for(Iterator<Player> it = players.iterator(); it.hasNext();)
+        for(Player player: players)
         {
-            if(it.next().getPoints() >= pointsToWin)
+            if(player.getPoints() >= pointsToWin)
             {
                 return true;
             }
@@ -91,9 +110,9 @@ public class PlayerRegistry
     {
         ArrayList<Character> characters = new ArrayList<Character>(players.size());
 
-        for(Iterator<Player> it = players.iterator(); it.hasNext();)
+        for(Player player: players)
         {
-            characters.add(it.next().getCharacter());
+            characters.add(player.getCharacter());
         }
 
         return characters;
@@ -112,5 +131,10 @@ public class PlayerRegistry
     public int getMaxPlayers()
     {
         return maxPlayers;
+    }
+
+    public int getPointsToWin()
+    {
+        return pointsToWin;
     }
 }

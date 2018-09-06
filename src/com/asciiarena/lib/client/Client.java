@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.List;
 
 import com.asciiarena.lib.common.communication.Connection;
+import com.asciiarena.lib.common.communication.ConnectionError;
 import com.asciiarena.lib.common.communication.Message;
 import com.asciiarena.lib.common.version.Version;
 
@@ -26,24 +27,38 @@ public class Client
 
     public void start()
     {
-        Connection connection = connect(ip, port);
-
-        if(!checkServerToPlay(connection)) 
+        try
         {
-            connection.close();
-            return;
-        }
-  
-        if(!login(connection))
-        {
-            connection.close();
-            return;
-        }
+            Connection connection = new Connection(new Socket(ip, port));
 
-        //startGame();
+            if(!checkServerToPlay(connection)) 
+            {
+                connection.close();
+                return;
+            }
+
+            if(!login(connection))
+            {
+                connection.close();
+                return;
+            }
+
+            Game game = new Game(connection);
+            game.start();
+        } 
+        catch (ConnectionError e)
+        {
+            System.err.printf("Error: Connection lost\n");
+            System.exit(1);
+        }
+        catch (IOException e)
+        {
+            System.err.printf("Server connection error. ip: %s, port: %d\n", ip, port);
+            System.exit(1);
+        }
     }
 
-    private boolean checkServerToPlay(Connection connection)
+    private boolean checkServerToPlay(Connection connection) throws ConnectionError
     {
         Message.Version versionMessage = new Message.Version(Version.CURRENT);
         connection.send(versionMessage);
@@ -69,7 +84,7 @@ public class Client
         return false; 
     }
 
-    private boolean login(Connection connection)
+    private boolean login(Connection connection) throws ConnectionError
     {
         if(character == ASK_FOR_CHARACTER || players.contains(character))
         {
@@ -80,18 +95,29 @@ public class Client
         connection.send(newPlayerMessage);
 
         Message.PlayerLogin playerLoginMessage = (Message.PlayerLogin) connection.receive(); 
-        if(playerLoginMessage.logged)
+        switch(playerLoginMessage.status)
         {
-            do
-            {
-                Message.PlayersInfo playersLoginMessage = (Message.PlayersInfo) connection.receive(); 
-                players = playersLoginMessage.players;
-                System.out.printf(getServerGameStateMessage());
-            }
-            while(players.size() < maxPlayers);
-        }
+            case SUCCESSFUL:
+                do
+                {
+                    Message.PlayersInfo playersLoginMessage = (Message.PlayersInfo) connection.receive(); 
+                    players = playersLoginMessage.players;
+                    System.out.printf(getServerGameStateMessage());
+                }
+                while(players.size() < maxPlayers);
+                return true; 
 
-        return playerLoginMessage.logged; 
+            case CHARACTER_ALREADY_EXISTS:
+                System.out.printf("Sorry, character '%c' already exists in the server");
+                return false;
+
+            case GAME_COMPLETE:
+                System.out.printf("Sorry, Game is complete");
+                return false;
+
+            default:
+                return false;
+        }
     }
 
     private char askForCharacter()
@@ -111,22 +137,6 @@ public class Client
             }
         }
         return inputCharacter;
-    }
-
-    private Connection connect(String ip, int port)
-    {
-        try
-        {
-            Socket socket = new Socket(ip, port);
-            return new Connection(socket);
-        } 
-        catch (IOException e)
-        {
-            System.err.printf("Server connection error. ip: %s, port: %d\n", ip, port);
-            System.exit(1);
-        }     
-
-        return null;
     }
 
     private String getServerGameStateMessage()

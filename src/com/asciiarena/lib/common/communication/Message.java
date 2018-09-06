@@ -3,6 +3,9 @@ package com.asciiarena.lib.common.communication;
 import java.io.Serializable;
 import java.util.List;
 
+import com.asciiarena.lib.common.match.Entity;
+import com.asciiarena.lib.common.match.Wall;
+
 public class Message 
 {
     public static class Version implements Serializable
@@ -51,18 +54,20 @@ public class Message
 
         public List<Character> players; 
         public int maxPlayers; 
+        public int pointsToWin;
 
         public ServerInfo() {}
-        public ServerInfo(List<Character> players, int maxPlayers)
+        public ServerInfo(List<Character> players, int maxPlayers, int pointsToWin)
         {
             this.players = players;
             this.maxPlayers = maxPlayers;
+            this.pointsToWin = pointsToWin;
         }
 
         @Override
         public String toString()
         {
-            return String.format("SERVER_INFO | %s | %d", players, maxPlayers);
+            return String.format("SERVER_INFO | %s | %d | %d", players, maxPlayers, pointsToWin);
         }
     }
 
@@ -87,20 +92,27 @@ public class Message
 
     public static class PlayerLogin implements Serializable
     {
-        private static final long serialVersionUID = -7996103842250877133L;
+        private static final long serialVersionUID = -8777686551827290213L;
 
-        public boolean logged;
+        public static enum Status
+        {
+            SUCCESSFUL,
+            CHARACTER_ALREADY_EXISTS,
+            GAME_COMPLETE
+        }
+
+        public Status status;
 
         public PlayerLogin() {}
-        public PlayerLogin(boolean logged)
+        public PlayerLogin(Status status)
         {
-            this.logged = logged;
+            this.status = status;
         }
 
         @Override
         public String toString()
         {
-            return String.format("PLAYER_LOGIN | %b", logged);
+            return String.format("PLAYER_LOGIN | %s", status);
         }
     }
 
@@ -120,6 +132,33 @@ public class Message
         public String toString()
         {
             return String.format("PLAYER_INFO | %s", players);
+        }
+    }
+
+    public static class MatchInfo implements Serializable
+    {
+        private static final long serialVersionUID = -366787905875060737L;
+
+        public int width;
+        public int height;
+        public Wall grid[][]; 
+        public String seed;
+        public List<Entity> entities; 
+        
+        public MatchInfo() {}
+        public MatchInfo(int width, int height, Wall grid[][], String seed, List<Entity> entities)
+        {
+            this.width = width;
+            this.height = height;
+            this.grid = grid;
+            this.seed = seed;
+            this.entities = entities;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("MATCH_INFO | %d | %d | %s", width , height, seed);
         }
     }
 }

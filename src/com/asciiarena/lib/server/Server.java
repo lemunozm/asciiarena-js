@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import com.asciiarena.lib.common.communication.Connection;
+import com.asciiarena.lib.common.communication.ConnectionError;
 import com.asciiarena.lib.common.communication.Message;
 import com.asciiarena.lib.common.logging.Log;
 import com.asciiarena.lib.common.version.Version;
@@ -41,47 +42,48 @@ public class Server
         } 
         catch (IOException e)
         {
-            e.printStackTrace();
+            Log.error("Can not open the server or port %d, port");
         }
     }
 
     private void clientConnection(Socket socket)
     {
-        Connection connection = new Connection(socket);
-
-        if(!checkClientConnection(connection))
+        try
         {
-            connection.close();
-            return;
+            Connection connection = new Connection(socket);
+
+            if(!checkVersion(connection))
+            {
+                connection.close();
+                return;
+            }
+
+            if(!checkServerInfo(connection))
+            {
+                connection.close();
+                return;
+            }
+
+            if(!gameManager.login(connection))
+            {
+                connection.close();
+                return;
+            }
         }
-
-        if(!gameManager.login(connection))
+        catch(ConnectionError e)
         {
-            connection.close();
+            Log.warning("Client connection error");
             return;
         }
 
         if(gameManager.getPlayerRegistry().isComplete())
         {
             gameManager.startGame();
+            gameManager.reset();
         }
     }
 
-    private boolean checkClientConnection(Connection connection)
-    {
-        if(checkVersion(connection))
-        {
-            sendServerInfo(connection);
-            if(!gameManager.getPlayerRegistry().isComplete())
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean checkVersion(Connection connection)
+    private boolean checkVersion(Connection connection) throws ConnectionError
     {
         Message.Version versionMessage = (Message.Version) connection.receive();
 
@@ -93,7 +95,18 @@ public class Server
         return checkedVersionMessage.validation;
     }
 
-    private boolean validateVersion(String version)
+    private boolean checkServerInfo(Connection connection) throws ConnectionError
+    {
+        Message.ServerInfo serverInfoMessage = new Message.ServerInfo();
+        serverInfoMessage.players = gameManager.getPlayerRegistry().getCharacters();
+        serverInfoMessage.maxPlayers = gameManager.getPlayerRegistry().getMaxPlayers();
+        serverInfoMessage.pointsToWin = gameManager.getPlayerRegistry().getPointsToWin();
+        connection.send(serverInfoMessage);
+
+        return !gameManager.getPlayerRegistry().isComplete();
+    }
+
+    private static boolean validateVersion(String version)
     {
         switch(Version.check(version))
         {
@@ -107,14 +120,6 @@ public class Server
             default:
                 return false;
         }
-    }
-
-    private void sendServerInfo(Connection connection)
-    {
-        Message.ServerInfo serverInfoMessage = new Message.ServerInfo();
-        serverInfoMessage.players = gameManager.getPlayerRegistry().getCharacters();
-        serverInfoMessage.maxPlayers = gameManager.getPlayerRegistry().getMaxPlayers();
-        connection.send(serverInfoMessage);
     }
 
     public int getPort()

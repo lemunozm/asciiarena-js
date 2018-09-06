@@ -17,60 +17,62 @@ public class Connection
         this.socket = socket; 
     }
 
-    public boolean send(Object object)
+    public void send(Object object) throws ConnectionError
     {
-        String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
         try
         {
             ObjectOutputStream objectOutput = new ObjectOutputStream(socket.getOutputStream());
             objectOutput.writeObject(object); 
 
-            String message = TermColor.YELLOW + "[" + object.toString() + "]" + TermColor.RESET;
-            Log.info("%s to: %s", message, remote);  
-
-            return true;
+            Log.info("%s to: %s", formatMessage(TermColor.YELLOW, object.toString()), formatAddress(socket));  
         } 
         catch (IOException e)
         {
-            Log.error("Connection lost: %s", remote);  
+            throw new ConnectionError(e, formatAddress(socket));
         }
-        return false;
     }
 
-    public Object receive()
+    public Object receive() throws ConnectionError
     {
-        String remote = TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
         try
         {
             ObjectInputStream objectInput = new ObjectInputStream(socket.getInputStream());
             Object object = objectInput.readObject();
 
-            String message = TermColor.BLUE + "[" + object.toString() + "]" + TermColor.RESET;
-            Log.info("%s from: %s", message, remote);  
+            Log.info("%s from: %s", formatMessage(TermColor.BLUE, object.toString()), formatAddress(socket));  
 
             return object;
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            Log.error("Connection lost: %s", remote);  
+            throw new ConnectionError(e, formatAddress(socket));
         }
-        catch (ClassNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     public void close()
     {
         try
         {
-            this.socket.close();
+            socket.close();
         } 
         catch (IOException e)
         {
             e.printStackTrace();
         }
+    }
+
+    public boolean isClosed()
+    {
+        return socket.isClosed();
+    }
+
+    private static String formatAddress(Socket socket)
+    {
+        return TermColor.PURPLE + socket.getRemoteSocketAddress().toString().substring(1) + TermColor.RESET;
+    }
+
+    private static String formatMessage(TermColor color, String message)
+    {
+        return color + "[" + message + "]" + TermColor.RESET;
     }
 }
