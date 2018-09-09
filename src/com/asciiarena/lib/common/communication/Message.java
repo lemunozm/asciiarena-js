@@ -48,26 +48,32 @@ public class Message
         }
     }
 
-    public static class ServerInfo implements Serializable
+    public static class GameInfo implements Serializable
     {
         private static final long serialVersionUID = -8246089342165465473L;
 
         public List<Character> players; 
         public int maxPlayers; 
         public int pointsToWin;
+        public int mapWidth;
+        public int mapHeight;
+        public String defaultMapSeed;
 
-        public ServerInfo() {}
-        public ServerInfo(List<Character> players, int maxPlayers, int pointsToWin)
+        public GameInfo() {}
+        public GameInfo(List<Character> players, int maxPlayers, int pointsToWin, int mapWidth, int mapHeight, String seed)
         {
             this.players = players;
             this.maxPlayers = maxPlayers;
             this.pointsToWin = pointsToWin;
+            this.mapWidth = mapWidth;
+            this.mapHeight = mapHeight;
         }
 
         @Override
         public String toString()
         {
-            return String.format("SERVER_INFO | %s | %d | %d", players, maxPlayers, pointsToWin);
+            return String.format("GAME_INFO | %s | %d | %d | %d | %d | %s", 
+                    players, maxPlayers, pointsToWin, mapWidth, mapHeight, defaultMapSeed);
         }
     }
 
@@ -139,17 +145,13 @@ public class Message
     {
         private static final long serialVersionUID = -366787905875060737L;
 
-        public int width;
-        public int height;
         public Wall grid[][]; 
         public String seed;
         public List<Entity> entities; 
         
         public MatchInfo() {}
-        public MatchInfo(int width, int height, Wall grid[][], String seed, List<Entity> entities)
+        public MatchInfo(Wall grid[][], String seed, List<Entity> entities)
         {
-            this.width = width;
-            this.height = height;
             this.grid = grid;
             this.seed = seed;
             this.entities = entities;
@@ -158,7 +160,7 @@ public class Message
         @Override
         public String toString()
         {
-            return String.format("MATCH_INFO | %d | %d | %s", width , height, seed);
+            return String.format("MATCH_INFO | %s | %d", seed, entities.size());
         }
     }
 }

@@ -17,6 +17,8 @@ public class Client
     private char character;
     private List<Character> players;
     private int maxPlayers;
+    private int width;
+    private int height;
 
     public Client(String ip, int port, char character)
     {
@@ -31,7 +33,13 @@ public class Client
         {
             Connection connection = new Connection(new Socket(ip, port));
 
-            if(!checkServerToPlay(connection)) 
+            if(!checkVersion(connection)) 
+            {
+                connection.close();
+                return;
+            }
+
+            if(!checkGameInfo(connection)) 
             {
                 connection.close();
                 return;
@@ -43,7 +51,7 @@ public class Client
                 return;
             }
 
-            Game game = new Game(connection);
+            Game game = new Game(connection, width, height);
             game.start();
         } 
         catch (ConnectionError e)
@@ -58,7 +66,7 @@ public class Client
         }
     }
 
-    private boolean checkServerToPlay(Connection connection) throws ConnectionError
+    private boolean checkVersion(Connection connection) throws ConnectionError
     {
         Message.Version versionMessage = new Message.Version(Version.CURRENT);
         connection.send(versionMessage);
@@ -66,22 +74,27 @@ public class Client
         Message.CheckedVersion checkedVersionMessage = (Message.CheckedVersion) connection.receive();
         System.out.printf("Client version: %s - Server version: %s\n", Version.CURRENT, checkedVersionMessage.version);
 
-        if(checkedVersionMessage.validation)
+        return checkedVersionMessage.validation;
+    }
+
+    private boolean checkGameInfo(Connection connection) throws ConnectionError
+    {
+        Message.GameInfo gameInfoMessage = (Message.GameInfo) connection.receive();
+        players = gameInfoMessage.players;
+        maxPlayers = gameInfoMessage.maxPlayers;
+        width = gameInfoMessage.mapWidth;
+        height = gameInfoMessage.mapHeight;
+        String seed = gameInfoMessage.defaultMapSeed;
+
+        System.out.printf("Map seed: %s\n", seed.equals("") ? "random" : "<" + seed + ">");
+        System.out.printf("Map dimensions: %d, %d\n", width, height);
+        System.out.printf(getServerGameStateMessage());
+        if(players.size() ==  maxPlayers)
         {
-            Message.ServerInfo serverInfoMessage = (Message.ServerInfo) connection.receive();
-            players = serverInfoMessage.players;
-            maxPlayers = serverInfoMessage.maxPlayers;
-
-            System.out.printf(getServerGameStateMessage());
-            if(players.size() ==  maxPlayers)
-            {
-                System.out.printf("The game is already started\n");
-            }
-
-            return players.size() < maxPlayers;
+            System.out.printf("The game is already started\n");
         }
 
-        return false; 
+        return players.size() < maxPlayers;
     }
 
     private boolean login(Connection connection) throws ConnectionError

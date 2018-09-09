@@ -19,6 +19,20 @@ public class GameManager
         this.currentMatch = null;
     }
 
+    public boolean checkGameInfo(Connection connection) throws ConnectionError
+    {
+        Message.GameInfo gameInfoMessage = new Message.GameInfo();
+        gameInfoMessage.players = playerRegistry.getCharacters();
+        gameInfoMessage.maxPlayers = playerRegistry.getMaxPlayers();
+        gameInfoMessage.pointsToWin = playerRegistry.getPointsToWin();
+        gameInfoMessage.mapWidth = config.map.width; 
+        gameInfoMessage.mapHeight = config.map.height; 
+        gameInfoMessage.defaultMapSeed = config.map.seed; 
+        connection.send(gameInfoMessage);
+
+        return !playerRegistry.isComplete();
+    }
+
     public boolean login(Connection connection) throws ConnectionError
     {
         Message.NewPlayer newPlayerMessage = (Message.NewPlayer) connection.receive();

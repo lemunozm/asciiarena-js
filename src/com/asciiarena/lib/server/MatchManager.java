@@ -28,8 +28,6 @@ public class MatchManager
         Match match = new Match(mapConfig.width, mapConfig.height, seed, playerRegistry.getCharacters());
 
         Message.MatchInfo matchInfoMessage = new Message.MatchInfo();
-        matchInfoMessage.width = match.getMap().getWidth();
-        matchInfoMessage.height = match.getMap().getHeight();
         matchInfoMessage.seed = seed;
         matchInfoMessage.grid = match.getMap().getGrid();
         matchInfoMessage.entities = match.getEntities();

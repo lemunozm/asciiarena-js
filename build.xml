@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="AsciiArena" basedir="." default="jar">
     <property name="source.dir"     value="src"/>
+    <property name="resources.dir"  value="resources"/>
     <property name="lib.dir"        value="lib"/>
     <property name="class.dir"      value="build"/>
     <property name="jar.dir"        value="dist"/>
@@ -41,6 +42,7 @@
                 <attribute name="Main-Class" value="${main-class}"/>
                 <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
+            <fileset dir="${resources.dir}/.." includes="${resources.dir}/"/>
         </jar>
     </target>
 </project>

@@ -1,5 +1,8 @@
 package com.asciiarena.lib.client;
 
+import com.asciiarena.lib.client.gui.terminal.Brush;
+import com.asciiarena.lib.client.gui.terminal.TerminalWindow;
+import com.asciiarena.lib.client.gui.terminal.Tile;
 import com.asciiarena.lib.common.communication.Connection;
 import com.asciiarena.lib.common.communication.ConnectionError;
 import com.asciiarena.lib.common.communication.Message;
@@ -10,23 +13,27 @@ import com.asciiarena.lib.common.util.Vector2;
 public class Game
 {
     private Connection connection;
+    private int width;
+    private int height;
 
-    public Game(Connection connection)
+    public Game(Connection connection, int width, int height)
     {
         this.connection = connection;
+        this.width = width;
+        this.height = height;
     }
 
     public void start() throws ConnectionError
     {
-        //init point register
-        //init screen
         System.out.println("Initializing game...");
-        
+        //init point register
+        TerminalWindow term = new TerminalWindow("AsciiArena", width * 2 - 1, height);
+        Brush screen = term.createBrush();
         //while
             Message.MatchInfo matchInfoMessage = (Message.MatchInfo) connection.receive();
-            for(int y = 0; y < matchInfoMessage.height; y++)
+            for(int y = 0; y < height; y++)
             {
-                for(int x = 0; x < matchInfoMessage.width; x++)
+                for(int x = 0; x < width; x++)
                 {
                     char mapGraphic = (matchInfoMessage.grid[x][y] == Wall.BORDER) ? 'X' : ' ';
                     char character = '\0';
@@ -38,12 +45,12 @@ public class Game
                             break;
                         }
                     }
-                    System.out.printf("%c ", (character != '\0') ? character : mapGraphic); 
+                    screen.draw(x * 2, y, new Tile((character != '\0') ? character : mapGraphic));
                 }
-                System.out.printf("\n");
             }
 
             Match match = new Match();
+            term.render();
 
             //while(more than one alive)
                 //match.update(); ==> a reception wait here about 3 seconds at first loop.

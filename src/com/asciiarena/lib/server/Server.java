@@ -58,7 +58,7 @@ public class Server
                 return;
             }
 
-            if(!checkServerInfo(connection))
+            if(!gameManager.checkGameInfo(connection))
             {
                 connection.close();
                 return;
@@ -93,17 +93,6 @@ public class Server
         connection.send(checkedVersionMessage);
 
         return checkedVersionMessage.validation;
-    }
-
-    private boolean checkServerInfo(Connection connection) throws ConnectionError
-    {
-        Message.ServerInfo serverInfoMessage = new Message.ServerInfo();
-        serverInfoMessage.players = gameManager.getPlayerRegistry().getCharacters();
-        serverInfoMessage.maxPlayers = gameManager.getPlayerRegistry().getMaxPlayers();
-        serverInfoMessage.pointsToWin = gameManager.getPlayerRegistry().getPointsToWin();
-        connection.send(serverInfoMessage);
-
-        return !gameManager.getPlayerRegistry().isComplete();
     }
 
     private static boolean validateVersion(String version)
