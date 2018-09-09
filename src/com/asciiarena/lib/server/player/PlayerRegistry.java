@@ -8,6 +8,8 @@ import com.asciiarena.lib.common.communication.Connection;
 import com.asciiarena.lib.common.communication.ConnectionError;
 import com.asciiarena.lib.common.logging.Log;
 
+import javafx.util.Pair;
+
 public class PlayerRegistry
 {
     public static enum Status
@@ -48,15 +50,15 @@ public class PlayerRegistry
         return Status.OK;
     }        
 
-    public void sendToPlayers(Object object) 
+    public void sendToPlayers(Object message) 
     {
         for(Player player: players)
         {
             try
             {
-                if(!player.isConnected())
+                if(player.isConnected())
                 {
-                    player.getConnection().send(object);
+                    player.getConnection().send(message);
                 }
             }
             catch (ConnectionError e)
@@ -67,25 +69,27 @@ public class PlayerRegistry
         }
     }
 
-    public List<Object> receiveFromPlayers() 
+    public List<Pair<Player, Object>> receiveFromPlayers() 
     {
-        ArrayList<Object> objects = new ArrayList<Object>(players.size());
-        for(int i = 0; i < players.size(); i++)
+        ArrayList<Pair<Player, Object>> messages = new ArrayList<Pair<Player, Object>>(players.size());
+        for(Player player: players)
         {
             try
             {
-                if(!players.get(i).isConnected())
+                Object message = null;
+                if(player.isConnected())
                 {
-                    objects.set(i, players.get(i).getConnection().receive());
+                    message = player.getConnection().receive(); 
                 }
+                messages.add(new Pair<Player, Object>(player, message));
             }
             catch (ConnectionError e)
             {
-                players.get(i).markAsDisconnected();
-                Log.warning("Player %c disconnected", players.get(i).getCharacter());
+                player.markAsDisconnected();
+                Log.warning("Player %c disconnected", player.getCharacter());
             }
         }
-        return objects; 
+        return messages; 
     }
 
     public boolean hasWinner()

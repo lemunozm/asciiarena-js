@@ -43,40 +43,52 @@ public class Vector2 implements Serializable
         return "(" + x + ", " + y + ")"; 
     }
 
-    public void set(int x, int y)
+    public Vector2 set(int x, int y)
     {
         this.x = x;
         this.y = y;
+
+        return this;
     }
 
-    public void set(Vector2 v)
+    public Vector2 set(Vector2 v)
     {
         this.x = v.x;
         this.y = v.y;
+
+        return this;
     }
 
-    public void add(int x, int y)
+    public Vector2 add(int x, int y)
     {
         this.x += x;
         this.y += y;
+
+        return this;
     }
 
-    public void add(Vector2 v)
+    public Vector2 add(Vector2 v)
     {
         x += v.x;
         y += v.y;
+
+        return this;
     }
 
-    public void sub(int x, int y)
+    public Vector2 sub(int x, int y)
     {
         this.x -= x;
         this.y -= y;
+
+        return this;
     }
 
-    public void sub(Vector2 v)
+    public Vector2 sub(Vector2 v)
     {
         x -= v.x;
         y -= v.y;
+
+        return this;
     }
 
     public int getLength() 

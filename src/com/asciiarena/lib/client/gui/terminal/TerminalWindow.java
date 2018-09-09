@@ -28,7 +28,6 @@ public class TerminalWindow
         this.terminalPanel = new TerminalPanel(rows, columns, fontHeight, font);
         terminalPanel.setFocusable(true);
 
-
         this.frame = new JFrame(title);
         frame.add(terminalPanel);
         frame.setResizable(false);
@@ -40,12 +39,18 @@ public class TerminalWindow
         frame.setVisible(true);
     }
 
+    public void close()
+    {
+        frame.setVisible(false);
+        frame.dispose();
+    }
+
     public boolean isKeyDown(Key key)
     {
         return terminalPanel.isKeyDown(key.getCode());
     }
 
-    public void render()
+    public void show()
     {
         terminalPanel.repaint();
     }

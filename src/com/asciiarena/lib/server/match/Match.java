@@ -28,6 +28,21 @@ public class Match
         }
     }
 
+    public void update(List<EntityAction> entityActions)
+    {
+        for(EntityAction action: entityActions)
+        {
+            Vector2 movement = action.getMovement().getVector();
+            Vector2 entityPosition = action.getEntity().getPosition();
+
+            Vector2 futurePosition = entityPosition.add(movement);
+            if(map.getPlace(futurePosition) == Wall.EMPTY && !existEntity(futurePosition))
+            {
+                action.getEntity().move(movement);
+            }
+        }
+    }
+
     public Vector2 searchEmptyRandomPosition(int minEntityDistance)
     {
         ArrayList<Vector2> emptyPlaces = new ArrayList<Vector2>(map.getWidth() * map.getHeight()); 
@@ -36,23 +51,61 @@ public class Match
             for(int x = 0; x < map.getWidth(); x++)
             {
                 Vector2 position = new Vector2(x, y);
-                if(map.getPlace(position) == Wall.EMPTY) 
+                if(map.getPlace(position) == Wall.EMPTY && getClosedEntityDistance(position) > minEntityDistance) 
                 {
-                    boolean free = true; 
-                    for(Entity entity: entities)
-                    {
-                        free &= entity.getPosition().getDistanceTo(position) > minEntityDistance;
-                    }
-
-                    if(free)
-                    {
-                        emptyPlaces.add(position);
-                    }
+                    emptyPlaces.add(position);
                 }
             }
         }
         
         return emptyPlaces.get(new Random().nextInt(emptyPlaces.size()));
+    }
+
+    public int getClosedEntityDistance(Vector2 position)
+    {
+        int minDistance = Integer.MAX_VALUE;
+        for(Entity entity: entities)
+        {
+            int distance = entity.getPosition().getDistanceTo(position);
+            if(distance < minDistance)
+            {
+                minDistance = distance;
+            }
+        }
+
+        return minDistance;
+    }
+
+    public boolean existEntity(Vector2 position)
+    {
+        for(Entity entity: entities)
+        {
+            if(position.equals(entity.getPosition()))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Entity getEntity(char character)
+    {
+        for(Entity entity: entities)
+        {
+            if(entity.getCharacter() == character)
+            {
+                return entity;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean hasFinished()
+    {
+        //TODO
+        return false;   
     }
 
     public Map getMap()

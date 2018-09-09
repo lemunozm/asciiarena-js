@@ -78,7 +78,7 @@ public class Server
 
         if(gameManager.getPlayerRegistry().isComplete())
         {
-            gameManager.startGame();
+            gameManager.runGame();
             gameManager.reset();
         }
     }

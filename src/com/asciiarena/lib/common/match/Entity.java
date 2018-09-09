@@ -21,7 +21,12 @@ public class Entity implements Serializable
 
     public void setPosition(Vector2 position)
     {
-        this.position = position;
+        this.position.set(position);
+    }
+
+    public void move(Vector2 movement)
+    {
+        position.add(movement);
     }
 
     public void setDirection(Direction direction)
@@ -36,7 +41,7 @@ public class Entity implements Serializable
 
     public Vector2 getPosition()
     {
-        return position;
+        return position.clone();
     }
 
     public Direction Direction()

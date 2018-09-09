@@ -3,6 +3,7 @@ package com.asciiarena.lib.common.communication;
 import java.io.Serializable;
 import java.util.List;
 
+import com.asciiarena.lib.common.match.Direction;
 import com.asciiarena.lib.common.match.Entity;
 import com.asciiarena.lib.common.match.Wall;
 
@@ -161,6 +162,44 @@ public class Message
         public String toString()
         {
             return String.format("MATCH_INFO | %s | %d", seed, entities.size());
+        }
+    }
+
+    public static class Frame implements Serializable
+    {
+        private static final long serialVersionUID = -970751876256890497L;
+
+        public List<Entity> entities; 
+        
+        public Frame() {}
+        public Frame(List<Entity> entities)
+        {
+            this.entities = entities;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("FRAME | %d", entities.size());
+        }
+    }
+
+    public static class PlayerAction implements Serializable
+    {
+        private static final long serialVersionUID = 2648491898404678417L;
+
+        public Direction movement; 
+        
+        public PlayerAction() {}
+        public PlayerAction(Direction movement)
+        {
+            this.movement = movement;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("PLAYER_ACTION | %s", movement);
         }
     }
 }

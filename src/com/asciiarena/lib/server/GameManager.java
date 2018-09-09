@@ -74,25 +74,24 @@ public class GameManager
         }
     }
 
-    public void startGame()
+    public void runGame()
     {
         Log.info("Start game");
 
         while(!playerRegistry.hasWinner())
         {
-            currentMatch = new MatchManager(config.map, playerRegistry); 
-            currentMatch.startMatch();
-            try
-            {
-                Thread.sleep(3600000);
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-            System.exit(1);
-        }
+            Log.info("Start match");
 
+            currentMatch = new MatchManager(config.map, playerRegistry); 
+            currentMatch.init();
+            while(!currentMatch.hasFinished())
+            {
+                currentMatch.update(); 
+                currentMatch.playerActions();
+            }
+
+            Log.info("Finish match");
+        }
         currentMatch = null;
 
         Log.info("Finish game");

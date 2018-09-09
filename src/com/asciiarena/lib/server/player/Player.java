@@ -6,14 +6,14 @@ public class Player
 {
     private char character;
     private Connection connection;
-    private boolean connectionLost;
+    private boolean connected;
     private int points;
 
     public Player(char character, Connection connection)
     {
         this.character = character;
         this.connection = connection;
-        this.connectionLost = false;
+        this.connected = true;
     }
 
     public void addPoints(int points)
@@ -23,12 +23,12 @@ public class Player
 
     void markAsDisconnected()
     {
-        connectionLost = true;
+        connected = false;
     }
 
-    boolean isConnected()
+    public boolean isConnected()
     {
-        return connectionLost;
+        return connected;
     }
 
     public char getCharacter()

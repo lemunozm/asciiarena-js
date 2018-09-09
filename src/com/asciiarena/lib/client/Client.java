@@ -51,8 +51,8 @@ public class Client
                 return;
             }
 
-            Game game = new Game(connection, width, height);
-            game.start();
+            Game game = new Game(width, height);
+            game.run(connection);
         } 
         catch (ConnectionError e)
         {
