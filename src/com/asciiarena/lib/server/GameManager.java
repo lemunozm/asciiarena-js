@@ -87,7 +87,6 @@ public class GameManager
             while(!currentMatch.hasFinished())
             {
                 currentMatch.update(); 
-                currentMatch.playerActions();
             }
 
             Log.info("Finish match");

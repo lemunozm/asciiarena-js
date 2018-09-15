@@ -32,13 +32,16 @@ public class Match
     {
         for(EntityAction action: entityActions)
         {
-            Vector2 movement = action.getMovement().getVector();
-            Vector2 entityPosition = action.getEntity().getPosition();
-
-            Vector2 futurePosition = entityPosition.add(movement);
-            if(map.getPlace(futurePosition) == Wall.EMPTY && !existEntity(futurePosition))
+            if(action.getMovement() != null)
             {
-                action.getEntity().move(movement);
+                Vector2 movement = action.getMovement().getVector();
+                Vector2 entityPosition = action.getEntity().getPosition();
+
+                Vector2 futurePosition = entityPosition.add(movement);
+                if(map.getPlace(futurePosition) == Wall.EMPTY && !existEntity(futurePosition))
+                {
+                    action.getEntity().move(movement);
+                }
             }
         }
     }

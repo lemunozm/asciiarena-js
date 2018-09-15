@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import javax.swing.JPanel;
@@ -24,6 +25,7 @@ public class TerminalPanel extends JPanel implements KeyListener
     private static final Color EMPTY_BACKGROUND = Color.BLACK;
 
     private HashSet<Integer> keysDown;
+    private ArrayList<Integer> keysUp;
     private Tile[][] tiles;
     private int tileHeight;
     private int tileWidth;
@@ -50,6 +52,7 @@ public class TerminalPanel extends JPanel implements KeyListener
     public TerminalPanel(int rows, int columns, int fontHeight, Font font)
     {
         this.keysDown = new HashSet<Integer>();
+        this.keysUp = new ArrayList<Integer>();
         this.tiles = new Tile[rows][columns];
         this.tileWidth = fontHeight / 2;
         this.tileHeight = fontHeight;
@@ -74,6 +77,7 @@ public class TerminalPanel extends JPanel implements KeyListener
     @Override
     public void paint(Graphics g)
     {
+        System.out.println("drawing");
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -102,6 +106,15 @@ public class TerminalPanel extends JPanel implements KeyListener
         }
     }
 
+    public void collapseKeysBuffer()
+    {
+        for(int keyUp: keysUp) 
+        {
+            keysDown.remove(keyUp);
+        }
+        keysUp.clear();
+    }
+
     @Override
     public void keyPressed(KeyEvent e)
     {
@@ -111,7 +124,7 @@ public class TerminalPanel extends JPanel implements KeyListener
     @Override
     public void keyReleased(KeyEvent e)
     {
-        keysDown.remove(e.getKeyCode());
+        keysUp.add(e.getKeyCode());
     }
 
     @Override

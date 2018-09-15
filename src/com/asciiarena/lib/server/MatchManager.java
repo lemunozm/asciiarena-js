@@ -1,33 +1,33 @@
 package com.asciiarena.lib.server;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import com.asciiarena.lib.common.communication.Message;
 import com.asciiarena.lib.common.match.Entity;
+import com.asciiarena.lib.common.match.MatchSynchronization;
 import com.asciiarena.lib.server.match.EntityAction;
 import com.asciiarena.lib.server.match.Match;
 import com.asciiarena.lib.server.player.Player;
 import com.asciiarena.lib.server.player.PlayerRegistry;
-
-import javafx.util.Pair;
 
 public class MatchManager
 {
     private static final int RANDOM_SEED_LENGTH = 20;
 
     private PlayerRegistry playerRegistry;
+    private ArrayList<PlayerEventManager> playerEventManagers;
     private String seed;
     private Match match;
-    private ArrayList<EntityAction> entityActions;
+    private MatchSynchronization matchSynchronization;
 
     public MatchManager(ServerConfig.GameConfig.MapConfig mapConfig, PlayerRegistry registry)
     {
         this.playerRegistry = registry;
+        this.playerEventManagers = new ArrayList<PlayerEventManager>();
         this.seed = mapConfig.seed.equals("") ? generateRandomSeed() : mapConfig.seed;
         this.match = new Match(mapConfig.width, mapConfig.height, seed, playerRegistry.getCharacters());
-        this.entityActions = new ArrayList<EntityAction>(); 
+        this.matchSynchronization = new MatchSynchronization();
     }
 
     public void init()
@@ -37,42 +37,35 @@ public class MatchManager
         matchInfoMessage.grid = match.getMap().getGrid();
         matchInfoMessage.entities = match.getEntities();
         playerRegistry.sendToPlayers(matchInfoMessage);
+
+        for(Player player: playerRegistry.getPlayers())
+        {
+            playerEventManagers.add(new PlayerEventManager(player));
+        }
     }
 
     public void update()
     {
+        matchSynchronization.waitForNextFrame();
+
+        ArrayList<EntityAction> entityActions = new ArrayList<EntityAction>(); 
+
+        for(PlayerEventManager playerEvent: playerEventManagers)
+        {
+            Player player = playerEvent.getPlayer();
+            if(player.isConnected())
+            {
+                Entity entity = match.getEntity(player.getCharacter());
+                entityActions.add(new EntityAction(entity, playerEvent.requestMovement())); 
+            }
+        }
+
         match.update(entityActions);
         entityActions.clear();
 
         Message.Frame frameMessage = new Message.Frame();
         frameMessage.entities = match.getEntities();
         playerRegistry.sendToPlayers(frameMessage);
-
-        try
-        {
-            Thread.sleep(0);
-        } 
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public void playerActions()
-    {
-        List<Pair<Player, Object>> playerActionMessages = playerRegistry.receiveFromPlayers();
-
-        for(Pair<Player, Object> message: playerActionMessages)
-        {
-            Player player = message.getKey();
-            if(player.isConnected())
-            {
-                Message.PlayerAction action = (Message.PlayerAction) message.getValue();
-
-                Entity entity = match.getEntity(player.getCharacter());
-                entityActions.add(new EntityAction(entity, action.movement));
-            }
-        }
     }
 
     public boolean hasFinished()

@@ -1,6 +1,7 @@
 package com.asciiarena.lib.server.player;
 
 import com.asciiarena.lib.common.communication.Connection;
+import com.asciiarena.lib.common.logging.Log;
 
 public class Player
 {
@@ -21,8 +22,9 @@ public class Player
         this.points += points; 
     }
 
-    void markAsDisconnected()
+    public void markAsDisconnected()
     {
+        Log.warning("Player %c disconnected", character);
         connected = false;
     }
 

@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.asciiarena.lib.common.communication.Connection;
 import com.asciiarena.lib.common.communication.ConnectionError;
-import com.asciiarena.lib.common.logging.Log;
 
 import javafx.util.Pair;
 
@@ -64,7 +63,6 @@ public class PlayerRegistry
             catch (ConnectionError e)
             {
                 player.markAsDisconnected();
-                Log.warning("Player %c disconnected", player.getCharacter());
             }
         }
     }
@@ -86,7 +84,6 @@ public class PlayerRegistry
             catch (ConnectionError e)
             {
                 player.markAsDisconnected();
-                Log.warning("Player %c disconnected", player.getCharacter());
             }
         }
         return messages; 
