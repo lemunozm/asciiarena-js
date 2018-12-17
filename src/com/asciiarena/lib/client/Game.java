@@ -38,7 +38,6 @@ public class Game
                 //Save and update player information (points)
                 //check if match finished
                 match.playerAction(connection, readUserAction());
-                match.render();
                 terminal.show();
             }
         }

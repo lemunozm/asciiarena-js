@@ -53,7 +53,7 @@ public class TerminalWindow
     public void show()
     {
         terminalPanel.collapseKeysBuffer(); //check if this can make a concurrent error.
-        terminalPanel.repaint();
+        terminalPanel.paint();
     }
 
     public Brush createBrush()

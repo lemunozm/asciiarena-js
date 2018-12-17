@@ -9,7 +9,6 @@ import com.asciiarena.lib.common.communication.ConnectionError;
 import com.asciiarena.lib.common.communication.Message;
 import com.asciiarena.lib.common.match.Direction;
 import com.asciiarena.lib.common.match.Entity;
-import com.asciiarena.lib.common.match.MatchSynchronization;
 import com.asciiarena.lib.common.match.Wall;
 import com.asciiarena.lib.common.util.Vector2;
 
@@ -20,7 +19,6 @@ public class Match
     private List<Entity> entities;
     private int width;
     private int height;
-    private MatchSynchronization matchSynchronization;
 
     public Match(int width, int height, Brush matchScreen)
     {
@@ -29,7 +27,6 @@ public class Match
         this.entities = null;
         this.width = width;
         this.height = height;
-        this.matchSynchronization = new MatchSynchronization();
     }
 
     public void init(Connection connection) throws ConnectionError
@@ -37,14 +34,14 @@ public class Match
         Message.MatchInfo matchInfoMessage = (Message.MatchInfo) connection.receive();
         mapGrid = matchInfoMessage.grid;
         entities = matchInfoMessage.entities;
+        render();
     }
 
     public void update(Connection connection) throws ConnectionError
     {
-        matchSynchronization.waitForNextFrame();
-
         Message.Frame frameMessage = (Message.Frame) connection.receive();
         entities = frameMessage.entities;
+        render();
     }
 
     public void playerAction(Connection connection, PlayerAction action) throws ConnectionError

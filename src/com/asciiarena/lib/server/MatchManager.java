@@ -46,8 +46,6 @@ public class MatchManager
 
     public void update()
     {
-        matchSynchronization.waitForNextFrame();
-
         ArrayList<EntityAction> entityActions = new ArrayList<EntityAction>(); 
 
         for(PlayerEventManager playerEvent: playerEventManagers)
@@ -66,6 +64,8 @@ public class MatchManager
         Message.Frame frameMessage = new Message.Frame();
         frameMessage.entities = match.getEntities();
         playerRegistry.sendToPlayers(frameMessage);
+
+        matchSynchronization.waitForNextFrame();
     }
 
     public boolean hasFinished()

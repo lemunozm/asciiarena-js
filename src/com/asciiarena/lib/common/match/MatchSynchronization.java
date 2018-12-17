@@ -17,9 +17,7 @@ public class MatchSynchronization
     {
         long timestamp = new Date().getTime();
         long waitingTime = (1000 / FPS) - (timestamp - lastFrameTimestamp);
-        lastFrameTimestamp = timestamp;
 
-        System.out.println("update");
         if(waitingTime > 0)
         {
             try
@@ -31,5 +29,7 @@ public class MatchSynchronization
                 e.printStackTrace();
             }
         }
+
+        lastFrameTimestamp = new Date().getTime();
     }
 }
