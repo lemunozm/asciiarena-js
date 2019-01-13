@@ -27,12 +27,12 @@ class PlayerRegistry:
     def add_player(character):
         if is_complete():
             return ERROR_FULL
-        elif get_player():
+        if get_player():
             return ERROR_ALREADY_EXISTS
-        else:
-            new_player = Player(character, 0)
-            player_list.add_player(new_player)
-            return OK
+
+        new_player = Player(character, 0)
+        player_list.add_player(new_player)
+        return OK
 
     def is_complete():
         return len(self._player_list) == self._max_players
