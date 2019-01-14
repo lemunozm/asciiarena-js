@@ -8,3 +8,11 @@ class CheckedVersion:
     def __init__(self, value, validation):
         self.value = value
         self.validation = validation
+
+class GameInfo:
+    def __init__(self, players, max_players, points, map_size, seed):
+        self.players = players
+        self.max_players = max_players
+        self.points = points
+        self.map_size = map_size
+        self.seed = seed
