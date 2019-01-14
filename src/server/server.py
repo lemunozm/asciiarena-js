@@ -4,14 +4,22 @@ import socket
 import threading
 import _pickle as pickle
 
+class GameConfig:
+    def __init__(self, players, points):
+        self.players = players
+        self.points = points
+
+class MapConfig:
+    def __init__(self, map_size, seed):
+        self.map_size = map_size
+        self.seed = seed
+
 class Server:
-    def __init__(self, port, players, points, map_size, seed, log):
+    def __init__(self, port, log_level, game_config, map_config):
         self._port = port
-        self._players = players
-        self._points = points
-        self._map_size = map_size
-        self._seed = seed
-        self._log = log
+        self._game_config = game_config
+        self._map_config = map_config
+        self._log_level = log_level
 
     def run(self):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
