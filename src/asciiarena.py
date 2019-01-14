@@ -42,15 +42,11 @@ def init_client(args):
 def init_server(args):
     print("Running asciiarena server...")
 
-    points = args.players if 0 != args.players else args.players * 5
-    map_size = args.map_size if 0 != args.map_size else math.sqrt(args.players * 255)
+    points = args.points if 0 != args.points else args.players * 5
+    map_size = args.map_size if 0 != args.map_size else int(math.sqrt(args.players * 255))
 
-    game_config = server.GameConfig(args.players, args.points)
-    map_config = server.MapConfig(args.map_size, args.seed)
-
-    game_server = server.Server(args.port, args.log, game_config, map_config)
+    game_server = server.Server(args.port, args.players, points, map_size, args.seed, args.log)
     game_server.run()
-
 
 if __name__ == "__main__":
     command_line_interface()

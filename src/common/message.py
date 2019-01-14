@@ -10,8 +10,8 @@ class CheckedVersion:
         self.validation = validation
 
 class GameInfo:
-    def __init__(self, players, max_players, points, map_size, seed):
-        self.players = players
+    def __init__(self, player_list, max_players, points, map_size, seed):
+        self.player_list = player_list
         self.max_players = max_players
         self.points = points
         self.map_size = map_size

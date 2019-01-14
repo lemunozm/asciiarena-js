@@ -16,8 +16,11 @@ class Client:
         if not self._check_version(sock):
             return
 
-        self._check_game_info(sock)
-        self._login(sock)
+        if not self._check_game_info(sock):
+            return
+
+        if not self._login(sock):
+            return
 
     def _check_version(self, sock):
         version_obj = message.Version(version.CURRENT)
@@ -34,7 +37,20 @@ class Client:
         return compatibility
 
     def _check_game_info(self, sock):
-        pass
+        game_info_message = sock.recv(message.MAX_BUFFER_SIZE)
+        game_info_obj = pickle.loads(game_info_message)
+
+        seed_str = "random" if "" == game_info_obj.seed else game_info_obj.seed
+        print("")
+        print("Game: points to win: {} | map size: {} x {} | seed: {}".format(game_info_obj.points, game_info_obj.map_size, game_info_obj.map_size, seed_str))
+        print("      players: {} / {} players - {}".format(len(game_info_obj.player_list), game_info_obj.max_players, game_info_obj.player_list))
+
+        if len(game_info_obj.player_list) == game_info_obj.max_players:
+            print("      The game is already started")
+            return False
+
+        return True
 
     def _login(self, sock):
+        # Only returns if the game is full
         pass

@@ -1,9 +1,10 @@
 from enum import Enum
 
 class Player:
-    def __init__(self, character, points):
+    def __init__(self, character, points, socket):
         self._character = character
         self._points = points
+        self._socket = socket
 
     def get_character(self):
         return self._character
@@ -11,11 +12,13 @@ class Player:
     def get_points(self):
         return self._points
 
+    def get_socket(self):
+        return self._socket
 
 class PlayerRegistry:
 
-    def __init__(self, player_list, max_players, points_to_win):
-        self._player_list = player_list
+    def __init__(self, max_players, points_to_win):
+        self._player_list = []
         self._max_players = max_players
         self._points_to_win = points_to_win
 
@@ -50,3 +53,11 @@ class PlayerRegistry:
                 winners.append(player)
         return winners
 
+    def get_player_list(self):
+        return self._player_list
+
+    def get_max_players(self):
+        return self._max_players
+
+    def get_points_to_win(self):
+        return self._points_to_win

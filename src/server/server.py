@@ -1,24 +1,16 @@
 from common import version, message
+from .players import PlayerRegistry
+from .game_manager import GameManager
 
 import socket
 import threading
 import _pickle as pickle
 
-class GameConfig:
-    def __init__(self, players, points):
-        self.players = players
-        self.points = points
-
-class MapConfig:
-    def __init__(self, map_size, seed):
-        self.map_size = map_size
-        self.seed = seed
-
 class Server:
-    def __init__(self, port, log_level, game_config, map_config):
+    def __init__(self, port, max_players, points, map_size, seed, log_level):
         self._port = port
-        self._game_config = game_config
-        self._map_config = map_config
+        self._player_registry = PlayerRegistry(max_players, points);
+        self._game_manager = GameManager(map_size, seed)
         self._log_level = log_level
 
     def run(self):
@@ -36,6 +28,8 @@ class Server:
         self._check_game_info(sock)
         self._login(sock)
 
+        #Check here if all people are available
+
     def _check_version(self, sock):
         version_message = sock.recv(message.MAX_BUFFER_SIZE)
         version_obj = pickle.loads(version_message)
@@ -47,7 +41,15 @@ class Server:
         sock.send(checked_version_message)
 
     def _check_game_info(self, sock):
-        pass
+        player_list = self._player_registry.get_player_list()
+        max_players = self._player_registry.get_max_players()
+        points = self._player_registry.get_points_to_win()
+        map_size = self._game_manager.get_map_size()
+        seed = self._game_manager.get_seed()
+
+        game_info_obj = message.GameInfo(player_list, max_players, points, map_size, seed)
+        game_info_message = pickle.dumps(game_info_obj)
+        sock.send(game_info_message)
 
     def _login(self, sock):
         pass
