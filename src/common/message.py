@@ -16,3 +16,14 @@ class GameInfo:
         self.points = points
         self.map_size = map_size
         self.seed = seed
+
+class PlayerLogin:
+    def __init__(self, character):
+        self.character = character
+
+class PlayerLoginStatus:
+    SUCCESFUL = 1
+    ALREADY_EXISTS = 2
+    GAME_COMPLETE = 3
+    def __init__(self, status):
+        self.status = status

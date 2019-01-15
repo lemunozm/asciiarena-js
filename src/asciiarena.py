@@ -8,7 +8,7 @@ import string
 import math
 
 def command_line_interface():
-    default_port = "3500"
+    default_port = "2500"
 
     parser = argparse.ArgumentParser(prog = "asciiarena")
     parser.add_argument("--version", action = "version", version = "%(prog)s " + version.CURRENT)
@@ -18,7 +18,7 @@ def command_line_interface():
     client_parser = subparsers.add_parser("client")
     client_parser.add_argument("--ip", required = True, help = "Server ip")
     client_parser.add_argument("--port", default = default_port, type = int, help = "Server port (" + default_port + " by default)")
-    client_parser.add_argument("--character", help = "Player character", choices = list(string.ascii_uppercase))
+    client_parser.add_argument("--character", default = "", help = "Player character", choices = list(string.ascii_uppercase))
     client_parser.set_defaults(func = init_client)
 
     server_parser = subparsers.add_parser("server")

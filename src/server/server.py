@@ -24,11 +24,16 @@ class Server:
             thread.start()
 
     def _client_connection(self, sock):
-        self._check_version(sock)
-        self._check_game_info(sock)
-        self._login(sock)
+        if not self._check_version(sock):
+            return
 
-        #Check here if all people are available
+        if not self._check_game_info(sock):
+            return
+
+        if not self._login(sock):
+            return
+
+        print("Loggued")
 
     def _check_version(self, sock):
         version_message = sock.recv(message.MAX_BUFFER_SIZE)
@@ -40,8 +45,10 @@ class Server:
         checked_version_message = pickle.dumps(checked_version_obj)
         sock.send(checked_version_message)
 
+        return validation
+
     def _check_game_info(self, sock):
-        player_list = self._player_registry.get_player_list()
+        player_list = self._player_registry.get_character_list()
         max_players = self._player_registry.get_max_players()
         points = self._player_registry.get_points_to_win()
         map_size = self._game_manager.get_map_size()
@@ -51,5 +58,41 @@ class Server:
         game_info_message = pickle.dumps(game_info_obj)
         sock.send(game_info_message)
 
+        return len(player_list) != max_players
+
     def _login(self, sock):
-        pass
+        while True:
+            status = self._login_request(sock)
+            if message.PlayerLoginStatus.SUCCESFUL == status:
+                return True
+            if message.PlayerLoginStatus.GAME_COMPLETE == status:
+                return False
+
+    def _login_request(self, sock):
+        player_login_message = sock.recv(message.MAX_BUFFER_SIZE)
+        player_login_obj = pickle.loads(player_login_message)
+
+        status = self._registry_player(sock, player_login_obj.character)
+
+        player_login_status_obj = message.PlayerLoginStatus(status)
+        player_login_status_message = pickle.dumps(player_login_status_obj)
+        sock.send(player_login_status_message)
+
+        if message.PlayerLoginStatus.SUCCESFUL == status:
+            #sendAll
+            pass
+
+        return status
+
+    def _registry_player(self, sock, character):
+        if self._player_registry.add_player(character, sock):
+            return message.PlayerLoginStatus.SUCCESFUL
+        else:
+            if self._player_registry.is_complete():
+                return message.PlayerLoginStatus.GAME_COMPLETE
+            else:
+                return message.PlayerLoginStatus.ALREADY_EXISTS
+
+
+
+
