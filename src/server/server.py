@@ -71,7 +71,7 @@ class Server:
                 players_info_message = message.PlayersInfo(self._player_registry.get_character_list())
                 communication.sendAll(self._player_registry.get_socket_list(), players_info_message)
                 return True
-            if message.PlayerLoginStatus.GAME_COMPLETE == status:
+            if message.PlayerLoginStatus.GAME_FULL == status:
                 return False
 
     def _registry_player(self, sock, character):
@@ -79,7 +79,7 @@ class Server:
             return message.PlayerLoginStatus.SUCCESFUL
         else:
             if self._player_registry.is_complete():
-                return message.PlayerLoginStatus.GAME_COMPLETE
+                return message.PlayerLoginStatus.GAME_FULL
             else:
                 return message.PlayerLoginStatus.ALREADY_EXISTS
 

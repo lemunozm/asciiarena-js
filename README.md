@@ -1,2 +1,2 @@
-# AsciiArena
-An arcade multiplayer game in console
+# asciiarena
+An arcade multiplayer console game

@@ -73,7 +73,7 @@ class Client:
             player_login_status_message = communication.recv(sock)
             if message.PlayerLoginStatus.SUCCESFUL == player_login_status_message.status:
                 return True
-            if message.PlayerLoginStatus.GAME_COMPLETE == player_login_status_message.status:
+            if message.PlayerLoginStatus.GAME_FULL == player_login_status_message.status:
                 return False
             if message.PlayerLoginStatus.ALREADY_EXISTS == player_login_status_message.status:
                 print("      the character '" + serf._character + "' already exists.")

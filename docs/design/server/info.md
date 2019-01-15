@@ -1,6 +1,7 @@
-- Only the classes inside of `server` package have known about connections.
+## Project modules knowledge:
+
+- Only the `server` and `game_manager`packages have known about connections.
+- Ony the `asciiarena.py` package knows about how talk with the user before init the client or server
+- `Server` class knows about connections and users, but not about the game.
+- `GameManager` class knows about how the game but nothing about the match itself.
 - The `Match` package doest know that lives into a server.
-- the `app.mode` package knows only about how talk with the user before init the client or server
-- `GameManager` class knows about how create a games but nothing about the match itself.
-- `MatchManager` knows only about the match and how to translate the connection data to match information.
-- `Server` is the manager for controlling the new connections. He choose when the things happens (at top level).
