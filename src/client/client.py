@@ -20,10 +20,8 @@ class Client:
 
         if not self._check_version(sock):
             return
-
         if not self._check_game_info(sock):
             return
-
         if not self._login(sock):
             return
 
@@ -76,7 +74,7 @@ class Client:
             if message.PlayerLoginStatus.GAME_FULL == player_login_status_message.status:
                 return False
             if message.PlayerLoginStatus.ALREADY_EXISTS == player_login_status_message.status:
-                print("      the character '" + serf._character + "' already exists.")
+                print("      the character '" + self._character + "' already exists.")
                 self._character = ""
 
     def _wait_game(self, sock):

@@ -3,7 +3,7 @@ from .players import PlayerRegistry
 from .game_manager import GameManager
 
 import socket
-import threading
+from threading import Thread, Lock
 import _pickle as pickle
 
 class Server:
@@ -12,6 +12,7 @@ class Server:
         self._player_registry = PlayerRegistry(max_players, points);
         self._game_manager = GameManager(self._player_registry, map_size, seed)
         self._log_level = log_level
+        self._mutex = Lock()
 
     def run(self):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,16 +22,14 @@ class Server:
 
         while True:
             sock, address = server_sock.accept()
-            thread = threading.Thread(target = self._client_connection, args = (sock,))
+            thread = Thread(target = self._client_connection, args = (sock,))
             thread.start()
 
     def _client_connection(self, sock):
         if not self._check_version(sock):
             return
-
         if not self._check_game_info(sock):
             return
-
         if not self._login(sock):
             return
 
@@ -62,17 +61,21 @@ class Server:
     def _login(self, sock):
         while True:
             player_login_message = communication.recv(sock)
-            status = self._registry_player(sock, player_login_message.character)
+            self._mutex.acquire()
+            try:
+                status = self._registry_player(sock, player_login_message.character)
 
-            player_login_status_message = message.PlayerLoginStatus(status)
-            communication.send(sock, player_login_status_message)
+                player_login_status_message = message.PlayerLoginStatus(status)
+                communication.send(sock, player_login_status_message)
 
-            if message.PlayerLoginStatus.SUCCESFUL == status:
-                players_info_message = message.PlayersInfo(self._player_registry.get_character_list())
-                communication.sendAll(self._player_registry.get_socket_list(), players_info_message)
-                return True
-            if message.PlayerLoginStatus.GAME_FULL == status:
-                return False
+                if message.PlayerLoginStatus.SUCCESFUL == status:
+                    players_info_message = message.PlayersInfo(self._player_registry.get_character_list())
+                    communication.sendAll(self._player_registry.get_socket_list(), players_info_message)
+                    return True
+                if message.PlayerLoginStatus.GAME_FULL == status:
+                    return False
+            finally:
+                self._mutex.release()
 
     def _registry_player(self, sock, character):
         if self._player_registry.add_player(character, sock):
@@ -82,7 +85,4 @@ class Server:
                 return message.PlayerLoginStatus.GAME_FULL
             else:
                 return message.PlayerLoginStatus.ALREADY_EXISTS
-
-
-
 
