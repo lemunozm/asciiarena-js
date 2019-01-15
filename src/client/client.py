@@ -1,4 +1,4 @@
-from common import version, message
+from common import version, message, communication
 
 import socket
 import string
@@ -9,6 +9,10 @@ class Client:
         self._ip = ip;
         self._port = port;
         self._character = character
+        self._max_players = 0
+        self._points_to_win = 0
+        self._map_size = 0
+        self._seed = ""
 
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,38 +27,37 @@ class Client:
         if not self._login(sock):
             return
 
-        print("Logged")
+        self._wait_game(sock)
+        print("init_game")
 
     def _check_version(self, sock):
-        version_obj = message.Version(version.CURRENT)
-        version_message = pickle.dumps(version_obj)
-        sock.send(version_message)
+        version_message = message.Version(version.CURRENT)
+        communication.send(sock, version_message)
 
-        checked_version_message = sock.recv(message.MAX_BUFFER_SIZE)
-        checked_version_obj = pickle.loads(checked_version_message)
+        checked_version_message = communication.recv(sock)
 
-        compatibility = "COMPATIBLE" if checked_version_obj.validation else "INCOMPATIBLE"
+        compatibility = "COMPATIBLE" if checked_version_message.validation else "INCOMPATIBLE"
         print("Connected to server {}:{}".format(self._ip, self._port))
-        print("Client version: {} - server version: {} - {}".format(version.CURRENT, checked_version_obj.value, compatibility))
+        print("Client version: {} - server version: {} - {}".format(version.CURRENT, checked_version_message.value, compatibility))
 
         return compatibility
 
     def _check_game_info(self, sock):
-        game_info_message = sock.recv(message.MAX_BUFFER_SIZE)
-        game_info_obj = pickle.loads(game_info_message)
+        game_info_message = communication.recv(sock)
 
-        player_list = game_info_obj.player_list
-        max_players = game_info_obj.max_players
-        points = game_info_obj.points
-        map_size = game_info_obj.map_size
-        seed_str = "random" if "" == game_info_obj.seed else game_info_obj.seed
+        character_list = game_info_message.character_list
+        self._max_players = game_info_message.max_players
+        self._points_to_win = game_info_message.points
+        self._map_size = game_info_message.map_size
+        self._seed = game_info_message.seed
+        printable_seed = "random" if "" == self._seed else self._seed
 
         print("")
-        print("Game: points to win: {} | map size: {} x {} | seed: {}".format(points, map_size, map_size, seed_str))
-        print("      players: {} / {} - characters: {}".format(len(player_list), max_players, player_list))
+        print("Game: points to win: {} | map size: {} x {} | seed: {}".format(self._points_to_win, self._map_size, self._map_size, printable_seed))
+        print("      players: {} / {} - characters: {}".format(len(character_list), self._max_players, character_list))
 
-        if len(player_list) == max_players:
-            print("      The game is already started")
+        if len(character_list) == self._max_players:
+            print("      the game is already started. Please, try later.")
             return False
 
         return True
@@ -63,28 +66,32 @@ class Client:
         while True:
             if "" == self._character:
                 self._character = Client._ask_character()
-            status = self._login_request(sock)
-            if message.PlayerLoginStatus.SUCCESFUL == status:
+
+            player_login_message = message.PlayerLogin(self._character)
+            communication.send(sock, player_login_message)
+
+            player_login_status_message = communication.recv(sock)
+            if message.PlayerLoginStatus.SUCCESFUL == player_login_status_message.status:
                 return True
-            if message.PlayerLoginStatus.GAME_COMPLETE == status:
+            if message.PlayerLoginStatus.GAME_COMPLETE == player_login_status_message.status:
                 return False
-            if message.PlayerLoginStatus.ALREADY_EXISTS == status:
-                print("The character '" + serf._character + "' already exists.")
+            if message.PlayerLoginStatus.ALREADY_EXISTS == player_login_status_message.status:
+                print("      the character '" + serf._character + "' already exists.")
                 self._character = ""
 
-    def _login_request(self, sock):
-        player_login_obj = message.PlayerLogin(self._character)
-        player_login_message = pickle.dumps(player_login_obj)
-        sock.send(player_login_message)
+    def _wait_game(self, sock):
+        while True:
+            players_info_message = communication.recv(sock)
 
-        player_login_status_message = sock.recv(message.MAX_BUFFER_SIZE)
-        player_login_status_obj = pickle.loads(player_login_status_message)
+            character_list = players_info_message.character_list
+            print("      players: {} / {} - characters: {}".format(len(character_list), self._max_players, character_list))
 
-        return player_login_status_obj.status
+            if len(character_list) == self._max_players:
+                return
 
     @staticmethod
     def _ask_character():
         while True:
-            character = input("      Choose a character (an unique letter from A to Z): ")
+            character = input("      choose a character (an unique letter from A to Z): ")
             if 1 == len(character) and -1 != string.ascii_uppercase.find(character):
                 return character
