@@ -1,5 +1,5 @@
 from common import version, message, communication
-from .players import PlayerRegistry
+from .room import PlayerRoom
 from .game_manager import GameManager
 
 import socket
@@ -12,8 +12,8 @@ logger = logging.getLogger("asciiarena")
 class Server:
     def __init__(self, port, max_players, points, map_size, seed):
         self._port = port
-        self._player_registry = PlayerRegistry(max_players, points);
-        self._game_manager = GameManager(self._player_registry, map_size, seed)
+        self._player_room = PlayerRoom(max_players, points);
+        self._game_manager = GameManager(self._player_room, map_size, seed)
         self._mutex = Lock()
 
     def run(self):
@@ -38,27 +38,43 @@ class Server:
 
     def _client_connection(self, sock):
         try:
-            if not self._check_version(sock):
-                return
-            if not self._check_game_info(sock):
-                return
-            if not self._login(sock):
-                return
+            client_message = communication.recv(sock)
+            if message.Version == client_message.__class__:
+                self._server_info_request(sock, client_message)
 
-            if self._player_registry.is_complete():
-                self._game_manager.init_game()
+            elif message.PlayerLogin == client_message.__class__:
+                with self._mutex:
+                    if not self._login_request(sock, client_message):
+                        return
 
-        except communication.ConnectionError:
+                    if self._player_room.is_complete():
+                        self._game_manager.init_game()
+
+            else:
+                (ip, port) = sock.getpeername()
+                logger.warning("Rejected: unknown message received from {}:{}".format(ip, port))
+
+        except communication.ConnectionLost:
             (ip, port) = sock.getpeername()
             logger.error("Connection lost with client {}:{}".format(ip, port))
-            # if the player is already logger y la partida no ha empezado then we must logout
 
         finally:
             sock.close()
 
-    def _check_version(self, sock):
-        version_message = communication.recv(sock)
+    def _server_info_request(self, sock, version_message):
+        if not self._check_version(sock, version_message):
+            return
 
+        character_list = self._player_room.get_character_list()
+        max_players = self._player_room.get_max_participants()
+        points = self._player_room.get_points_to_win()
+        map_size = self._game_manager.get_map_size()
+        seed = self._game_manager.get_seed()
+
+        game_info_message = message.GameInfo(character_list, max_players, points, map_size, seed)
+        communication.send(sock, game_info_message)
+
+    def _check_version(self, sock, version_message):
         validation = version.check(version_message.value)
 
         if validation:
@@ -71,43 +87,28 @@ class Server:
 
         return validation
 
-    def _check_game_info(self, sock):
-        character_list = self._player_registry.get_character_list()
-        max_players = self._player_registry.get_max_players()
-        points = self._player_registry.get_points_to_win()
-        map_size = self._game_manager.get_map_size()
-        seed = self._game_manager.get_seed()
+    def _login_request(self, sock, player_login_message):
+        status = self._registry_player(sock, player_login_message.character)
 
-        game_info_message = message.GameInfo(character_list, max_players, points, map_size, seed)
-        communication.send(sock, game_info_message)
+        player_login_status_message = message.PlayerLoginStatus(status)
+        communication.send(sock, player_login_status_message)
 
-        return not self._player_registry.is_complete()
+        if message.PlayerLoginStatus.SUCCESFUL == status:
+            players_info_message = message.PlayersInfo(self._player_room.get_character_list())
+            communication.sendAll(self._player_room.get_socket_list(), players_info_message)
+            return True
 
-    def _login(self, sock):
-        while True:
-            player_login_message = communication.recv(sock)
-            with self._mutex:
-                status = self._registry_player(sock, player_login_message.character)
-
-                player_login_status_message = message.PlayerLoginStatus(status)
-                communication.send(sock, player_login_status_message)
-
-                if message.PlayerLoginStatus.SUCCESFUL == status:
-                    players_info_message = message.PlayersInfo(self._player_registry.get_character_list())
-                    communication.sendAll(self._player_registry.get_socket_list(), players_info_message)
-                    return True
-
-                if message.PlayerLoginStatus.GAME_FULL == status:
-                    return False
+        if message.PlayerLoginStatus.GAME_CLOSED == status:
+            return False
 
     def _registry_player(self, sock, character):
-        if self._player_registry.add_player(character, sock):
+        if self._player_room.add_player(character, sock):
             logger.info("Player registered '{}'".format(character))
             return message.PlayerLoginStatus.SUCCESFUL
         else:
-            if self._player_registry.is_complete():
+            if self._player_room.is_complete() or not self._player_room.is_open():
                 logger.info("Player registry try '{}': game full".format(character))
-                return message.PlayerLoginStatus.GAME_FULL
+                return message.PlayerLoginStatus.GAME_CLOSED
             else:
                 logger.info("Player registry try '{}': already exists".format(character))
                 return message.PlayerLoginStatus.ALREADY_EXISTS

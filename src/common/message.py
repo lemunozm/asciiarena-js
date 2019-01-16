@@ -23,7 +23,7 @@ class PlayerLogin:
 
 class PlayerLoginStatus:
     SUCCESFUL = 1
-    GAME_FULL = 2
+    GAME_CLOSED = 2
     ALREADY_EXISTS = 3
     def __init__(self, status):
         self.status = status
@@ -31,3 +31,9 @@ class PlayerLoginStatus:
 class PlayersInfo:
     def __init__(self, character_list):
         self.character_list = character_list
+
+class MatchInfo:
+    def __init__(self):
+        pass
+
+
