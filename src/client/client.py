@@ -15,18 +15,26 @@ class Client:
         self._seed = ""
 
     def run(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self._ip, self._port))
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((self._ip, self._port))
 
-        if not self._check_version(sock):
-            return
-        if not self._check_game_info(sock):
-            return
-        if not self._login(sock):
-            return
+            if not self._check_version(sock):
+                return
+            if not self._check_game_info(sock):
+                return
+            if not self._login(sock):
+                return
 
-        self._wait_game(sock)
-        print("init_game")
+            self._wait_game(sock)
+            print("init_game")
+
+        except OSError:
+            print("Error: can not connect to server {}:{}".format(self._ip, self._port))
+        except communication.ConnectionError:
+            print("Error: connection lost with the server {}:{}".format(self._ip, self._port))
+        finally:
+            sock.close()
 
     def _check_version(self, sock):
         version_message = message.Version(version.CURRENT)
@@ -51,11 +59,11 @@ class Client:
         printable_seed = "random" if "" == self._seed else self._seed
 
         print("")
-        print("Game: points to win: {} | map size: {} x {} | seed: {}".format(self._points_to_win, self._map_size, self._map_size, printable_seed))
-        print("      players: {} / {} - characters: {}".format(len(character_list), self._max_players, character_list))
+        print("Game: Points to win: {} | map size: {} x {} | seed: {}".format(self._points_to_win, self._map_size, self._map_size, printable_seed))
+        print("      Players: {} / {} - characters: {}".format(len(character_list), self._max_players, character_list))
 
         if len(character_list) == self._max_players:
-            print("      the game is already started. Please, try later.")
+            print("      Game is already started. Please, try later.")
             return False
 
         return True
@@ -74,7 +82,7 @@ class Client:
             if message.PlayerLoginStatus.GAME_FULL == player_login_status_message.status:
                 return False
             if message.PlayerLoginStatus.ALREADY_EXISTS == player_login_status_message.status:
-                print("      the character '" + self._character + "' already exists.")
+                print("      Character '" + self._character + "' already exists.")
                 self._character = ""
 
     def _wait_game(self, sock):
@@ -82,7 +90,7 @@ class Client:
             players_info_message = communication.recv(sock)
 
             character_list = players_info_message.character_list
-            print("      players: {} / {} - characters: {}".format(len(character_list), self._max_players, character_list))
+            print("      Players: {} / {} - characters: {}".format(len(character_list), self._max_players, character_list))
 
             if len(character_list) == self._max_players:
                 return
@@ -90,6 +98,6 @@ class Client:
     @staticmethod
     def _ask_character():
         while True:
-            character = input("      choose a character (an unique letter from A to Z): ")
+            character = input("      Choose a character (an unique letter from A to Z): ")
             if 1 == len(character) and -1 != string.ascii_uppercase.find(character):
                 return character

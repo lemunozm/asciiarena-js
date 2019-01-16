@@ -6,6 +6,9 @@ import argparse
 import sys
 import string
 import math
+import logging
+
+logger = logging.getLogger("asciiarena")
 
 def command_line_interface():
     default_port = "2500"
@@ -25,7 +28,7 @@ def command_line_interface():
     server_parser.add_argument("--players", required = True, type = int, help = "required players to init a game")
     server_parser.add_argument("--port", default = default_port, type = int, help = "open the server in the specified port (" + default_port + " by default)")
     server_parser.add_argument("--points", default = 0, type = int, help = "necessary points for a player to win the game")
-    server_parser.add_argument("--log", default = "none", choices=["info", "warning", "error", "none"], help = "Set the log level (none by default)")
+    server_parser.add_argument("--log-level", default = "critical", choices=["none", "debug", "info", "warning", "error", "critical"], help = "Set the log level (critical by default)")
     server_parser.add_argument("--map-size", default = 0, type = int, help = "size of the map")
     server_parser.add_argument("--seed", default = "", help = "map generator seed (random by default)")
     server_parser.set_defaults(func = init_server)
@@ -36,6 +39,8 @@ def command_line_interface():
 def init_client(args):
     print("Running asciiarena client...")
 
+    logger.disabled = True
+
     game_client = client.Client(args.ip, args.port, args.character)
     game_client.run()
 
@@ -45,8 +50,26 @@ def init_server(args):
     points = args.points if 0 != args.points else args.players * 5
     map_size = args.map_size if 0 != args.map_size else int(math.sqrt(args.players * 255))
 
-    game_server = server.Server(args.port, args.players, points, map_size, args.seed, args.log)
+    init_logger(args.log_level)
+
+    game_server = server.Server(args.port, args.players, points, map_size, args.seed)
     game_server.run()
+
+def init_logger(log_level):
+    level = {
+        "none": logging.NOTSET,
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }[log_level]
+
+    logger.setLevel(level)
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S")
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
 if __name__ == "__main__":
     command_line_interface()
