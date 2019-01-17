@@ -17,11 +17,11 @@ class GameInfo:
         self.map_size = map_size
         self.seed = seed
 
-class PlayerLogin:
+class Login:
     def __init__(self, character):
         self.character = character
 
-class PlayerLoginStatus:
+class LoginStatus:
     SUCCESFUL = 1
     GAME_CLOSED = 2
     ALREADY_EXISTS = 3

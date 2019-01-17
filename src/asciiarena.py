@@ -10,8 +10,9 @@ import logging
 
 logger = logging.getLogger("asciiarena")
 
+DEFAULT_PORT = "2500"
+
 def command_line_interface():
-    default_port = "2500"
 
     parser = argparse.ArgumentParser(prog = "asciiarena")
     parser.add_argument("--version", action = "version", version = "%(prog)s " + version.CURRENT)
@@ -20,13 +21,13 @@ def command_line_interface():
 
     client_parser = subparsers.add_parser("client")
     client_parser.add_argument("--ip", required = True, help = "Server ip")
-    client_parser.add_argument("--port", default = default_port, type = int, help = "Server port (" + default_port + " by default)")
+    client_parser.add_argument("--port", default = DEFAULT_PORT, type = int, help = "Server port (" + DEFAULT_PORT + " by default)")
     client_parser.add_argument("--character", default = "", help = "Player character", choices = list(string.ascii_uppercase))
     client_parser.set_defaults(func = init_client)
 
     server_parser = subparsers.add_parser("server")
     server_parser.add_argument("--players", required = True, type = int, help = "required players to init a game")
-    server_parser.add_argument("--port", default = default_port, type = int, help = "open the server in the specified port (" + default_port + " by default)")
+    server_parser.add_argument("--port", default = DEFAULT_PORT, type = int, help = "open the server in the specified tcp port (" + DEFAULT_PORT + " by default)")
     server_parser.add_argument("--points", default = 0, type = int, help = "necessary points for a player to win the game")
     server_parser.add_argument("--log-level", default = "critical", choices=["none", "debug", "info", "warning", "error", "critical"], help = "Set the log level (critical by default)")
     server_parser.add_argument("--map-size", default = 0, type = int, help = "size of the map")
@@ -52,8 +53,8 @@ def init_server(args):
 
     init_logger(args.log_level)
 
-    game_server = server.Server(args.port, args.players, points, map_size, args.seed)
-    game_server.run()
+    game_server = server.Server(args.players, points, map_size, args.seed)
+    game_server.run(args.port)
 
 def init_logger(log_level):
     level = {
