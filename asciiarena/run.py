@@ -1,14 +1,11 @@
 from client import Client
 from server import Server
-from common import version
+from common import version, logging
 
 import argparse
 import sys
 import string
 import math
-import logging
-
-logger = logging.getLogger("asciiarena")
 
 DEFAULT_PORT = "3500"
 
@@ -40,8 +37,6 @@ def command_line_interface():
 def init_client(args):
     print("Running asciiarena client...")
 
-    logger.disabled = True
-
     client = Client(args.character)
     client.run(args.ip, args.port)
 
@@ -51,26 +46,10 @@ def init_server(args):
     points = args.points if 0 != args.points else args.players * 5
     map_size = args.map_size if 0 != args.map_size else int(math.sqrt(args.players * 255))
 
-    init_logger(args.log_level)
+    logging.init_logger(args.log_level)
 
     server = Server(args.players, points, map_size, args.seed)
     server.run(args.port)
-
-def init_logger(log_level):
-    level = {
-        "none": logging.NOTSET,
-        "debug": logging.DEBUG,
-        "info": logging.INFO,
-        "warning": logging.WARNING,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL,
-    }[log_level]
-
-    logger.setLevel(level)
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S")
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
 
 if __name__ == "__main__":
     command_line_interface()
