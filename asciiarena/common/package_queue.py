@@ -1,5 +1,4 @@
 import queue
-import threading
 
 class PackageQueue():
     def __init__(self):
