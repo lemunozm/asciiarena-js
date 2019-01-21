@@ -1,5 +1,5 @@
 from common.logging import logger
-from common.package_queue import InputPack, OutputPack
+from common.package_queue import InputPack
 
 from enum import Enum
 import selectors
@@ -22,22 +22,36 @@ class NetworkCommunication:
         self._running = False
 
     def listen(self, port):
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.setblocking(False)
-        server_socket.bind(('localhost', port))
-        server_socket.listen()
+        try:
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            server_socket.setblocking(False)
+            server_socket.bind(("0.0.0.0", port))
+            server_socket.listen()
+            self._selector.register(server_socket, selectors.EVENT_READ, self.Operation.ACCEPT)
 
-        self._selector.register(server_socket, selectors.EVENT_READ, self.Operation.ACCEPT)
-        return None
+            logger.info("Listening on port: {}".format(port))
+            return server_socket
+
+        except OSError as error:
+            logger.critical("Problem initializing the server on port {}, error: {}".format(port, error.errno))
+            if(98 == error.errno):
+                logger.critical("Port {} is already in use".format(port))
+            return None
 
     def connect(self, ip, port):
-        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        connection.connect((ip, port))
-        connection.setblocking(False)
+        try:
+            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            connection.connect((ip, port))
+            connection.setblocking(False)
+            self._selector.register(connection, selectors.EVENT_READ, self.Operation.READ)
 
-        self._selector.register(connection, selectors.EVENT_READ, self.Operation.READ)
-        return connection
+            logger.info("New connection to {}:{}".format(ip, port))
+            return connection
+
+        except OSError as error:
+            logger.critical("Can not connect to {}:{}, error: {}".format(ip, port, error.errno))
+            return None
 
     def set_disconnection_callback(self, callback):
         self._disconnection_callback = callback
@@ -45,16 +59,24 @@ class NetworkCommunication:
     def run(self):
         self._running = True
 
-        input_thread = threading.Thread(target = self._input_process)
-        input_thread.daemon = True
-        input_thread.start()
+        self._input_thread = threading.Thread(target = self._input_process)
+        self._input_thread.daemon = True
+        self._input_thread.start()
 
-        output_thread = threading.Thread(target = self._output_process)
-        output_thread.daemon = True
-        output_thread.start()
+        self._output_thread = threading.Thread(target = self._output_process)
+        self._output_thread.daemon = True
+        self._output_thread.start()
 
-    def close(self):
+    def stop(self):
         self._running = False
+        self._input_thread.join()
+        self._output_thread.join()
+        current_connection_list = []
+        for key, value in self._selector.get_map().items():
+            current_connection_list.append(value.fileobj)
+
+        for connection in current_connection_list:
+            self._close_connection(connection)
 
     def is_running(self):
         return self._running
@@ -65,7 +87,7 @@ class NetworkCommunication:
                 if self.Operation.ACCEPT == key.data:
                     connection, (ip, port) = key.fileobj.accept()
                     connection.setblocking(False)
-                    logger.debug("New connection with {}:{}".format(ip, port))
+                    logger.debug("New connection to {}:{}".format(ip, port))
                     self._selector.register(connection, selectors.EVENT_READ, self.Operation.READ)
 
                 elif self.Operation.READ == key.data:
@@ -74,8 +96,8 @@ class NetworkCommunication:
                     data = connection.recv(MAX_BUFFER_SIZE)
                     if data:
                         message = pickle.loads(data)
-                        logger.debug("Message {}: {} - from {}:{}".format(obj.__class__.__name__, vars(obj), ip, port))
-                        self._package_queue.enqueue_input((message, connection))
+                        logger.debug("Message - {}: {} - from {}:{}".format(message.__class__.__name__, vars(message), ip, port))
+                        self._package_queue.enqueue_input(InputPack(message, connection))
                     else:
                         self._close_connection(connection)
 
@@ -83,17 +105,16 @@ class NetworkCommunication:
         while self._running:
             output = self._package_queue.dequeue_output(1)
             if output:
-                message, connection_list = output
-                if message:
-                    data = pickle.dumps(message)
-                    for connection in connection_list:
+                if output.message:
+                    data = pickle.dumps(output.message)
+                    for connection in output.endpoint_list:
                         ip, port = connection.getpeername()
                         if connection.send(data):
-                            logger.debug("Message {}: {} - to {}:{}".format(obj.__class__.__name__, vars(obj), ip, port))
+                            logger.debug("Message - {}: {} - to {}:{}".format(output.message.__class__.__name__, vars(output.message), ip, port))
                         else:
                             self._close_connection(connection)
                 else:
-                    for connection in connection_list:
+                    for connection in output.endpoint_list:
                         self._close_connection(connection)
 
     def _close_connection(self, connection):

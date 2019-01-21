@@ -48,8 +48,14 @@ def init_server(args):
 
     logging.init_logger(args.log_level)
 
-    server = Server(args.players, points, map_size, args.seed)
-    server.run(args.port)
+    try:
+        server = Server(args.players, points, map_size, args.seed)
+        server.run(args.port)
+
+    except KeyboardInterrupt:
+        print("")
+        pass
 
 if __name__ == "__main__":
     command_line_interface()
+

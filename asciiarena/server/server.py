@@ -7,25 +7,16 @@ class Server:
         self._server_manager = ServerManager()
 
     def run(self, port):
-        try:
-            network = NetworkCommunication(self._server_manager)
-            network.set_disconnection_callback(self._on_disconnect)
-            network.listen(port)
+        network = NetworkCommunication(self._server_manager)
+        network.set_disconnection_callback(self._on_disconnect)
 
-            logger.info("Listening on port: {}".format(port))
+        if network.listen(port):
             network.run()
 
-            while True:
+            while self._server_manager.is_active():
                 self._server_manager.process_package()
 
-        except OSError as error:
-            logger.critical("Problem initializing the server, error: {}".format(error.errno))
-            if(98 == error.errno):
-                logger.critical("Port {} is already in use".format(port))
-
-        except KeyboardInterrupt:
-            print("")
-            pass
+            network.stop()
 
     def _on_disconnect(self, connection):
         #logout
