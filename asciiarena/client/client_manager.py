@@ -1,22 +1,6 @@
-from common.package_queue import PackageQueue, InputPack, OutputPack
 from common.logging import logger
 from common import version, message
-
-class MessageQueue(PackageQueue):
-    def __init__(self):
-        PackageQueue.__init__(self)
-
-    def _attach_endpoint(self, endpoint):
-        self._endpoint = endpoint
-
-    def _receive_message(self):
-        return self._input_queue.get(timeout = 2).message
-
-    def _send_message(self, message):
-        self._output_queue.put(OutputPack(message, self._endpoint))
-
-    def _end_communication(self):
-        self._output_queue.put(OutputPack(None, self._endpoint))
+from .message_queue import MessageQueue
 
 class ClientManager(MessageQueue):
     def __init__(self, character):
@@ -41,7 +25,7 @@ class ClientManager(MessageQueue):
         version_message = message.Version(version.CURRENT)
 
         self._send_message(version_message)
-        checked_version_message = self._receive_message()
+        checked_version_message = self._receive_message_timeout()
 
         compatibility = "COMPATIBLE" if checked_version_message.validation else "INCOMPATIBLE"
         print("Client version: {} - server version: {} - {}".format(version.CURRENT, checked_version_message.value, compatibility))
@@ -49,7 +33,7 @@ class ClientManager(MessageQueue):
         if not compatibility:
             self._end_communication()
 
-        game_info_message = self._receive_message()
+        game_info_message = self._receive_message_timeout()
 
         self._character_list = game_info_message.character_list
         self._max_players = game_info_message.max_players
@@ -64,4 +48,38 @@ class ClientManager(MessageQueue):
         return compatibility
 
     def _login_request(self):
-        return False
+        pass
+"""
+    def _login_request(self):
+        while True:
+            status = self._login(sock)
+            if message.PlayerLoginStatus.GAME_CLOSED == status:
+                return False
+            if message.PlayerLoginStatus.ALREADY_EXISTS == status:
+                continue
+            if message.PlayerLoginStatus.SUCCESFUL == status:
+                #wait()
+                return True
+
+    def _login(self, sock):
+        if "" == self._character:
+            self._character = Client._ask_user_for_character()
+
+        player_login_message = message.PlayerLogin(self._character)
+        self._send_message(player_login_message)
+        communication.send(sock, player_login_message)
+
+        player_login_status_message = communication.recv(sock)
+        if message.PlayerLoginStatus.ALREADY_EXISTS == player_login_status_message.status:
+            print("      Character '" + self._character + "' already exists.")
+            self._character = ""
+
+        return player_login_status_message.status
+
+    @staticmethod
+    def _ask_user_for_character():
+        while True:
+            character = input("      Choose a character (an unique letter from A to Z): ")
+            if 1 == len(character) and -1 != string.ascii_uppercase.find(character):
+                return character
+"""
