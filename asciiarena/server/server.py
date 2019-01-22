@@ -1,12 +1,14 @@
 from common.network_communication import NetworkCommunication
 from common.logging import logger
+from common import version
 from .server_manager import ServerManager
 
 class Server:
     def __init__(self, max_players, points, map_size, seed):
-        self._server_manager = ServerManager()
+        self._server_manager = ServerManager(max_players, points, map_size, seed)
 
     def run(self, port):
+        logger.info("Server version: {}".format(version.CURRENT))
         network = NetworkCommunication(self._server_manager)
         network.set_disconnection_callback(self._on_disconnect)
 
@@ -14,7 +16,7 @@ class Server:
             network.run()
 
             while self._server_manager.is_active():
-                self._server_manager.process_package()
+                self._server_manager.process_request()
 
             network.stop()
 

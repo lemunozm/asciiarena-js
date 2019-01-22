@@ -5,7 +5,7 @@ import socket
 
 class Client:
     def __init__(self, character):
-        self._client_manager = ClientManager()
+        self._client_manager = ClientManager(character)
 
     def run(self, ip, port):
         network = NetworkCommunication(self._client_manager)
@@ -19,7 +19,6 @@ class Client:
             self._client_manager.init_communication(server)
 
             network.stop()
-
         else:
             print("Can not connect to server {}:{}".format(ip, port))
 
