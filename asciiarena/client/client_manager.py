@@ -1,6 +1,6 @@
 from common.logging import logger
 from common import version, message
-from .message_queue import MessageQueue
+from .message_queue import MessageQueue, ReceiveMessageError
 
 class ClientManager(MessageQueue):
     def __init__(self, character):
@@ -15,17 +15,21 @@ class ClientManager(MessageQueue):
     def init_communication(self, endpoint):
         self._attach_endpoint(endpoint)
 
-        if not self._server_info_request():
-            return
+        try:
+            if not self._server_info_request():
+                return
 
-        if not self._login_request():
-            return
+            if not self._login_request():
+                return
+
+        except ReceiveMessageError:
+            print("Unexpected disconnection")
 
     def _server_info_request(self):
         version_message = message.Version(version.CURRENT)
 
         self._send_message(version_message)
-        checked_version_message = self._receive_message_timeout()
+        checked_version_message = self._receive_message()
 
         compatibility = "COMPATIBLE" if checked_version_message.validation else "INCOMPATIBLE"
         print("Client version: {} - server version: {} - {}".format(version.CURRENT, checked_version_message.value, compatibility))
@@ -33,7 +37,7 @@ class ClientManager(MessageQueue):
         if not compatibility:
             self._end_communication()
 
-        game_info_message = self._receive_message_timeout()
+        game_info_message = self._receive_message()
 
         self._character_list = game_info_message.character_list
         self._max_players = game_info_message.max_players

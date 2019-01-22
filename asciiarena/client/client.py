@@ -1,6 +1,5 @@
 from common.network_communication import NetworkCommunication
 from common.logging import logger
-from .message_queue import MessageTimeoutError
 from .client_manager import ClientManager
 import socket
 
@@ -15,14 +14,9 @@ class Client:
         server = network.connect(ip, port)
         if server:
             print("Connected to server {}:{}".format(ip, port))
+
             network.run()
-
-            try:
-                self._client_manager.init_communication(server)
-
-            except MessageTimeoutError as error:
-                print("Error can not reach the server after {} seconds".format(error.timeout))
-
+            self._client_manager.init_communication(server)
             network.stop()
 
         else:

@@ -14,10 +14,7 @@ class Server:
 
         if network.listen(port):
             network.run()
-
-            while self._server_manager.is_active():
-                self._server_manager.process_request()
-
+            self._server_manager.process_requests()
             network.stop()
 
     def _on_disconnect(self, connection):

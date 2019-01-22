@@ -11,20 +11,19 @@ class ServerManager(PackageQueue):
         self._map_size = map_size
         self._seed = seed
 
-    def is_active(self):
-        return self._active
+    def process_requests(self):
+        while self._active:
+            input_pack = self._input_queue.get()
+            if "" != input_pack.message:
+                if message.Version == input_pack.message.__class__:
+                    self._info_server_request(input_pack.message, input_pack.endpoint)
 
-    def process_request(self):
-        input_pack = self._input_queue.get()
-        if message.Version == input_pack.message.__class__:
-            self._info_server_request(input_pack.message, input_pack.endpoint)
+                elif message.Login == input_pack.message.__class__:
+                    self._login_request(input_pack.message, input_pack.endpoint)
 
-        elif message.Login == input_pack.message.__class__:
-            self._login_request(input_pack.message, input_pack.endpoint)
-
-        else:
-            logger.error("Unknown message type: {} - Rejecting connection...".format(input_pack.message.__class__));
-            self._output_queue(OutputPack(None, input_pack.endpoint))
+                else:
+                    logger.error("Unknown message type: {} - Rejecting connection...".format(input_pack.message.__class__));
+                    self._output_queue(OutputPack(None, input_pack.endpoint))
 
     def _info_server_request(self, version_message, endpoint):
         validation = version.check(version_message.value)

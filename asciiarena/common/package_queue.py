@@ -7,11 +7,11 @@ class InputPack:
 
 class OutputPack:
     def __init__(self, message, endpoint):
+        self.message = message
         if isinstance(endpoint, list):
             self.endpoint_list = endpoint
         else:
             self.endpoint_list = [endpoint]
-        self.message = message
 
 class PackageQueue():
     def __init__(self):
