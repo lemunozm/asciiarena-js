@@ -21,7 +21,7 @@ class Login:
 
 class LoginStatus:
     SUCCESFUL = 1
-    ROOM_CLOSED = 2
+    ROOM_COMPLETED = 2
     ALREADY_EXISTS = 3
     def __init__(self, status):
         self.status = status

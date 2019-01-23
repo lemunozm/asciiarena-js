@@ -20,11 +20,7 @@ class NetworkCommunication:
         self._selector = selectors.DefaultSelector()
         self._package_factory = PackageFactory()
         self._package_queue = package_queue
-        self._disconnection_callback = None
         self._running = False
-
-    def set_disconnection_callback(self, callback):
-        self._disconnection_callback = callback
 
     def run(self):
         self._running = True
@@ -124,9 +120,6 @@ class NetworkCommunication:
     def _close_connection(self, connection):
         ip, port = connection.getpeername()
         logger.debug("Connection closed with {}:{}".format(ip, port))
-        if self._disconnection_callback:
-            self._disconnection_callback(connection)
-
         self._package_queue.enqueue_input(InputPack("", connection))
         self._selector.unregister(connection)
         connection.close()

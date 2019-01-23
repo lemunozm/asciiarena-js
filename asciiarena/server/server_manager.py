@@ -8,6 +8,7 @@ class ServerManager(PackageQueue):
         PackageQueue.__init__(self)
         self._active = True
         self._room = PlayersRoom(max_players, points)
+        self._game = False
         self._map_size = map_size
         self._seed = seed
 
@@ -24,6 +25,8 @@ class ServerManager(PackageQueue):
                 else:
                     logger.error("Unknown message type: {} - Rejecting connection...".format(input_pack.message.__class__));
                     self._output_queue(OutputPack(None, input_pack.endpoint))
+            else:
+                self._lost_connection(input_pack.endpoint)
 
     def _info_server_request(self, version_message, endpoint):
         validation = version.check(version_message.value)
@@ -52,20 +55,31 @@ class ServerManager(PackageQueue):
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
 
             if self._room.is_complete():
-                self._room.open(False)
                 match_info_message = message.MatchInfo()
-                self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
-                print("Start game!!")
+                if False == self._game:
+                    self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
+                    self._game = True
+                    print("Start game!!")
+
+                if True == self._game:
+                    self._output_queue.put(OutputPack(match_info_message, endpoint))
 
     def _register_player(self, character, endpoint):
         if self._room.add_player(character, endpoint):
             logger.info("Player '{}' registered successfully".format(character))
             return message.LoginStatus.SUCCESFUL
         else:
-            if not self._room.is_open() or self._room.is_complete():
-                logger.debug("Player '{}' tried to register: room closed".format(character))
-                return message.LoginStatus.ROOM_CLOSED
+            if self._room.is_complete():
+                logger.debug("Player '{}' tried to register: room complete".format(character))
+                return message.LoginStatus.ROOM_COMPLETED
             else:
                 logger.debug("Player '{}' tried to register: already exists".format(character))
                 return message.LoginStatus.ALREADY_EXISTS
+
+    def _lost_connection(self, endpoint):
+        for player in self._room.get_participant_list():
+            if player.get_endpoint() ==  endpoint:
+                player.set_endpoint(None)
+                logger.info("Player '{}' disconected".format(player.get_character()))
+                return
 

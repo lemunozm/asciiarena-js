@@ -71,7 +71,7 @@ class ClientManager(MessageQueue):
                 self._character = ""
                 continue
 
-            elif message.LoginStatus.ROOM_CLOSED == login_status_message.status:
+            elif message.LoginStatus.ROOM_COMPLETED == login_status_message.status:
                 print("      Sorry, the game is already started. Try again later.")
                 return False
 
