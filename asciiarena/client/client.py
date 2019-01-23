@@ -1,7 +1,6 @@
 from common.network_communication import NetworkCommunication
 from common.logging import logger
 from .client_manager import ClientManager
-import socket
 
 class Client:
     def __init__(self, character):
@@ -9,7 +8,6 @@ class Client:
 
     def run(self, ip, port):
         network = NetworkCommunication(self._client_manager)
-        network.set_disconnection_callback(self._on_disconnect)
 
         server = network.connect(ip, port)
         if server:
@@ -22,6 +20,3 @@ class Client:
         else:
             print("Can not connect to server {}:{}".format(ip, port))
 
-    def _on_disconnect(self, connection):
-        server_ip, server_port = connection.getpeername()
-        print("Disconnected from server {}:{}".format(server_ip, server_port))

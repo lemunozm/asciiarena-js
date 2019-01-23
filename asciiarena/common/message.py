@@ -19,13 +19,9 @@ class Login:
     def __init__(self, character):
         self.character = character
 
-class Logout:
-    def __init__(self, character):
-        self.character = character
-
 class LoginStatus:
     SUCCESFUL = 1
-    GAME_CLOSED = 2
+    ROOM_CLOSED = 2
     ALREADY_EXISTS = 3
     def __init__(self, status):
         self.status = status
@@ -37,3 +33,8 @@ class PlayersInfo:
 class MatchInfo:
     def __init__(self):
         pass
+
+class Disconnect:
+    def __init__(self, character):
+        self.character = character
+

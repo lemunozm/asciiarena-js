@@ -7,7 +7,7 @@ class Room:
         self._open = True
 
     def add_participant(self, name, participant):
-        if self.is_close():
+        if not self.is_open():
             return False
         if self.is_complete():
             return False
@@ -17,17 +17,17 @@ class Room:
         self._participant_dict[name] = participant
         return True
 
-    def open(sefl, value):
+    def open(self, value):
         self._open = value
 
     def is_open(self):
         return self._open
 
-    def is_complete(self, name, participant):
+    def is_complete(self):
         return len(self._participant_dict) == self._max_participants
 
     def has_participant(self, name):
-        self._participant_dict[name]
+        return self._participant_dict.get(name, None)
 
     def get_participant_dict(self):
         return self._participant_dict
@@ -37,9 +37,9 @@ class Room:
 
 
 class Player:
-    def __init__(self, character, socket):
+    def __init__(self, character, endpoint):
         self._character = character
-        self._socket = socket
+        self._endpoint = endpoint
         self._points = 0
 
     def get_character(self):
@@ -48,8 +48,8 @@ class Player:
     def get_points(self):
         return self._points
 
-    def get_socket(self):
-        return self._socket
+    def get_endpoint(self):
+        return self._endpoint
 
 
 class PlayersRoom(Room):
@@ -57,13 +57,13 @@ class PlayersRoom(Room):
         Room.__init__(self, max_players)
         self._points_to_win = points_to_win
 
-    def add_player(self, character, socket):
-        player = Player(character, socket)
+    def add_player(self, character, endpoint):
+        player = Player(character, endpoint)
         return Room.add_participant(self, character, player)
 
     def get_character_list(self):
         character_list = []
-        for character in self.get_participant_dict():
+        for character in self.get_participant_dict().keys():
             character_list.append(character)
         return character_list
 
@@ -74,11 +74,11 @@ class PlayersRoom(Room):
                 winner_list.append(player)
         return winner_list
 
-    def get_socket_list(self):
-        socket_list = []
+    def get_endpoint_list(self):
+        endpoint_list = []
         for player in self.get_participant_dict().values():
-            socket_list.append(player.get_socket())
-        return socket_list
+            endpoint_list.append(player.get_endpoint())
+        return endpoint_list
 
     def get_points_to_win(self):
         return self._points_to_win

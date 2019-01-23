@@ -31,8 +31,8 @@ class ServerManager(PackageQueue):
         checked_version_message = message.CheckedVersion(version.CURRENT, validation)
         self._output_queue.put(OutputPack(checked_version_message, endpoint))
 
-        compatibility = "COMPATIBLE" if validation else "INCOMPATIBLE"
-        logger.info("Server info request from client with version {} - {}".format(version_message.value, compatibility))
+        compatibility = "compatible" if validation else "incompatible"
+        logger.debug("Server info request from client with version {} - {}".format(version_message.value, compatibility))
 
         character_list = self._room.get_character_list()
         max_players = self._room.get_max_participants()
@@ -42,5 +42,30 @@ class ServerManager(PackageQueue):
         self._output_queue.put(OutputPack(game_info_message, endpoint))
 
     def _login_request(self, login_message, endpoint):
-        pass
+        status = self._register_player(login_message.character, endpoint)
+
+        login_status_message = message.LoginStatus(status)
+        self._output_queue.put(OutputPack(login_status_message, endpoint))
+
+        if message.LoginStatus.SUCCESFUL == status:
+            players_info_message = message.PlayersInfo(self._room.get_character_list())
+            self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
+
+        if self._room.is_complete():
+            self._room.open(False)
+            match_info_message = message.MatchInfo()
+            self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
+            print("Start game!!")
+
+    def _register_player(self, character, endpoint):
+        if self._room.add_player(character, endpoint):
+            logger.info("Player '{}' registered successfully".format(character))
+            return message.LoginStatus.SUCCESFUL
+        else:
+            if not self._room.is_open() or self._room.is_complete():
+                logger.debug("Player '{}' tried to register: room closed".format(character))
+                return message.LoginStatus.ROOM_CLOSED
+            else:
+                logger.debug("Player '{}' tried to register: already exists".format(character))
+                return message.LoginStatus.ALREADY_EXISTS
 

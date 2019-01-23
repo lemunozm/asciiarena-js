@@ -37,8 +37,13 @@ def command_line_interface():
 def init_client(args):
     print("Running asciiarena client...")
 
-    client = Client(args.character)
-    client.run(args.ip, args.port)
+    try:
+        client = Client(args.character)
+        client.run(args.ip, args.port)
+
+    except KeyboardInterrupt:
+        print("")
+        pass
 
 def init_server(args):
     print("Running asciiarena server...")

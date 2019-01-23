@@ -8,6 +8,7 @@ import _pickle as pickle
 import threading
 
 MAX_BUFFER_SIZE = 4096
+BLOCKING_TIME = 0.05
 
 class NetworkCommunication:
     class Operation(Enum):
@@ -83,7 +84,7 @@ class NetworkCommunication:
 
     def _input_process(self):
         while self._running:
-            for key, event in self._selector.select(timeout = 1):
+            for key, event in self._selector.select(timeout = BLOCKING_TIME):
                 if self.Operation.ACCEPT == key.data:
                     connection, (ip, port) = key.fileobj.accept()
                     connection.setblocking(False)
@@ -103,24 +104,28 @@ class NetworkCommunication:
 
     def _output_process(self):
         while self._running:
-            output = self._package_queue.dequeue_output(1)
-            if output:
-                if output.message:
-                    data = pickle.dumps(output.message)
-                    for connection in output.endpoint_list:
-                        ip, port = connection.getpeername()
-                        if connection.send(data):
-                            logger.debug("Message - {}: {} - to {}:{}".format(output.message.__class__.__name__, vars(output.message), ip, port))
-                        else:
-                            self._close_connection(connection)
-                else:
-                    for connection in output.endpoint_list:
+            output = self._package_queue.dequeue_output(BLOCKING_TIME)
+            if not output:
+                continue
+
+            if output.message:
+                data = pickle.dumps(output.message)
+                for connection in output.endpoint_list:
+                    ip, port = connection.getpeername()
+                    if connection.send(data):
+                        logger.debug("Message - {}: {} - to {}:{}".format(output.message.__class__.__name__, vars(output.message), ip, port))
+                    else:
                         self._close_connection(connection)
+            else:
+                for connection in output.endpoint_list:
+                    self._close_connection(connection)
 
     def _close_connection(self, connection):
         ip, port = connection.getpeername()
         logger.debug("Connection closed with {}:{}".format(ip, port))
-        self._disconnection_callback(connection)
+        if self._disconnection_callback:
+            self._disconnection_callback(connection)
+
         self._package_queue.enqueue_input(InputPack("", connection))
         self._selector.unregister(connection)
         connection.close()
