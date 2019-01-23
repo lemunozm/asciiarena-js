@@ -6,6 +6,7 @@ import selectors
 import socket
 import _pickle as pickle
 import threading
+import pynetstring
 
 MAX_BUFFER_SIZE = 4096
 BLOCKING_TIME = 0.05
@@ -21,6 +22,7 @@ class NetworkCommunication:
         self._package_queue = package_queue
         self._disconnection_callback = None
         self._running = False
+        self._decoder = pynetstring.Decoder()
 
     def listen(self, port):
         try:
@@ -96,29 +98,47 @@ class NetworkCommunication:
                     ip, port = connection.getpeername()
                     data = connection.recv(MAX_BUFFER_SIZE)
                     if data:
-                        message = pickle.loads(data)
-                        logger.debug("Message - {}: {} - from {}:{}".format(message.__class__.__name__, vars(message), ip, port))
-                        self._package_queue.enqueue_input(InputPack(message, connection))
+                        for input_pack in self.create_input_packages(data, connection):
+                            logger.debug("Message - {}: {} - from {}:{}".format(input_pack.message.__class__.__name__, vars(input_pack.message), ip, port))
+                            self._package_queue.enqueue_input(input_pack)
                     else:
                         self._close_connection(connection)
 
     def _output_process(self):
         while self._running:
-            output = self._package_queue.dequeue_output(BLOCKING_TIME)
-            if not output:
+            output_pack = self._package_queue.dequeue_output(BLOCKING_TIME)
+            if not output_pack:
                 continue
 
-            if output.message:
-                data = pickle.dumps(output.message)
-                for connection in output.endpoint_list:
-                    ip, port = connection.getpeername()
-                    if connection.send(data):
-                        logger.debug("Message - {}: {} - to {}:{}".format(output.message.__class__.__name__, vars(output.message), ip, port))
-                    else:
-                        self._close_connection(connection)
+            if output_pack.message:
+                for data, connection in self.process_output_package(output_pack):
+                    try:
+                        connection.sendall(data)
+                        ip, port = connection.getpeername()
+                        logger.debug("Message - {}: {} - to {}:{}".format(output_pack.message.__class__.__name__, vars(output_pack.message), ip, port))
+                    except OSError:
+                        pass
             else:
                 for connection in output.endpoint_list:
                     self._close_connection(connection)
+
+    def create_input_packages(self, data, endpoint):
+        input_pack_list = []
+        message_data_list = self._decoder.feed(data)
+        for message_data in message_data_list:
+            message = pickle.loads(message_data)
+            input_pack_list.append(InputPack(message, endpoint))
+
+        return input_pack_list
+
+    def process_output_package(self, output_package):
+        data_endpoint_list = []
+        message_data = pickle.dumps(output_package.message)
+        data = pynetstring.encode(message_data)
+        for endpoint in output_package.endpoint_list:
+            data_endpoint_list.append((data, endpoint))
+
+        return data_endpoint_list
 
     def _close_connection(self, connection):
         ip, port = connection.getpeername()

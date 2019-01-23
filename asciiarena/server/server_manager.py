@@ -51,11 +51,11 @@ class ServerManager(PackageQueue):
             players_info_message = message.PlayersInfo(self._room.get_character_list())
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
 
-        if self._room.is_complete():
-            self._room.open(False)
-            match_info_message = message.MatchInfo()
-            self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
-            print("Start game!!")
+            if self._room.is_complete():
+                self._room.open(False)
+                match_info_message = message.MatchInfo()
+                self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
+                print("Start game!!")
 
     def _register_player(self, character, endpoint):
         if self._room.add_player(character, endpoint):
