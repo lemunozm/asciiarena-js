@@ -1,12 +1,11 @@
 from common.logging import logger
+from common.package_factory import PackageFactory
 from common.package_queue import InputPack
 
 from enum import Enum
 import selectors
 import socket
-import _pickle as pickle
 import threading
-import pynetstring
 
 MAX_BUFFER_SIZE = 4096
 BLOCKING_TIME = 0.05
@@ -19,10 +18,38 @@ class NetworkCommunication:
 
     def __init__(self, package_queue):
         self._selector = selectors.DefaultSelector()
+        self._package_factory = PackageFactory()
         self._package_queue = package_queue
         self._disconnection_callback = None
         self._running = False
-        self._decoder = pynetstring.Decoder()
+
+    def set_disconnection_callback(self, callback):
+        self._disconnection_callback = callback
+
+    def run(self):
+        self._running = True
+
+        self._input_thread = threading.Thread(target = self._input_process)
+        self._input_thread.daemon = True
+        self._input_thread.start()
+
+        self._output_thread = threading.Thread(target = self._output_process)
+        self._output_thread.daemon = True
+        self._output_thread.start()
+
+    def stop(self):
+        self._running = False
+        self._input_thread.join()
+        self._output_thread.join()
+        current_connection_list = []
+        for key, value in self._selector.get_map().items():
+            current_connection_list.append(value.fileobj)
+
+        for connection in current_connection_list:
+            self._close_connection(connection)
+
+    def is_running(self):
+        return self._running
 
     def listen(self, port):
         try:
@@ -56,34 +83,6 @@ class NetworkCommunication:
             logger.critical("Can not connect to {}:{}, error: {}".format(ip, port, error.errno))
             return None
 
-    def set_disconnection_callback(self, callback):
-        self._disconnection_callback = callback
-
-    def run(self):
-        self._running = True
-
-        self._input_thread = threading.Thread(target = self._input_process)
-        self._input_thread.daemon = True
-        self._input_thread.start()
-
-        self._output_thread = threading.Thread(target = self._output_process)
-        self._output_thread.daemon = True
-        self._output_thread.start()
-
-    def stop(self):
-        self._running = False
-        self._input_thread.join()
-        self._output_thread.join()
-        current_connection_list = []
-        for key, value in self._selector.get_map().items():
-            current_connection_list.append(value.fileobj)
-
-        for connection in current_connection_list:
-            self._close_connection(connection)
-
-    def is_running(self):
-        return self._running
-
     def _input_process(self):
         while self._running:
             for key, event in self._selector.select(timeout = BLOCKING_TIME):
@@ -98,7 +97,7 @@ class NetworkCommunication:
                     ip, port = connection.getpeername()
                     data = connection.recv(MAX_BUFFER_SIZE)
                     if data:
-                        for input_pack in self.create_input_packages(data, connection):
+                        for input_pack in self._package_factory.create_input_packages(data, connection):
                             logger.debug("Message - {}: {} - from {}:{}".format(input_pack.message.__class__.__name__, vars(input_pack.message), ip, port))
                             self._package_queue.enqueue_input(input_pack)
                     else:
@@ -111,7 +110,7 @@ class NetworkCommunication:
                 continue
 
             if output_pack.message:
-                for data, connection in self.process_output_package(output_pack):
+                for data, connection in self._package_factory.process_output_package(output_pack):
                     try:
                         connection.sendall(data)
                         ip, port = connection.getpeername()
@@ -121,24 +120,6 @@ class NetworkCommunication:
             else:
                 for connection in output.endpoint_list:
                     self._close_connection(connection)
-
-    def create_input_packages(self, data, endpoint):
-        input_pack_list = []
-        message_data_list = self._decoder.feed(data)
-        for message_data in message_data_list:
-            message = pickle.loads(message_data)
-            input_pack_list.append(InputPack(message, endpoint))
-
-        return input_pack_list
-
-    def process_output_package(self, output_package):
-        data_endpoint_list = []
-        message_data = pickle.dumps(output_package.message)
-        data = pynetstring.encode(message_data)
-        for endpoint in output_package.endpoint_list:
-            data_endpoint_list.append((data, endpoint))
-
-        return data_endpoint_list
 
     def _close_connection(self, connection):
         ip, port = connection.getpeername()
