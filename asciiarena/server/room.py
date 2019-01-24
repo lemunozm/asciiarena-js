@@ -1,18 +1,21 @@
 from enum import Enum
 
 class Room:
+    ADDITION_SUCCESSFUL = 1
+    ADDITION_ERR_COMPLETE = 2
+    ADDITION_ERR_ALREADY_EXISTS = 3
     def __init__(self, max_participants):
         self._participant_dict = {}
         self._max_participants = max_participants
 
     def add_participant(self, name, participant):
         if self.is_complete():
-            return False
+            return Room.ADDITION_ERR_COMPLETE
         if self.get_participant(name):
-            return False
+            return Room.ADDITION_ERR_ALREADY_EXISTS
 
         self._participant_dict[name] = participant
-        return True
+        return Room.ADDITION_SUCCESSFUL
 
     def is_complete(self):
         return len(self._participant_dict) == self._max_participants
@@ -47,16 +50,16 @@ class Player:
 
 
 class PlayersRoom(Room):
+    ADDITION_REUSE = 4
     def __init__(self, max_players, points_to_win):
         Room.__init__(self, max_players)
         self._points_to_win = points_to_win
 
     def add_player(self, character, endpoint):
         player = self.get_participant(character)
-        if player:
-            if None == player.get_endpoint():
+        if player and None == player.get_endpoint():
                 player.set_endpoint(endpoint)
-                return True
+                return PlayersRoom.ADDITION_REUSE
         else:
             new_player = Player(character, endpoint)
             return self.add_participant(character, new_player)

@@ -20,9 +20,10 @@ class Login:
         self.character = character
 
 class LoginStatus:
-    SUCCESFUL = 1
-    ROOM_COMPLETED = 2
-    ALREADY_EXISTS = 3
+    LOGGED = 1
+    RECONNECTION = 2
+    ROOM_COMPLETED = 3
+    ALREADY_EXISTS = 4
     def __init__(self, status):
         self.status = status
 
@@ -31,10 +32,11 @@ class PlayersInfo:
         self.character_list = character_list
 
 class MatchInfo:
-    def __init__(self):
-        pass
+    def __init__(self, seed, grid):
+        self.seed = seed
+        self.grid = grid
 
-class Disconnect:
-    def __init__(self, character):
-        self.character = character
+class Frame:
+    def __init__(self, stamp):
+        self.stamp = stamp
 

@@ -2,13 +2,18 @@ from common.package_queue import PackageQueue, InputPack, OutputPack
 from common.logging import logger
 from common import version, message
 from .room import PlayersRoom
+from .match import Match
+
+import threading
+import time
 
 class ServerManager(PackageQueue):
     def __init__(self, max_players, points, map_size, seed):
         PackageQueue.__init__(self)
         self._active = True
         self._room = PlayersRoom(max_players, points)
-        self._game = False
+        self._game_thread = threading.Thread(target = self._run_game)
+        self._game_thread.daemon = True
         self._map_size = map_size
         self._seed = seed
 
@@ -50,31 +55,35 @@ class ServerManager(PackageQueue):
         login_status_message = message.LoginStatus(status)
         self._output_queue.put(OutputPack(login_status_message, endpoint))
 
-        if message.LoginStatus.SUCCESFUL == status:
+        if message.LoginStatus.LOGGED == status:
             players_info_message = message.PlayersInfo(self._room.get_character_list())
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
 
             if self._room.is_complete():
-                match_info_message = message.MatchInfo()
-                if False == self._game:
-                    self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
-                    self._game = True
-                    print("Start game!!")
+                self._game_thread.start()
 
-                if True == self._game:
-                    self._output_queue.put(OutputPack(match_info_message, endpoint))
+        elif message.LoginStatus.RECONNECTION == status:
+            match_info_message = message.MatchInfo()
+            self._output_queue.put(OutputPack(match_info_message, endpoint))
 
     def _register_player(self, character, endpoint):
-        if self._room.add_player(character, endpoint):
+        status = self._room.add_player(character, endpoint)
+
+        if PlayersRoom.ADDITION_SUCCESSFUL == status:
             logger.info("Player '{}' registered successfully".format(character))
-            return message.LoginStatus.SUCCESFUL
-        else:
-            if self._room.is_complete():
-                logger.debug("Player '{}' tried to register: room complete".format(character))
-                return message.LoginStatus.ROOM_COMPLETED
-            else:
-                logger.debug("Player '{}' tried to register: already exists".format(character))
-                return message.LoginStatus.ALREADY_EXISTS
+            return message.LoginStatus.LOGGED
+
+        elif PlayersRoom.ADDITION_REUSE == status:
+            logger.info("Player '{}' reconnected".format(character))
+            return message.LoginStatus.RECONNECTION
+
+        elif PlayersRoom.ADDITION_ERR_COMPLETE == status:
+            logger.debug("Player '{}' tried to register: room complete".format(character))
+            return message.LoginStatus.ROOM_COMPLETED
+
+        elif PlayersRoom.ADDITION_ERR_ALREADY_EXISTS == status:
+            logger.debug("Player '{}' tried to register: already exists".format(character))
+            return message.LoginStatus.ALREADY_EXISTS
 
     def _lost_connection(self, endpoint):
         for player in self._room.get_participant_list():
@@ -82,4 +91,18 @@ class ServerManager(PackageQueue):
                 player.set_endpoint(None)
                 logger.info("Player '{}' disconected".format(player.get_character()))
                 return
+
+    def _run_game(self):
+        print("Start game!!")
+        while [] == self._room.get_winner_list():
+            match = Match()
+            match_info_message = message.MatchInfo()
+            self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
+
+            frame_count = 0
+            while not match.has_finished():
+                time.sleep(1)
+                frame_message = message.Frame(frame_count)
+                self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
+                frame_count = frame_count + 1
 

@@ -12,12 +12,15 @@ class MessageQueue(PackageQueue):
     def _attach_endpoint(self, endpoint):
         self._endpoint = endpoint
 
-    def _receive_message(self):
-        input_pack = self._input_queue.get()
-        if "" != input_pack.message:
-            return input_pack.message
-        else:
-            raise ReceiveMessageError()
+    def _receive_message(self, message_class_list):
+        while True:
+            input_pack = self._input_queue.get()
+            if "" != input_pack.message:
+                for message_class in message_class_list:
+                    if message_class == input_pack.message.__class__:
+                        return input_pack.message
+            else:
+                raise ReceiveMessageError()
 
     def _send_message(self, message):
         self._output_queue.put(OutputPack(message, self._endpoint))

@@ -26,7 +26,7 @@ class ClientManager(MessageQueue):
 
             self._wait_game();
 
-            # init match here
+            self._init_game();
 
         except ReceiveMessageError:
             print("Unexpected disconnection")
@@ -35,7 +35,7 @@ class ClientManager(MessageQueue):
         version_message = message.Version(version.CURRENT)
 
         self._send_message(version_message)
-        checked_version_message = self._receive_message()
+        checked_version_message = self._receive_message([message.CheckedVersion])
 
         compatibility = "compatible" if checked_version_message.validation else "incompatible"
         print("Client version: {} - server version: {} - {}".format(version.CURRENT, checked_version_message.value, compatibility))
@@ -43,7 +43,7 @@ class ClientManager(MessageQueue):
         if not compatibility:
             self._end_communication()
 
-        game_info_message = self._receive_message()
+        game_info_message = self._receive_message([message.GameInfo])
 
         self._character_list = game_info_message.character_list
         self._max_players = game_info_message.max_players
@@ -64,7 +64,7 @@ class ClientManager(MessageQueue):
             login_message = message.Login(self._character)
             self._send_message(login_message)
 
-            login_status_message = self._receive_message()
+            login_status_message = self._receive_message([message.LoginStatus])
 
             if message.LoginStatus.ALREADY_EXISTS == login_status_message.status:
                 print("      Character '" + self._character + "' already exists.")
@@ -75,21 +75,26 @@ class ClientManager(MessageQueue):
                 print("      Sorry, the game is already started. Try again later.")
                 return False
 
-            elif message.LoginStatus.SUCCESFUL == login_status_message.status:
+            elif message.LoginStatus.LOGGED == login_status_message.status:
                 print("      Logged with character '" + self._character + "'.")
                 return True
 
+            elif message.LoginStatus.RECONNECTION == login_status_message.status:
+                print("      Reconnection with already logged character '" + self._character + "'.")
+                return True
+
     def _wait_game(self):
+        while len(self._character_list) != self._max_players:
+            player_info_message = self._receive_message([message.PlayersInfo])
+            self._character_list = player_info_message.character_list
+            ClientManager._print_player_list(self._character_list, self._max_players)
+
+    def _init_game(self):
+        match_info_message = self._receive_message([message.MatchInfo])
+        print("Start game!!")
         while True:
-            server_message = self._receive_message()
-
-            if message.PlayersInfo == server_message.__class__:
-                self._character_list = server_message.character_list
-                ClientManager._print_player_list(self._character_list, self._max_players)
-
-            elif message.MatchInfo == server_message.__class__:
-                print("Start game!!")
-                return
+            frame_message = self._receive_message([message.Frame])
+            print("Frame stamp: {}".format(frame_message.stamp))
 
     @staticmethod
     def _print_player_list(character_list, max_players):
