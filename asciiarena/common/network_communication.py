@@ -120,7 +120,7 @@ class NetworkCommunication:
     def _close_connection(self, connection):
         ip, port = connection.getpeername()
         logger.debug("Connection closed with {}:{}".format(ip, port))
-        self._package_queue.enqueue_input(InputPack("", connection))
+        self._package_queue.enqueue_input(InputPack(None, connection))
         self._selector.unregister(connection)
         connection.close()
 

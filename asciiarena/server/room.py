@@ -87,3 +87,9 @@ class PlayersRoom(Room):
     def get_points_to_win(self):
         return self._points_to_win
 
+    def get_player_with_endpoint(self, endpoint):
+        for player in self._participant_dict.values():
+            if player.get_endpoint() == endpoint:
+                return player
+        return None
+

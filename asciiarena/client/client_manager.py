@@ -1,4 +1,5 @@
 from common.logging import logger
+from common.terrain import Terrain
 from common import version, message
 from .message_queue import MessageQueue, ReceiveMessageError
 
@@ -80,7 +81,7 @@ class ClientManager(MessageQueue):
                 return True
 
             elif message.LoginStatus.RECONNECTION == login_status_message.status:
-                print("      Reconnection with already logged character '" + self._character + "'.")
+                print("      Reconnection with character '" + self._character + "'.")
                 return True
 
     def _wait_game(self):
@@ -91,10 +92,26 @@ class ClientManager(MessageQueue):
 
     def _init_game(self):
         match_info_message = self._receive_message([message.MatchInfo])
-        print("Start game!!")
+        ClientManager._print_ground(match_info_message.grid, self._map_size)
         while True:
             frame_message = self._receive_message([message.Frame])
             print("Frame stamp: {}".format(frame_message.stamp))
+
+    @staticmethod
+    def _print_ground(grid, dimension):
+        ground = ""
+        for i, terrain in enumerate(grid):
+            if terrain == Terrain.EMPTY:
+                ground += "  "
+            elif terrain == Terrain.BORDER_WALL:
+                ground += "X "
+            elif terrain == Terrain.BLOCKED:
+                ground += "· "
+            else:
+                ground += "? "
+            if 0 == (i + 1) % dimension:
+                ground += "\n"
+        print(ground)
 
     @staticmethod
     def _print_player_list(character_list, max_players):

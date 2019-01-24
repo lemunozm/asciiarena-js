@@ -40,3 +40,14 @@ class Frame:
     def __init__(self, stamp):
         self.stamp = stamp
 
+class PlayerAction:
+    class Movement:
+        def __init__(self, direction):
+            self.direction = direction
+
+    class Shoot:
+        def __init(self, skill_id):
+            self.skill_id = skill_id
+
+    def __init__(self, action):
+        self.action = action

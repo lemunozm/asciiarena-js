@@ -15,7 +15,7 @@ class MessageQueue(PackageQueue):
     def _receive_message(self, message_class_list):
         while True:
             input_pack = self._input_queue.get()
-            if "" != input_pack.message:
+            if None != input_pack.message:
                 for message_class in message_class_list:
                     if message_class == input_pack.message.__class__:
                         return input_pack.message
