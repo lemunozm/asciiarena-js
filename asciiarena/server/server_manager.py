@@ -124,29 +124,24 @@ class ServerManager(PackageQueue):
 
         arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
+        self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+
+    def _compute_frame_signal(self):
+        frame_message = message.Frame(self._frame_stamp)
+        self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
         if not self._arena.has_finished():
-            self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+            self._frame_stamp = self._frame_stamp + 1
+            next_frame = lambda: self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+            timer = threading.Timer(1, next_frame)
+            timer.daemon = True
+            timer.start()
 
         elif [] == self._room.get_winner_list():
             self._input_queue.put(InputPack(ServerSignal.NEW_ARENA_SIGNAL, None))
 
         else:
             pass #reset signal => clear the room
-
-
-    def _compute_frame_signal(self):
-        def enqueue_new_frame():
-            self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
-
-        frame_message = message.Frame(self._frame_stamp)
-        self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
-
-        self._frame_stamp = self._frame_stamp + 1
-
-        timer = threading.Timer(1, enqueue_new_frame)
-        timer.daemon = True
-        timer.start()
 
     def _lost_connection(self, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)
