@@ -27,7 +27,7 @@ def command_line_interface():
     server_parser.add_argument("--port", default = DEFAULT_PORT, type = int, help = "open the server in the specified tcp port (" + DEFAULT_PORT + " by default)")
     server_parser.add_argument("--points", default = 0, type = int, help = "necessary points for a player to win the game")
     server_parser.add_argument("--log-level", default = "critical", choices=["none", "debug", "info", "warning", "error", "critical"], help = "Set the log level (critical by default)")
-    server_parser.add_argument("--map-size", default = 0, type = int, help = "size of the map")
+    server_parser.add_argument("--arena-size", default = 0, type = int, help = "size of the arena")
     server_parser.add_argument("--seed", default = "", help = "map generator seed (random by default)")
     server_parser.set_defaults(func = init_server)
 
@@ -49,12 +49,12 @@ def init_server(args):
     print("Running asciiarena server...")
 
     points = args.points if 0 != args.points else args.players * 5
-    map_size = args.map_size if 0 != args.map_size else int(math.sqrt(args.players * 255))
+    arena_size = args.arena_size if 0 != args.arena_size else int(math.sqrt(args.players * 255))
 
     logging.init_logger(args.log_level)
 
     try:
-        server = Server(args.players, points, map_size, args.seed)
+        server = Server(args.players, points, arena_size, args.seed)
         server.run(args.port)
 
     except KeyboardInterrupt:

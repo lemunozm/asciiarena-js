@@ -2,24 +2,23 @@ from common.package_queue import PackageQueue, InputPack, OutputPack
 from common.logging import logger
 from common import version, message
 from .room import PlayersRoom
-from .match import Match
+from .arena import Arena
 
 from enum import Enum
 import threading
-import time
 
 class ServerSignal(Enum):
-    MATCH_REQUEST = 1
-    FRAME_REQUEST = 2
+    NEW_ARENA_SIGNAL = 1
+    COMPUTE_FRAME_SIGNAL = 2
 
 class ServerManager(PackageQueue):
-    def __init__(self, max_players, points, map_size, seed):
+    def __init__(self, players, points, arena_size, seed):
         PackageQueue.__init__(self)
         self._active = True
-        self._room = PlayersRoom(max_players, points)
-        self._map_size = map_size
+        self._room = PlayersRoom(players, points)
+        self._arena_size = arena_size
         self._seed = seed
-        self._match = None
+        self._arena = None
         self._frame_stamp = 0
 
     def process_requests(self):
@@ -36,11 +35,11 @@ class ServerManager(PackageQueue):
                     self._player_action_request(input_pack.message, input_pack.endpoint)
 
                 elif isinstance(input_pack.message, ServerSignal):
-                    if ServerSignal.MATCH_REQUEST == input_pack.message:
-                        self._match_request()
+                    if ServerSignal.NEW_ARENA_SIGNAL == input_pack.message:
+                        self._new_arena_signal()
 
-                    elif ServerSignal.FRAME_REQUEST == input_pack.message:
-                        self._frame_request()
+                    elif ServerSignal.COMPUTE_FRAME_SIGNAL == input_pack.message:
+                        self._compute_frame_signal()
 
                 else:
                     logger.error("Unknown message type: {} - Rejecting connection...".format(input_pack.message.__class__));
@@ -59,10 +58,10 @@ class ServerManager(PackageQueue):
         logger.debug("Server info request from client with version {} - {}".format(version_message.value, compatibility))
 
         character_list = self._room.get_character_list()
-        max_players = self._room.get_max_participants()
+        players = self._room.get_size()
         points = self._room.get_points_to_win()
 
-        game_info_message = message.GameInfo(character_list, max_players, points, self._map_size, self._seed)
+        game_info_message = message.GameInfo(character_list, players, points, self._arena_size, self._seed)
         self._output_queue.put(OutputPack(game_info_message, endpoint))
 
     def _login_request(self, login_message, endpoint):
@@ -76,15 +75,15 @@ class ServerManager(PackageQueue):
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
 
             if self._room.is_complete():
-                self._input_queue.put(InputPack(ServerSignal.MATCH_REQUEST, None))
+                self._input_queue.put(InputPack(ServerSignal.NEW_ARENA_SIGNAL, None))
 
         elif message.LoginStatus.RECONNECTION == status:
             players_info_message = message.PlayersInfo(self._room.get_character_list())
             self._output_queue.put(OutputPack(players_info_message, endpoint))
 
-            if self._match:
-                match_info_message = message.MatchInfo(self._match.get_ground().get_seed(), self._match.get_ground().get_grid())
-                self._output_queue.put(OutputPack(match_info_message, endpoint))
+            if self._arena:
+                arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
+                self._output_queue.put(OutputPack(arena_info_message, endpoint))
 
     def _register_player(self, character, endpoint):
         status = self._room.add_player(character, endpoint)
@@ -109,39 +108,45 @@ class ServerManager(PackageQueue):
         player = self._room.get_player_with_endpoint(endpoint)
         if player:
             if isinstance(player_action_message, message.PlayerAction.Movement):
-                self._match.character_moves(player.get_character(), player_action_message.action.movement)
+                self._arena.character_moves(player.get_character(), player_action_message.action.movement)
 
             elif isinstance(player_action_message, message.PlayerAction.Shoot):
-                self._match.character_shoots(player.get_character(), player_action_message.action.skill_id)
+                self._arena.character_shoots(player.get_character(), player_action_message.action.skill_id)
 
             else:
                 logger.error("Unknown player action type: {} - Rejecting connection...".format(player_action_message.action.__class__));
                 self._output_queue(OutputPack(None, endpoint))
 
-    def _match_request(self):
-        print("Start match!!")
-        self._match = Match(self._map_size, self._seed)
+    def _new_arena_signal(self):
+        print("Start arena!!")
+        self._arena = Arena(self._arena_size, self._seed)
         self._frame_stamp = 0
 
-        match_info_message = message.MatchInfo(self._match.get_ground().get_seed(), self._match.get_ground().get_grid())
-        self._output_queue.put(OutputPack(match_info_message, self._room.get_endpoint_list()))
+        arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
+        self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
 
-        if not self._match.has_finished():
-            self._input_queue.put(InputPack(ServerSignal.FRAME_REQUEST, None))
+        if not self._arena.has_finished():
+            self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
 
         elif [] == self._room.get_winner_list():
-            self._input_queue.put(InputPack(ServerSignal.MATCH_REQUEST, None))
+            self._input_queue.put(InputPack(ServerSignal.NEW_ARENA_SIGNAL, None))
 
         else:
             pass #reset signal => clear the room
 
-    def _frame_request(self):
-        time.sleep(1)
+
+    def _compute_frame_signal(self):
+        def enqueue_new_frame():
+            self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+
         frame_message = message.Frame(self._frame_stamp)
+        self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
+
         self._frame_stamp = self._frame_stamp + 1
 
-        self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
-        self._input_queue.put(InputPack(ServerSignal.FRAME_REQUEST, None))
+        timer = threading.Timer(1, enqueue_new_frame)
+        timer.daemon = True
+        timer.start()
 
     def _lost_connection(self, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)

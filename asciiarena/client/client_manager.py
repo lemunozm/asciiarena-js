@@ -10,9 +10,9 @@ class ClientManager(MessageQueue):
         MessageQueue.__init__(self)
         self._character = character
         self._character_list = []
-        self._max_players = 0
+        self._players = 0
         self._points_to_win = 0
-        self._map_size = 0
+        self._arena_size = 0
         self._seed = ""
 
     def init_communication(self, endpoint):
@@ -47,14 +47,14 @@ class ClientManager(MessageQueue):
         game_info_message = self._receive_message([message.GameInfo])
 
         self._character_list = game_info_message.character_list
-        self._max_players = game_info_message.max_players
+        self._players = game_info_message.players
         self._points_to_win = game_info_message.points
-        self._map_size = game_info_message.map_size
+        self._arena_size = game_info_message.arena_size
         self._seed = game_info_message.seed
         printable_seed = "<random>" if "" == self._seed else self._seed
 
-        print("\nGame: Points to win: {} | map size: {} x {} | seed: {}".format(self._points_to_win, self._map_size, self._map_size, printable_seed))
-        ClientManager._print_player_list(self._character_list, self._max_players)
+        print("\nGame: Points to win: {} | arena size: {} x {} | seed: {}".format(self._points_to_win, self._arena_size, self._arena_size, printable_seed))
+        ClientManager._print_player_list(self._character_list, self._players)
         return compatibility
 
     def _login_request(self):
@@ -85,14 +85,14 @@ class ClientManager(MessageQueue):
                 return True
 
     def _wait_game(self):
-        while len(self._character_list) != self._max_players:
+        while len(self._character_list) != self._players:
             player_info_message = self._receive_message([message.PlayersInfo])
             self._character_list = player_info_message.character_list
-            ClientManager._print_player_list(self._character_list, self._max_players)
+            ClientManager._print_player_list(self._character_list, self._players)
 
     def _init_game(self):
-        match_info_message = self._receive_message([message.MatchInfo])
-        ClientManager._print_ground(match_info_message.grid, self._map_size)
+        arena_info_message = self._receive_message([message.ArenaInfo])
+        ClientManager._print_ground(arena_info_message.grid, self._arena_size)
         while True:
             frame_message = self._receive_message([message.Frame])
             print("Frame stamp: {}".format(frame_message.stamp))
@@ -114,8 +114,8 @@ class ClientManager(MessageQueue):
         print(ground)
 
     @staticmethod
-    def _print_player_list(character_list, max_players):
-        print("      Players: {} / {} - characters: {}".format(len(character_list), max_players, character_list))
+    def _print_player_list(character_list, players):
+        print("      Players: {} / {} - characters: {}".format(len(character_list), players, character_list))
 
     @staticmethod
     def _ask_user_for_character():

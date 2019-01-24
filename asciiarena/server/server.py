@@ -4,8 +4,8 @@ from common import version
 from .server_manager import ServerManager
 
 class Server:
-    def __init__(self, max_players, points, map_size, seed):
-        self._server_manager = ServerManager(max_players, points, map_size, seed)
+    def __init__(self, players, points, arena_size, seed):
+        self._server_manager = ServerManager(players, points, arena_size, seed)
 
     def run(self, port):
         logger.info("Server version: {}".format(version.CURRENT))

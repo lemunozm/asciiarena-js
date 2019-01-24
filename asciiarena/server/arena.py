@@ -1,6 +1,6 @@
 from .ground import Ground
 
-class Match:
+class Arena:
     def __init__(self, size, seed):
         self._ground = Ground.fromSeed(size, seed)
 

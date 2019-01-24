@@ -4,9 +4,9 @@ class Room:
     ADDITION_SUCCESSFUL = 1
     ADDITION_ERR_COMPLETE = 2
     ADDITION_ERR_ALREADY_EXISTS = 3
-    def __init__(self, max_participants):
+    def __init__(self, size):
         self._participant_dict = {}
-        self._max_participants = max_participants
+        self._size = size
 
     def add_participant(self, name, participant):
         if self.is_complete():
@@ -18,7 +18,7 @@ class Room:
         return Room.ADDITION_SUCCESSFUL
 
     def is_complete(self):
-        return len(self._participant_dict) == self._max_participants
+        return len(self._participant_dict) == self._size
 
     def get_participant(self, name):
         return self._participant_dict.get(name, None)
@@ -26,8 +26,8 @@ class Room:
     def get_participant_list(self):
         return self._participant_dict.values()
 
-    def get_max_participants(self):
-        return self._max_participants
+    def get_size(self):
+        return self._size
 
 
 class Player:
@@ -51,8 +51,8 @@ class Player:
 
 class PlayersRoom(Room):
     ADDITION_REUSE = 4
-    def __init__(self, max_players, points_to_win):
-        Room.__init__(self, max_players)
+    def __init__(self, size, points_to_win):
+        Room.__init__(self, size)
         self._points_to_win = points_to_win
 
     def add_player(self, character, endpoint):
