@@ -1,0 +1,49 @@
+@startuml
+
+left to right direction
+
+package common {
+    class NetworkManager
+    class PackageFactory
+    class PackageQueue
+    class InputPack
+    class OutputPack
+
+    NetworkManager *-- PackageFactory
+    NetworkManager o-- PackageQueue
+    PackageQueue o--"0..*" InputPack
+    PackageQueue o--"0..*" OutputPack
+    PackageFactory --> InputPack
+    PackageFactory --> OutputPack
+}
+
+package server {
+    class Server
+    class ServerManager
+    class Arena
+    class PlayersRoom
+    class Player
+    class Ground
+
+    Server *-right- NetworkManager
+    Server *-- ServerManager
+    ServerManager -right-|> PackageQueue
+    ServerManager *-- PlayersRoom
+    ServerManager *-- Arena
+    PlayersRoom *--"0..*" Player
+    Arena *-- Ground
+}
+
+package client {
+    class MessageQueue
+    class Client
+    class ClientManager
+
+    Client *-left- NetworkManager
+    Client *-- ClientManager
+    MessageQueue -left-|> PackageQueue
+    ClientManager -right-|> MessageQueue
+
+}
+
+@enduml

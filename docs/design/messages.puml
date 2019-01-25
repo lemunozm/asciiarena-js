@@ -1,0 +1,30 @@
+@startuml
+
+title Client - Server communication
+
+participant Client
+participant Server
+
+== Initialization ==
+Client -[#blue]> Server : Version
+Client <[#blue]- Server : CheckedVersion
+Client <[#blue]- Server : GameInfo
+
+== Login ==
+Client -[#blue]> Server : Login
+Client <[#blue]- Server : LoginStatus
+
+loop 1..
+Client <-[#green]- Server : PlayersInfo N
+end
+
+Client <-[#green]- Server : ArenaInfo N
+
+loop 1..
+    Client -[#blue]-> Server : PlayerAction
+    Client <-[#green]- Server : Frame N
+end
+
+Client <[#green]- Server : PointsInfo N
+
+@enduml

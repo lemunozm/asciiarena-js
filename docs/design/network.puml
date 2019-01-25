@@ -1,0 +1,38 @@
+@startuml
+start
+:run;
+fork
+    while (running) is (true)
+    :read event;
+    split
+        :accept;
+        :register connection;
+    split again
+        :receive;
+        :create input packages;
+        :enqueue packages;
+    split again
+        :disconnection;
+        :create close package;
+        :enqueue package;
+    split again
+        :timeout;
+    end split
+    endwhile (false)
+fork again
+    while (running) is (true)
+    :dequeue;
+    if (exists) then (yes)
+        if (has message) then (yes)
+            :send;
+        else (no)
+            :unregister;
+        endif
+    else (no)
+        :timeout;
+    endif
+    endwhile (false)
+end fork
+end
+@enduml
+
