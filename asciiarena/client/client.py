@@ -1,4 +1,4 @@
-from common.network_communication import NetworkCommunication
+from common.network_manager import NetworkManager
 from common.logging import logger
 from .client_manager import ClientManager
 
@@ -7,7 +7,7 @@ class Client:
         self._client_manager = ClientManager(character)
 
     def run(self, ip, port):
-        network = NetworkCommunication(self._client_manager)
+        network = NetworkManager(self._client_manager)
 
         server = network.connect(ip, port)
         if server:

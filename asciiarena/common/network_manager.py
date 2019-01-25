@@ -10,7 +10,7 @@ import threading
 MAX_BUFFER_SIZE = 4096
 BLOCKING_TIME = 0.05
 
-class NetworkCommunication:
+class NetworkManager:
     class Operation(Enum):
         ACCEPT = 1
         READ = 2
@@ -90,9 +90,9 @@ class NetworkCommunication:
 
                 elif self.Operation.READ == key.data:
                     connection = key.fileobj
-                    ip, port = connection.getpeername()
                     data = connection.recv(MAX_BUFFER_SIZE)
                     if data:
+                        ip, port = connection.getpeername()
                         for input_pack in self._package_factory.create_input_packages(data, connection):
                             logger.debug("Message - {}: {} - from {}:{}".format(input_pack.message.__class__.__name__, vars(input_pack.message), ip, port))
                             self._package_queue.enqueue_input(input_pack)
@@ -106,7 +106,8 @@ class NetworkCommunication:
                 continue
 
             if output_pack.message:
-                for data, connection in self._package_factory.process_output_package(output_pack):
+                data, connection_list = self._package_factory.process_output_package(output_pack)
+                for connection in connection_list:
                     try:
                         connection.sendall(data)
                         ip, port = connection.getpeername()
@@ -120,6 +121,7 @@ class NetworkCommunication:
     def _close_connection(self, connection):
         ip, port = connection.getpeername()
         logger.debug("Connection closed with {}:{}".format(ip, port))
+        self._package_factory.untrack_endpoint(connection)
         self._package_queue.enqueue_input(InputPack(None, connection))
         self._selector.unregister(connection)
         connection.close()

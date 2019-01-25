@@ -1,4 +1,4 @@
-from common.network_communication import NetworkCommunication
+from common.network_manager import NetworkManager
 from common.logging import logger
 from common import version
 from .server_manager import ServerManager
@@ -9,7 +9,7 @@ class Server:
 
     def run(self, port):
         logger.info("Server version: {}".format(version.CURRENT))
-        network = NetworkCommunication(self._server_manager)
+        network = NetworkManager(self._server_manager)
 
         if network.listen(port):
             network.run()
