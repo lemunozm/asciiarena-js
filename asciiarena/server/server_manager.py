@@ -7,9 +7,12 @@ from .arena import Arena
 from enum import Enum
 import threading
 
+WAITING_TO_INIT_ARENA = 1 #seconds
+
 class ServerSignal(Enum):
     NEW_ARENA_SIGNAL = 1
     COMPUTE_FRAME_SIGNAL = 2
+
 
 class ServerManager(PackageQueue):
     def __init__(self, players, points, arena_size, seed):
@@ -20,6 +23,7 @@ class ServerManager(PackageQueue):
         self._seed = seed
         self._arena = None
         self._frame_stamp = 0
+
 
     def process_requests(self):
         while self._active:
@@ -61,8 +65,9 @@ class ServerManager(PackageQueue):
         players = self._room.get_size()
         points = self._room.get_points_to_win()
 
-        game_info_message = message.GameInfo(character_list, players, points, self._arena_size, self._seed)
+        game_info_message = message.GameInfo(character_list, players, points, self._arena_size, self._seed, WAITING_TO_INIT_ARENA)
         self._output_queue.put(OutputPack(game_info_message, endpoint))
+
 
     def _login_request(self, login_message, endpoint):
         status = self._register_player(login_message.character, endpoint)
@@ -85,6 +90,7 @@ class ServerManager(PackageQueue):
                 arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
                 self._output_queue.put(OutputPack(arena_info_message, endpoint))
 
+
     def _register_player(self, character, endpoint):
         status = self._room.add_player(character, endpoint)
 
@@ -104,6 +110,7 @@ class ServerManager(PackageQueue):
             logger.debug("Player '{}' tried to register: already exists".format(character))
             return message.LoginStatus.ALREADY_EXISTS
 
+
     def _player_action_request(self, player_action_message, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)
         if player:
@@ -117,6 +124,7 @@ class ServerManager(PackageQueue):
                 logger.error("Unknown player action type: {} - Rejecting connection...".format(player_action_message.action.__class__));
                 self._output_queue(OutputPack(None, endpoint))
 
+
     def _new_arena_signal(self):
         print("Start arena!!")
         self._arena = Arena(self._arena_size, self._seed)
@@ -125,6 +133,7 @@ class ServerManager(PackageQueue):
         arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
         self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+
 
     def _compute_frame_signal(self):
         frame_message = message.Frame(self._frame_stamp)
@@ -142,6 +151,7 @@ class ServerManager(PackageQueue):
 
         else:
             pass #reset signal => clear the room
+
 
     def _lost_connection(self, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)

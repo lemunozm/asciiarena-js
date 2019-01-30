@@ -2,8 +2,10 @@ from common.logging import logger
 from common.terrain import Terrain
 from common import version, message
 from .message_queue import MessageQueue, ReceiveMessageError
+from .game_screen import GameScreen
 
 import string
+import time
 
 class ClientManager(MessageQueue):
     def __init__(self, character):
@@ -14,6 +16,7 @@ class ClientManager(MessageQueue):
         self._points_to_win = 0
         self._arena_size = 0
         self._seed = ""
+
 
     def init_communication(self, endpoint):
         self._attach_endpoint(endpoint)
@@ -31,6 +34,7 @@ class ClientManager(MessageQueue):
 
         except ReceiveMessageError:
             print("Unexpected disconnection")
+
 
     def _server_info_request(self):
         version_message = message.Version(version.CURRENT)
@@ -51,11 +55,13 @@ class ClientManager(MessageQueue):
         self._points_to_win = game_info_message.points
         self._arena_size = game_info_message.arena_size
         self._seed = game_info_message.seed
+        self._waiting_time_to_arena = game_info_message.waiting_arena
         printable_seed = "<random>" if "" == self._seed else self._seed
 
         print("\nGame: Points to win: {} | arena size: {} x {} | seed: {}".format(self._points_to_win, self._arena_size, self._arena_size, printable_seed))
         ClientManager._print_player_list(self._character_list, self._players)
         return compatibility
+
 
     def _login_request(self):
         while True:
@@ -81,8 +87,9 @@ class ClientManager(MessageQueue):
                 return True
 
             elif message.LoginStatus.RECONNECTION == login_status_message.status:
-                print("      Reconnection with character '" + self._character + "'.")
+                print("      Reconnected with character '" + self._character + "'.")
                 return True
+
 
     def _wait_game(self):
         while len(self._character_list) != self._players:
@@ -90,32 +97,25 @@ class ClientManager(MessageQueue):
             self._character_list = player_info_message.character_list
             ClientManager._print_player_list(self._character_list, self._players)
 
-    def _init_game(self):
-        arena_info_message = self._receive_message([message.ArenaInfo])
-        ClientManager._print_ground(arena_info_message.grid, self._arena_size)
-        while True:
-            frame_message = self._receive_message([message.Frame])
-            print("Frame stamp: {}".format(frame_message.stamp))
 
-    @staticmethod
-    def _print_ground(grid, dimension):
-        ground = ""
-        for i, terrain in enumerate(grid):
-            if terrain == Terrain.EMPTY:
-                ground += "  "
-            elif terrain == Terrain.BORDER_WALL:
-                ground += "X "
-            elif terrain == Terrain.BLOCKED:
-                ground += "· "
-            else:
-                ground += "? "
-            if 0 == (i + 1) % dimension:
-                ground += "\n"
-        print(ground)
+    def _init_game(self):
+        ClientManager._print_starting_game(self._waiting_time_to_arena, 3)
+
+        with GameScreen(self._arena_size) as screen:
+            arena_info_message = self._receive_message([message.ArenaInfo])
+            screen.clear()
+            screen.draw_ground(arena_info_message.ground)
+            screen.render()
+
+            while True:
+                frame_message = self._receive_message([message.Frame])
+                #print("Frame stamp: {}".format(frame_message.stamp))
+
 
     @staticmethod
     def _print_player_list(character_list, players):
         print("      Players: {} / {} - characters: {}".format(len(character_list), players, character_list))
+
 
     @staticmethod
     def _ask_user_for_character():
@@ -123,3 +123,14 @@ class ClientManager(MessageQueue):
             character = input("      Choose a character (an unique letter from A to Z): ")
             if 1 == len(character) and -1 != string.ascii_uppercase.find(character):
                 return character
+
+
+    @staticmethod
+    def _print_starting_game(waiting_time, interval):
+        print("Starting game ", end = "", flush = True)
+        for i in range(0, interval):
+            print(".", end = "", flush = True)
+            time.sleep(waiting_time / interval)
+
+        print("")
+

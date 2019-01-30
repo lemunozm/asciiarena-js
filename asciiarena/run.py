@@ -10,11 +10,12 @@ import math
 DEFAULT_PORT = "3500"
 
 def command_line_interface():
-
     parser = argparse.ArgumentParser(prog = "asciiarena")
     parser.add_argument("--version", action = "version", version = "%(prog)s " + version.CURRENT)
 
     subparsers = parser.add_subparsers(title = "subcomands", help="select the application mode")
+    subparsers.required = True
+    subparsers.dest = "'client' or 'server'"
 
     client_parser = subparsers.add_parser("client")
     client_parser.add_argument("--ip", required = True, help = "Server ip")
@@ -34,6 +35,7 @@ def command_line_interface():
     args = parser.parse_args()
     args.func(args)
 
+
 def init_client(args):
     print("Running asciiarena client...")
 
@@ -44,6 +46,7 @@ def init_client(args):
     except KeyboardInterrupt:
         print("")
         pass
+
 
 def init_server(args):
     print("Running asciiarena server...")
@@ -60,6 +63,7 @@ def init_server(args):
     except KeyboardInterrupt:
         print("")
         pass
+
 
 if __name__ == "__main__":
     command_line_interface()

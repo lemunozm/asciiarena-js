@@ -90,14 +90,17 @@ class NetworkManager:
 
                 elif self.Operation.READ == key.data:
                     connection = key.fileobj
-                    data = connection.recv(MAX_BUFFER_SIZE)
-                    if data:
-                        ip, port = connection.getpeername()
-                        for input_pack in self._package_factory.create_input_packages(data, connection):
-                            logger.debug("Message - {}: {} - from {}:{}".format(input_pack.message.__class__.__name__, vars(input_pack.message), ip, port))
-                            self._package_queue.enqueue_input(input_pack)
-                    else:
-                        self._close_connection(connection)
+                    try:
+                        data = connection.recv(MAX_BUFFER_SIZE)
+                        if data:
+                            ip, port = connection.getpeername()
+                            for input_pack in self._package_factory.create_input_packages(data, connection):
+                                logger.debug("Message - {}: {} - from {}:{}".format(input_pack.message.__class__.__name__, vars(input_pack.message), ip, port))
+                                self._package_queue.enqueue_input(input_pack)
+                        else:
+                            self._close_connection(connection)
+                    except OSError:
+                        pass
 
     def _output_process(self):
         while self._running:
@@ -119,10 +122,13 @@ class NetworkManager:
                     self._close_connection(connection)
 
     def _close_connection(self, connection):
-        ip, port = connection.getpeername()
-        logger.debug("Connection closed with {}:{}".format(ip, port))
-        self._package_factory.untrack_endpoint(connection)
-        self._package_queue.enqueue_input(InputPack(None, connection))
-        self._selector.unregister(connection)
-        connection.close()
+        try:
+            ip, port = connection.getpeername()
+            logger.debug("Connection closed with {}:{}".format(ip, port))
+            self._package_factory.untrack_endpoint(connection)
+            self._package_queue.enqueue_input(InputPack(None, connection))
+            self._selector.unregister(connection)
+            connection.close()
+        except OSError:
+            pass
 

@@ -8,12 +8,13 @@ class CheckedVersion:
         self.validation = validation
 
 class GameInfo:
-    def __init__(self, character_list, players, points, arena_size, seed):
+    def __init__(self, character_list, players, points, arena_size, seed, waiting_arena):
         self.character_list = character_list
         self.players = players
         self.points = points
         self.arena_size = arena_size
         self.seed = seed
+        self.waiting_arena = waiting_arena
 
 class Login:
     def __init__(self, character):
@@ -32,9 +33,9 @@ class PlayersInfo:
         self.character_list = character_list
 
 class ArenaInfo:
-    def __init__(self, seed, grid):
+    def __init__(self, seed, ground):
         self.seed = seed
-        self.grid = grid
+        self.ground = ground
 
 class Frame:
     def __init__(self, stamp):
