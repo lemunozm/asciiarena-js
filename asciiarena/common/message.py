@@ -38,8 +38,14 @@ class ArenaInfo:
         self.ground = ground
 
 class Frame:
-    def __init__(self, stamp):
+    class Entity:
+        def __init__(self, character, position):
+            self.character = character
+            self.position = position
+
+    def __init__(self, stamp, entity_list):
         self.stamp = stamp
+        self.entity_list = entity_list
 
 class PlayerAction:
     class Movement:
@@ -50,7 +56,8 @@ class PlayerAction:
         def __init(self, skill_id):
             self.skill_id = skill_id
 
-    def __init__(self, action):
+    def __init__(self, frame_stamp, action):
+        self.frame_stamp  = frame_stamp
         self.action = action
 
 class PointsInfo:

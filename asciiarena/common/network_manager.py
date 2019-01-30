@@ -16,11 +16,13 @@ class NetworkManager:
         READ = 2
         WRITE = 3
 
+
     def __init__(self, package_queue):
         self._selector = selectors.DefaultSelector()
         self._package_factory = PackageFactory()
         self._package_queue = package_queue
         self._running = False
+
 
     def run(self):
         self._running = True
@@ -33,6 +35,7 @@ class NetworkManager:
         self._output_thread.daemon = True
         self._output_thread.start()
 
+
     def stop(self):
         self._running = False
         self._input_thread.join()
@@ -44,8 +47,10 @@ class NetworkManager:
         for connection in current_connection_list:
             self._close_connection(connection)
 
+
     def is_running(self):
         return self._running
+
 
     def listen(self, port):
         try:
@@ -65,6 +70,7 @@ class NetworkManager:
                 logger.critical("Port {} is already in use".format(port))
             return None
 
+
     def connect(self, ip, port):
         try:
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -78,6 +84,7 @@ class NetworkManager:
         except OSError as error:
             logger.critical("Can not connect to {}:{}, error: {}".format(ip, port, error.errno))
             return None
+
 
     def _input_process(self):
         while self._running:
@@ -102,6 +109,7 @@ class NetworkManager:
                     except OSError:
                         pass
 
+
     def _output_process(self):
         while self._running:
             output_pack = self._package_queue.dequeue_output(BLOCKING_TIME)
@@ -120,6 +128,7 @@ class NetworkManager:
             else:
                 for connection in output.endpoint_list:
                     self._close_connection(connection)
+
 
     def _close_connection(self, connection):
         try:

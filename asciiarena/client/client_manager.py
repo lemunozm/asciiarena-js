@@ -103,13 +103,15 @@ class ClientManager(MessageQueue):
 
         with GameScreen(self._arena_size) as screen:
             arena_info_message = self._receive_message([message.ArenaInfo])
-            screen.clear()
-            screen.draw_ground(arena_info_message.ground)
-            screen.render()
 
             while True:
                 frame_message = self._receive_message([message.Frame])
-                #print("Frame stamp: {}".format(frame_message.stamp))
+
+                screen.clear()
+                screen.draw_ground(arena_info_message.ground)
+                screen.draw_entities(frame_message.entity_list)
+                screen.debug_draw_frame_stamp(frame_message.stamp)
+                screen.render()
 
 
     @staticmethod

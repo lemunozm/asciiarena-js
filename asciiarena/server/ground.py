@@ -1,4 +1,5 @@
 from common.terrain import Terrain
+from common.util.vec2 import Vec2
 
 import random
 
@@ -21,18 +22,18 @@ class Ground:
         raise NotImplementedError()
 
 
-    def set_at(self, x, y, terrain):
-        self._grid[y * self._size + x] = terrain
+    def set_at(self, position, terrain):
+        self._grid[position.y * self._size + position.x] = terrain
 
 
-    def get_at(self, x, y):
-        return self._grid[y * self._size + x]
+    def get_at(self, position):
+        return self._grid[position.y * self._size + position.x]
 
 
-    def fill_at(self, left, top, width, height, terrain):
-        for x in range(left, left + width):
-            for y in range(top, top + height):
-                self.set_at(x, y, terrain)
+    def fill_at(self, position, dimension, terrain):
+        for x in range(position.x, position.x + dimension.x):
+            for y in range(position.y, position.y + dimension.y):
+                self.set_at(Vec2(x, y), terrain)
 
 
     def get_grid(self):
@@ -46,14 +47,62 @@ class Ground:
     def get_seed(self):
         return self._seed
 
+    def get_grid_coordinates(self, index):
+        return Vec2(index % self._size, index / self._size)
 
-    def found_separated_positions(self, amount, min_distance):
-        pass
+
+    def find_separated_positions(self, amount, min_distance):
+        random.seed(None)
+        position_list = []
+        free_terrain = []
+        for i, terrain in enumerate(self._grid):
+            if Terrain.EMPTY == terrain:
+                free_terrain.append(self.get_grid_coordinates(i))
+
+        index = random.randrange(0, len(free_terrain))
+        new_position = free_terrain[index]
+        position_list.append(new_position)
+        del free_terrain[index]
+
+        while len(position_list) < amount:
+            index = random.randrange(0, len(free_terrain))
+            new_position = free_terrain[index]
+            for position in position_list:
+                if Vec2.distance(position, new_position) > min_distance:
+                    position_list.append(new_position)
+                    del free_terrain[index]
+                    break
+
+        return position_list
+
+    """
+    def find_separated_positions(self, amount, free_distance):
+        random.seed(None)
+        position_list = []
+        free_terrain = []
+        for i, terrain in enumerate(self._grid):
+            if Terrain.EMPTY == terrain:
+                free_terrain.append(self.get_grid_coordinates(i))
+
+        index = random.randrange(0, len(free_terrain))
+        new_position = free_terrain[index]
+        position_list.append(new_position)
+
+        while len(position_list) < amount:
+            far_position = None
+            max_distance = 0
+            for position in free_terrain:
+                if Vec2.distance(position, new_position) > max_distance:
+                    far_position = position
+                    position_list.append(new_position)
+                    del free_terrain[index]
+                    break
+    """
 
 
     def _create_border(self):
-        self.fill_at(0, 0, self._size, 1, Terrain.BORDER_WALL)
-        self.fill_at(0, self._size - 1, self._size, 1, Terrain.BORDER_WALL)
-        self.fill_at(0, 1, 1, self._size - 1, Terrain.BORDER_WALL)
-        self.fill_at(self._size - 1, 1, 1, self._size - 1, Terrain.BORDER_WALL)
+        self.fill_at(Vec2(0, 0), Vec2(self._size, 1), Terrain.BORDER_WALL)
+        self.fill_at(Vec2(0, self._size - 1), Vec2(self._size, 1), Terrain.BORDER_WALL)
+        self.fill_at(Vec2(0, 1), Vec2(1, self._size - 1), Terrain.BORDER_WALL)
+        self.fill_at(Vec2(self._size - 1, 1), Vec2(1, self._size - 1), Terrain.BORDER_WALL)
 

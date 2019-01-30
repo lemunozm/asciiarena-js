@@ -4,12 +4,13 @@ from common import version, message
 from .room import PlayersRoom
 from .arena import Arena
 
-from enum import Enum
+import enum
 import threading
 
-WAITING_TO_INIT_ARENA = 1 #seconds
+WAITING_TO_INIT_ARENA = 1.0 #seconds
+FRAME_MAX_RATE = 1 #per second
 
-class ServerSignal(Enum):
+class ServerSignal(enum.Enum):
     NEW_ARENA_SIGNAL = 1
     COMPUTE_FRAME_SIGNAL = 2
 
@@ -114,6 +115,7 @@ class ServerManager(PackageQueue):
     def _player_action_request(self, player_action_message, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)
         if player:
+            #check the frame_stamp
             if isinstance(player_action_message, message.PlayerAction.Movement):
                 self._arena.character_moves(player.get_character(), player_action_message.action.movement)
 
@@ -126,23 +128,37 @@ class ServerManager(PackageQueue):
 
 
     def _new_arena_signal(self):
-        print("Start arena!!")
-        self._arena = Arena(self._arena_size, self._seed)
+        logger.info("Start game")
+        self._arena = Arena(self._arena_size, self._seed, self._room.get_character_list())
         self._frame_stamp = 0
 
         arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
-        self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+
+        timer = threading.Timer(WAITING_TO_INIT_ARENA - (1 / FRAME_MAX_RATE), self._next_frame)
+        timer.daemon = True
+        timer.start()
 
 
     def _compute_frame_signal(self):
-        frame_message = message.Frame(self._frame_stamp)
+        self._arena.update()
+
+        frame_entity_list = []
+        for entity in self._arena.get_entity_list():
+            frame_entity = message.Frame.Entity(entity.get_character(), entity.get_position())
+            frame_entity_list.append(frame_entity)
+
+        frame_message = message.Frame(self._frame_stamp, frame_entity_list)
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
+        self._next_frame()
+
+
+    def _next_frame(self):
         if not self._arena.has_finished():
             self._frame_stamp = self._frame_stamp + 1
-            next_frame = lambda: self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
-            timer = threading.Timer(1, next_frame)
+            next_frame_signal = lambda: self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
+            timer = threading.Timer(1 / FRAME_MAX_RATE, next_frame_signal)
             timer.daemon = True
             timer.start()
 
