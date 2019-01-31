@@ -2,7 +2,7 @@ from common.logging import logger
 from common.package_factory import PackageFactory
 from common.package_queue import InputPack
 
-from enum import Enum
+import enum
 import selectors
 import socket
 import threading
@@ -11,7 +11,7 @@ MAX_BUFFER_SIZE = 4096
 BLOCKING_TIME = 0.05
 
 class NetworkManager:
-    class Operation(Enum):
+    class Operation(enum.Enum):
         ACCEPT = 1
         READ = 2
         WRITE = 3
@@ -99,15 +99,16 @@ class NetworkManager:
                     connection = key.fileobj
                     try:
                         data = connection.recv(MAX_BUFFER_SIZE)
+                    except:
+                        self._close_connection(connection)
+                    else:
                         if data:
                             ip, port = connection.getpeername()
                             for input_pack in self._package_factory.create_input_packages(data, connection):
-                                logger.debug("Message - {}: {} - from {}:{}".format(input_pack.message.__class__.__name__, vars(input_pack.message), ip, port))
+                                logger.debug("Message - {} - from {}:{}".format(input_pack.message.__class__.__name__, ip, port))
                                 self._package_queue.enqueue_input(input_pack)
                         else:
                             self._close_connection(connection)
-                    except OSError:
-                        pass
 
 
     def _output_process(self):
@@ -122,7 +123,7 @@ class NetworkManager:
                     try:
                         connection.sendall(data)
                         ip, port = connection.getpeername()
-                        logger.debug("Message - {}: {} - to {}:{}".format(output_pack.message.__class__.__name__, vars(output_pack.message), ip, port))
+                        logger.debug("Message - {} - to {}:{}".format(output_pack.message.__class__.__name__, ip, port))
                     except OSError:
                         pass
             else:
@@ -131,13 +132,13 @@ class NetworkManager:
 
 
     def _close_connection(self, connection):
+        self._package_queue.enqueue_input(InputPack(None, connection))
+        self._package_factory.untrack_endpoint(connection)
+        self._selector.unregister(connection)
         try:
             ip, port = connection.getpeername()
-            logger.debug("Connection closed with {}:{}".format(ip, port))
-            self._package_factory.untrack_endpoint(connection)
-            self._package_queue.enqueue_input(InputPack(None, connection))
-            self._selector.unregister(connection)
             connection.close()
-        except OSError:
+            logger.info("Connection closed with {}:{}".format(ip, port))
+        except:
             pass
 

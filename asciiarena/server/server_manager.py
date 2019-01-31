@@ -8,7 +8,7 @@ import enum
 import threading
 
 WAITING_TO_INIT_ARENA = 1.0 #seconds
-FRAME_MAX_RATE = 1 #per second
+FRAME_MAX_RATE = 60 #per second
 
 class ServerSignal(enum.Enum):
     NEW_ARENA_SIGNAL = 1
@@ -60,7 +60,7 @@ class ServerManager(PackageQueue):
         self._output_queue.put(OutputPack(checked_version_message, endpoint))
 
         compatibility = "compatible" if validation else "incompatible"
-        logger.debug("Server info request from client with version {} - {}".format(version_message.value, compatibility))
+        logger.debug("Client with version {} - {}".format(version_message.value, compatibility))
 
         character_list = self._room.get_character_list()
         players = self._room.get_size()

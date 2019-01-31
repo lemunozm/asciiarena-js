@@ -88,6 +88,8 @@ class ClientManager(MessageQueue):
 
             elif message.LoginStatus.RECONNECTION == login_status_message.status:
                 print("      Reconnected with character '" + self._character + "'.")
+                if len(self._character_list) == self._players:
+                    self._waiting_time_to_arena = 0
                 return True
 
 
