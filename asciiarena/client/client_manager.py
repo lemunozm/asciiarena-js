@@ -3,6 +3,7 @@ from common.terrain import Terrain
 from common import version, message
 from .message_queue import MessageQueue, ReceiveMessageError
 from .game_screen import GameScreen
+from .keyboard import Keyboard, Key
 
 import string
 import time
@@ -104,16 +105,23 @@ class ClientManager(MessageQueue):
         ClientManager._print_starting_game(self._waiting_time_to_arena, 3)
 
         with GameScreen(self._arena_size) as screen:
+            keyboard = Keyboard()
+
             arena_info_message = self._receive_message([message.ArenaInfo])
 
             while True:
                 frame_message = self._receive_message([message.Frame])
 
+                keyboard.add_key_events(screen.get_event_list())
+
                 screen.clear()
                 screen.draw_ground(arena_info_message.ground)
-                screen.draw_entities(frame_message.entity_list)
+                if keyboard.is_key_down(Key.A):
+                    screen.draw_entities(frame_message.entity_list)
                 screen.debug_draw_frame_stamp(frame_message.stamp)
                 screen.render()
+
+                # Send events
 
 
     @staticmethod

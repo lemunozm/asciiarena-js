@@ -40,6 +40,16 @@ class GameScreen:
         return curses.LINES
 
 
+    def get_event_list(self):
+        key_event_list = []
+        while True:
+            key_event = self._stdscr.getch()
+            if key_event == curses.ERR:
+                break
+            key_event_list.append(key_event)
+        return key_event_list
+
+
     def clear(self):
         self._stdscr.clear()
 
