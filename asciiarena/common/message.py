@@ -2,10 +2,12 @@ class Version:
     def __init__(self, value):
         self.value = value
 
+
 class CheckedVersion:
     def __init__(self, value, validation):
         self.value = value
         self.validation = validation
+
 
 class GameInfo:
     def __init__(self, character_list, players, points, arena_size, seed, waiting_arena):
@@ -16,9 +18,11 @@ class GameInfo:
         self.seed = seed
         self.waiting_arena = waiting_arena
 
+
 class Login:
     def __init__(self, character):
         self.character = character
+
 
 class LoginStatus:
     LOGGED = 1
@@ -28,14 +32,17 @@ class LoginStatus:
     def __init__(self, status):
         self.status = status
 
+
 class PlayersInfo:
     def __init__(self, character_list):
         self.character_list = character_list
+
 
 class ArenaInfo:
     def __init__(self, seed, ground):
         self.seed = seed
         self.ground = ground
+
 
 class Frame:
     class Entity:
@@ -43,22 +50,21 @@ class Frame:
             self.character = character
             self.position = position
 
+
     def __init__(self, stamp, entity_list):
         self.stamp = stamp
         self.entity_list = entity_list
 
-class PlayerAction:
-    class Movement:
-        def __init__(self, direction):
-            self.direction = direction
 
-    class Shoot:
-        def __init(self, skill_id):
-            self.skill_id = skill_id
+class PlayerMovement:
+    def __init__(self, direction):
+        self.direction = direction
 
-    def __init__(self, frame_stamp, action):
-        self.frame_stamp  = frame_stamp
-        self.action = action
+
+class PlayerShot:
+    def __init(self, skill_id):
+        self.skill_id = skill_id
+
 
 class PointsInfo:
     def __init__(self):

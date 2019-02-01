@@ -36,8 +36,11 @@ class ServerManager(PackageQueue):
                 elif isinstance(input_pack.message, message.Login):
                     self._login_request(input_pack.message, input_pack.endpoint)
 
-                elif isinstance(input_pack.message, message.PlayerAction):
-                    self._player_action_request(input_pack.message, input_pack.endpoint)
+                elif isinstance(input_pack.message, message.PlayerMovement):
+                    self._player_movement_request(input_pack.message, input_pack.endpoint)
+
+                elif isinstance(input_pack.message, message.PlayerShot):
+                    self._player_shot_request(input_pack.message, input_pack.endpoint)
 
                 elif isinstance(input_pack.message, ServerSignal):
                     if ServerSignal.NEW_ARENA_SIGNAL == input_pack.message:
@@ -112,19 +115,17 @@ class ServerManager(PackageQueue):
             return message.LoginStatus.ALREADY_EXISTS
 
 
-    def _player_action_request(self, player_action_message, endpoint):
+    def _player_movement_request(self, player_movement_message, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)
         if player:
-            #check the frame_stamp
-            if isinstance(player_action_message, message.PlayerAction.Movement):
-                self._arena.character_moves(player.get_character(), player_action_message.action.movement)
+            logger.info("Player '{}' moves {}".format(player.get_character(), player_movement_message.direction))
+            self._arena.character_moves(player.get_character(), player_movement_message.direction)
 
-            elif isinstance(player_action_message, message.PlayerAction.Shoot):
-                self._arena.character_shoots(player.get_character(), player_action_message.action.skill_id)
 
-            else:
-                logger.error("Unknown player action type: {} - Rejecting connection...".format(player_action_message.action.__class__));
-                self._output_queue(OutputPack(None, endpoint))
+    def _player_shot_request(self, player_shot_message, endpoint):
+        player = self._room.get_player_with_endpoint(endpoint)
+        if player:
+            self._arena.character_shoots(player.get_character(), player_shot_message.skill_id)
 
 
     def _new_arena_signal(self):
@@ -135,9 +136,7 @@ class ServerManager(PackageQueue):
         arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
 
-        timer = threading.Timer(WAITING_TO_INIT_ARENA - (1 / FRAME_MAX_RATE), self._next_frame)
-        timer.daemon = True
-        timer.start()
+        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, WAITING_TO_INIT_ARENA)
 
 
     def _compute_frame_signal(self):
@@ -151,19 +150,12 @@ class ServerManager(PackageQueue):
         frame_message = message.Frame(self._frame_stamp, frame_entity_list)
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
-        self._next_frame()
-
-
-    def _next_frame(self):
         if not self._arena.has_finished():
             self._frame_stamp = self._frame_stamp + 1
-            next_frame_signal = lambda: self._input_queue.put(InputPack(ServerSignal.COMPUTE_FRAME_SIGNAL, None))
-            timer = threading.Timer(1 / FRAME_MAX_RATE, next_frame_signal)
-            timer.daemon = True
-            timer.start()
+            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 1 / FRAME_MAX_RATE)
 
         elif [] == self._room.get_winner_list():
-            self._input_queue.put(InputPack(ServerSignal.NEW_ARENA_SIGNAL, None))
+            self._server_signal(ServerSignal.NEW_ARENA_SIGNAL, 0)
 
         else:
             pass #reset signal => clear the room
@@ -174,4 +166,14 @@ class ServerManager(PackageQueue):
         if player:
             player.set_endpoint(None)
             logger.info("Player '{}' disconected".format(player.get_character()))
+
+
+    def _server_signal(self, signal, time):
+        future_signal = lambda: self._input_queue.put(InputPack(signal, None))
+        if time > 0:
+            timer = threading.Timer(time, future_signal)
+            timer.daemon = True
+            timer.start()
+        else:
+            future_signal()
 

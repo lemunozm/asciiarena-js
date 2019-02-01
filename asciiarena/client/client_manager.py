@@ -1,3 +1,4 @@
+from common.util.vec2 import Vec2
 from common.logging import logger
 from common.terrain import Terrain
 from common import version, message
@@ -112,16 +113,32 @@ class ClientManager(MessageQueue):
             while True:
                 frame_message = self._receive_message([message.Frame])
 
-                keyboard.update_key_events(screen.get_event_list())
-
                 screen.clear()
                 screen.draw_ground(arena_info_message.ground)
-                if keyboard.is_key_down(Key.A):
-                    screen.draw_entities(frame_message.entity_list)
+                screen.draw_entities(frame_message.entity_list)
                 screen.debug_draw_frame_stamp(frame_message.stamp)
                 screen.render()
 
-                # Send events
+                keyboard.update_key_events(screen.get_event_list())
+
+                direction = self._ask_player_movement_direction(keyboard)
+                if Vec2.zero() != direction:
+                    player_movement_message = message.PlayerMovement(direction)
+                    self._send_message(player_movement_message)
+
+
+    @staticmethod
+    def _ask_player_movement_direction(keyboard):
+        if keyboard.is_key_down(Key.W):
+            return Vec2.up()
+        elif keyboard.is_key_down(Key.A):
+            return Vec2.left()
+        elif keyboard.is_key_down(Key.S):
+            return Vec2.down()
+        elif keyboard.is_key_down(Key.D):
+            return Vec2.right()
+        else:
+            return Vec2.zero()
 
 
     @staticmethod

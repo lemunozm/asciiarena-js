@@ -7,6 +7,20 @@ class Vec2:
         self.y = y
 
 
+    def __str__(self):
+        return "Vec2({}, {})".format(self.x, self.y)
+
+
+    def __eq__(self, v):
+        if isinstance(v, Vec2):
+            return self.x == v.x and self.y == v.y
+        return False
+
+
+    def __ne__(self, v):
+        return not self.__eq__(v)
+
+
     def __add__(self, v):
         return Vec2(self.x + v.x, self.y + v.y)
 
@@ -37,7 +51,7 @@ class Vec2:
 
 
     @staticmethod
-    def empty():
+    def zero():
         return Vec2(0, 0)
 
 
