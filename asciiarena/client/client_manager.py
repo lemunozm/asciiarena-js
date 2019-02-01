@@ -112,7 +112,7 @@ class ClientManager(MessageQueue):
             while True:
                 frame_message = self._receive_message([message.Frame])
 
-                keyboard.add_key_events(screen.get_event_list())
+                keyboard.update_key_events(screen.get_event_list())
 
                 screen.clear()
                 screen.draw_ground(arena_info_message.ground)

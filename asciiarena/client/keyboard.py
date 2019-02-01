@@ -10,8 +10,9 @@ class Key(enum.Enum):
 
 class Keyboard:
     def __init__(self):
-        self._key_map = {}
-        self._listener = pynput.keyboard.Listener(on_release = self._on_release)
+        self._global_key_dict = {}
+        self._local_key_dict = {}
+        self._listener = pynput.keyboard.Listener(on_press = self._on_press, on_release = self._on_release)
         self._listener.start()
         self._mutex = threading.Lock()
 
@@ -21,20 +22,34 @@ class Keyboard:
 
 
     def is_key_down(self, key):
-        return self._key_map.get(key, False)
+        return self._local_key_dict.get(key, False)
 
 
-    def add_key_events(self, key_event_list):
+    def update_key_events(self, key_event_list):
+        for key_event in key_event_list:
+            key = Keyboard._key_event_to_key(key_event)
+            self._local_key_dict[key] = True
+
+        local_key_to_remove = []
         with self._mutex:
-            for key_event in key_event_list:
-                key = Keyboard._key_event_to_key(key_event)
-                self._key_map[key] = True
+            for key in self._local_key_dict.keys():
+                if not self._global_key_dict.get(key, False):
+                    local_key_to_remove.append(key)
+
+        for key in local_key_to_remove:
+            self._local_key_dict.pop(key)
+
+
+    def _on_press(self, key_code):
+        with self._mutex:
+            key = Keyboard._key_code_to_key(key_code)
+            self._global_key_dict[key] = True
 
 
     def _on_release(self, key_code):
-        key = Keyboard._key_code_to_key(key_code)
         with self._mutex:
-            self._key_map.pop(key, None)
+            key = Keyboard._key_code_to_key(key_code)
+            self._global_key_dict.pop(key)
 
 
     @staticmethod
