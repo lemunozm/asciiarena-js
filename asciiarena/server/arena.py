@@ -49,9 +49,6 @@ class Entity:
 
         return current == self._last_move_timestamp
 
-    def shoots(delf, skill):
-        pass
-
 
 class Arena:
     def __init__(self, size, seed, character_list):

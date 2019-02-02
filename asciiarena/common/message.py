@@ -51,8 +51,7 @@ class Frame:
             self.position = position
 
 
-    def __init__(self, stamp, entity_list):
-        self.stamp = stamp
+    def __init__(self, entity_list):
         self.entity_list = entity_list
 
 
@@ -61,7 +60,7 @@ class PlayerMovement:
         self.direction = direction
 
 
-class PlayerShot:
+class PlayerCast:
     def __init(self, skill_id):
         self.skill_id = skill_id
 

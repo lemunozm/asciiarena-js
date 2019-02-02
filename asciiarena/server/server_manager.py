@@ -23,7 +23,6 @@ class ServerManager(PackageQueue):
         self._arena_size = arena_size
         self._seed = seed
         self._arena = None
-        self._frame_stamp = 0
 
 
     def process_requests(self):
@@ -39,8 +38,8 @@ class ServerManager(PackageQueue):
                 elif isinstance(input_pack.message, message.PlayerMovement):
                     self._player_movement_request(input_pack.message, input_pack.endpoint)
 
-                elif isinstance(input_pack.message, message.PlayerShot):
-                    self._player_shot_request(input_pack.message, input_pack.endpoint)
+                elif isinstance(input_pack.message, message.PlayerCast):
+                    self._player_cast_request(input_pack.message, input_pack.endpoint)
 
                 elif isinstance(input_pack.message, ServerSignal):
                     if ServerSignal.NEW_ARENA_SIGNAL == input_pack.message:
@@ -123,14 +122,13 @@ class ServerManager(PackageQueue):
                 logger.debug("Player '{}' moves {}".format(entity.get_character(), player_movement_message.direction))
 
 
-    def _player_shot_request(self, player_shot_message, endpoint):
+    def _player_cast_request(self, player_cast_message, endpoint):
         pass
 
 
     def _new_arena_signal(self):
         logger.info("Start game")
         self._arena = Arena(self._arena_size, self._seed, self._room.get_character_list())
-        self._frame_stamp = 0
 
         arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
@@ -146,11 +144,10 @@ class ServerManager(PackageQueue):
             frame_entity = message.Frame.Entity(entity.get_character(), entity.get_position())
             frame_entity_list.append(frame_entity)
 
-        frame_message = message.Frame(self._frame_stamp, frame_entity_list)
+        frame_message = message.Frame(frame_entity_list)
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
         if not self._arena.has_finished():
-            self._frame_stamp = self._frame_stamp + 1
             self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 1 / FRAME_MAX_RATE)
 
         elif [] == self._room.get_winner_list():

@@ -1,10 +1,10 @@
-from common.util.vec2 import Vec2
-from common.logging import logger
-from common.terrain import Terrain
-from common import version, message
 from .message_queue import MessageQueue, ReceiveMessageError
-from .term_screen import TermScreen
+from .screen import TermScreen
+from .game_window import GameWindow
 from .keyboard import Keyboard, Key
+from common.logging import logger
+from common import version, message
+from common.util.vec2 import Vec2
 
 import string
 import time
@@ -105,20 +105,14 @@ class ClientManager(MessageQueue):
     def _init_game(self):
         ClientManager._print_starting_game(self._waiting_time_to_arena, 5)
 
-        with TermScreen(self._arena_size) as screen:
+        with TermScreen() as screen:
             keyboard = Keyboard()
-
             arena_info_message = self._receive_message([message.ArenaInfo])
+            game_window = GameWindow(screen, self._arena_size, arena_info_message.ground, self._seed, self._character_list)
 
             while True:
                 frame_message = self._receive_message([message.Frame])
-
-                screen.clear()
-                screen.draw_ground(arena_info_message.ground)
-                screen.draw_entities(frame_message.entity_list)
-                screen.debug_draw_frame_stamp(frame_message.stamp)
-                screen.render()
-
+                game_window.update(frame_message.entity_list, [])
                 keyboard.update_key_events(screen.get_event_list())
 
                 direction = self._ask_player_movement_direction(keyboard)
