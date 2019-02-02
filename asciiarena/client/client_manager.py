@@ -3,7 +3,7 @@ from common.logging import logger
 from common.terrain import Terrain
 from common import version, message
 from .message_queue import MessageQueue, ReceiveMessageError
-from .game_screen import GameScreen
+from .term_screen import TermScreen
 from .keyboard import Keyboard, Key
 
 import string
@@ -103,9 +103,9 @@ class ClientManager(MessageQueue):
 
 
     def _init_game(self):
-        ClientManager._print_starting_game(self._waiting_time_to_arena, 3)
+        ClientManager._print_starting_game(self._waiting_time_to_arena, 5)
 
-        with GameScreen(self._arena_size) as screen:
+        with TermScreen(self._arena_size) as screen:
             keyboard = Keyboard()
 
             arena_info_message = self._receive_message([message.ArenaInfo])
@@ -122,7 +122,7 @@ class ClientManager(MessageQueue):
                 keyboard.update_key_events(screen.get_event_list())
 
                 direction = self._ask_player_movement_direction(keyboard)
-                if Vec2.zero() != direction:
+                if Vec2(0, 0) != direction:
                     player_movement_message = message.PlayerMovement(direction)
                     self._send_message(player_movement_message)
 
@@ -130,15 +130,15 @@ class ClientManager(MessageQueue):
     @staticmethod
     def _ask_player_movement_direction(keyboard):
         if keyboard.is_key_down(Key.W):
-            return Vec2.up()
+            return Vec2(0, -1)
         elif keyboard.is_key_down(Key.A):
-            return Vec2.left()
+            return Vec2(-1, 0)
         elif keyboard.is_key_down(Key.S):
-            return Vec2.down()
+            return Vec2(0, 1)
         elif keyboard.is_key_down(Key.D):
-            return Vec2.right()
+            return Vec2(1, 0)
         else:
-            return Vec2.zero()
+            return Vec2(0, 0)
 
 
     @staticmethod

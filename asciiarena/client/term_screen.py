@@ -2,13 +2,9 @@ from common.terrain import Terrain
 
 import curses
 
-class GameScreen:
+class TermScreen:
     def __init__(self, arena_size):
         self._arena_size = arena_size
-        self._stdscr = None
-
-
-    def __enter__(self):
         self._stdscr = curses.initscr()
         self._stdscr.keypad(1)
         self._stdscr.nodelay(True)
@@ -21,6 +17,8 @@ class GameScreen:
         for i in range(1, curses.COLORS):
             curses.init_pair(i, i, 0)
 
+
+    def __enter__(self):
         return self
 
 
@@ -86,5 +84,5 @@ class GameScreen:
         x_origin = int((self.get_width() - self._arena_size * 2) / 2)
         y_origin = int((self.get_height() - self._arena_size) / 2) - 1
 
-        self._stdscr.addstr(y_origin + self._arena_size + 2, x_origin, "Current frame stamp: {}".format(stamp))
+        self._stdscr.addstr(y_origin + (self._arena_size + 2), x_origin, "Current frame stamp: {}".format(stamp))
 

@@ -49,27 +49,3 @@ class Vec2:
     def distance(v1, v2):
         return (v1 - v2).length()
 
-
-    @staticmethod
-    def zero():
-        return Vec2(0, 0)
-
-
-    @staticmethod
-    def up():
-        return Vec2(0, 1)
-
-
-    @staticmethod
-    def down():
-        return Vec2(0, -1)
-
-
-    @staticmethod
-    def right():
-        return Vec2(1, 0)
-
-
-    @staticmethod
-    def left():
-        return Vec2(-1, 0)

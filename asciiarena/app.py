@@ -27,7 +27,7 @@ def command_line_interface():
     server_parser.add_argument("--players", required = True, type = int, help = "required players to init a game")
     server_parser.add_argument("--port", default = DEFAULT_PORT, type = int, help = "open the server in the specified tcp port (" + DEFAULT_PORT + " by default)")
     server_parser.add_argument("--points", default = 0, type = int, help = "necessary points for a player to win the game")
-    server_parser.add_argument("--log-level", default = "critical", choices=["none", "debug", "info", "warning", "error", "critical"], help = "Set the log level (critical by default)")
+    server_parser.add_argument("--log-level", default = "critical", choices = logging.LEVEL_LIST, help = "Set the log level (critical by default)")
     server_parser.add_argument("--arena-size", default = 0, type = int, help = "size of the arena")
     server_parser.add_argument("--seed", default = "", help = "map generator seed (random by default)")
     server_parser.set_defaults(func = init_server)

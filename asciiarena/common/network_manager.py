@@ -105,7 +105,7 @@ class NetworkManager:
                         if data:
                             ip, port = connection.getpeername()
                             for input_pack in self._package_factory.create_input_packages(data, connection):
-                                logger.debug("Message - {} - from {}:{}".format(input_pack.message.__class__.__name__, ip, port))
+                                logger.debug_message("Message - {} - from {}:{}".format(input_pack.message.__class__.__name__, ip, port))
                                 self._package_queue.enqueue_input(input_pack)
                         else:
                             self._close_connection(connection)
@@ -123,7 +123,7 @@ class NetworkManager:
                     try:
                         connection.sendall(data)
                         ip, port = connection.getpeername()
-                        logger.debug("Message - {} - to {}:{}".format(output_pack.message.__class__.__name__, ip, port))
+                        logger.debug_message("Message - {} - to {}:{}".format(output_pack.message.__class__.__name__, ip, port))
                     except OSError:
                         pass
             else:

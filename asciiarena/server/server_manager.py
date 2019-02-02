@@ -11,8 +11,8 @@ WAITING_TO_INIT_ARENA = 1.0 #seconds
 FRAME_MAX_RATE = 60 #per second
 
 class ServerSignal(enum.Enum):
-    NEW_ARENA_SIGNAL = 1
-    COMPUTE_FRAME_SIGNAL = 2
+    NEW_ARENA_SIGNAL = enum.auto()
+    COMPUTE_FRAME_SIGNAL = enum.auto()
 
 
 class ServerManager(PackageQueue):
@@ -116,16 +116,15 @@ class ServerManager(PackageQueue):
 
 
     def _player_movement_request(self, player_movement_message, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
-        if player:
-            logger.info("Player '{}' moves {}".format(player.get_character(), player_movement_message.direction))
-            self._arena.character_moves(player.get_character(), player_movement_message.direction)
+        entity = self._get_entity_from_endpoint(endpoint)
+        if entity:
+            moved = entity.move(player_movement_message.direction)
+            if moved:
+                logger.debug("Player '{}' moves {}".format(entity.get_character(), player_movement_message.direction))
 
 
     def _player_shot_request(self, player_shot_message, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
-        if player:
-            self._arena.character_shoots(player.get_character(), player_shot_message.skill_id)
+        pass
 
 
     def _new_arena_signal(self):
@@ -177,3 +176,11 @@ class ServerManager(PackageQueue):
         else:
             future_signal()
 
+
+    def _get_entity_from_endpoint(self, endpoint):
+        player = self._room.get_player_with_endpoint(endpoint)
+        if player:
+            for entity in self._arena.get_entity_list():
+                if player.get_character() == entity.get_character():
+                    return entity
+        return None
