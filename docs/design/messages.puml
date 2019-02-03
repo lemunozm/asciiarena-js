@@ -21,8 +21,9 @@ end
 Client <-[#green]- Server : ArenaInfo N
 
 loop 1..
-    Client -[#blue]-> Server : PlayerAction
-    Client <-[#green]- Server : Frame N
+    Client -[#blue]-> Server : PlayerMovement
+    Client -[#blue]-> Server : PlayerCast
+    Client <[#green]- Server : Frame N
 end
 
 Client <[#green]- Server : PointsInfo N

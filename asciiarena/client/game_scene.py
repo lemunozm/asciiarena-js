@@ -1,5 +1,6 @@
 from common.terrain import Terrain
 from common.util.vec2 import Vec2
+from .screen import Style
 
 import time
 
@@ -43,7 +44,7 @@ class GameScene:
         pencil = self._screen.create_pencil(self._get_arena_origin())
 
         for entity in entity_list:
-            pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character)
+            pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character, style = Style.BOLD)
 
 
     def _draw_debug_info(self):
