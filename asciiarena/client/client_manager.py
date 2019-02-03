@@ -1,6 +1,6 @@
 from .message_queue import MessageQueue, ReceiveMessageError
 from .screen import TermScreen
-from .game_window import GameWindow
+from .game_scene import GameScene
 from .keyboard import Keyboard, Key
 from common.logging import logger
 from common import version, message
@@ -103,22 +103,36 @@ class ClientManager(MessageQueue):
 
 
     def _init_game(self):
-        ClientManager._print_starting_game(self._waiting_time_to_arena, 5)
+        arena_info_message = self._receive_message([message.ArenaInfo])
+        self._wait_to_start_game(0.20)
 
         with TermScreen() as screen:
             keyboard = Keyboard()
-            arena_info_message = self._receive_message([message.ArenaInfo])
-            game_window = GameWindow(screen, self._arena_size, arena_info_message.ground, self._seed, self._character_list)
+            game_scene = GameScene(screen, self._arena_size, arena_info_message.ground, arena_info_message.seed, self._character_list)
 
             while True:
                 frame_message = self._receive_message([message.Frame])
-                game_window.update(frame_message.entity_list, [])
+                game_scene.update(frame_message.entity_list, [])
                 keyboard.update_key_events(screen.get_event_list())
 
                 direction = self._ask_player_movement_direction(keyboard)
                 if Vec2(0, 0) != direction:
                     player_movement_message = message.PlayerMovement(direction)
                     self._send_message(player_movement_message)
+
+
+    def _wait_to_start_game(self, point_interval):
+        print("Starting game ", end = "", flush = True)
+
+        last_point_time = 0
+        while 0 == self._input_queue.qsize():
+            time.sleep(0.001)
+            current_time = time.time()
+            if current_time - last_point_time > point_interval:
+                print(".", end = "", flush = True)
+                last_point_time = current_time
+
+        print("")
 
 
     @staticmethod
@@ -146,14 +160,4 @@ class ClientManager(MessageQueue):
             character = input("      Choose a character (an unique letter from A to Z): ")
             if 1 == len(character) and -1 != string.ascii_uppercase.find(character):
                 return character
-
-
-    @staticmethod
-    def _print_starting_game(waiting_time, interval):
-        print("Starting game ", end = "", flush = True)
-        for i in range(0, interval):
-            print(".", end = "", flush = True)
-            time.sleep(waiting_time / interval)
-
-        print("")
 

@@ -3,7 +3,7 @@ from common.util.vec2 import Vec2
 
 import time
 
-class GameWindow:
+class GameScene:
     def __init__(self, screen, arena_size, ground, seed, character_list):
         self._screen = screen
         self._arena_size = arena_size
@@ -57,7 +57,7 @@ class GameWindow:
             self._frame_counter = 0
 
 
-        pencil.draw(Vec2(0, 0), "FPS: {} - Seed: {}".format(self._fps, self._seed))
+        pencil.draw(Vec2(0, 0), "FPS: {} - Seed: '{}'".format(self._fps, self._seed))
 
 
     def _get_arena_origin(self):

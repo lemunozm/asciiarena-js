@@ -7,9 +7,12 @@ from .arena import Arena
 import enum
 import threading
 import time
+import string
+import random
 
 WAITING_TO_INIT_ARENA = 1.0 #seconds
 FRAME_MAX_RATE = 60 #per second
+RANDOM_SEED_SIZE = 6
 
 class ServerSignal(enum.Enum):
     NEW_ARENA_SIGNAL = enum.auto()
@@ -128,10 +131,12 @@ class ServerManager(PackageQueue):
 
 
     def _new_arena_signal(self):
-        logger.info("Start game")
-        self._arena = Arena(self._arena_size, self._seed, self._room.get_character_list())
+        seed = self._seed if "" != self._seed else ServerManager.compute_random_seed(RANDOM_SEED_SIZE)
+        logger.info("Start arena (seed: {})".format(seed))
 
-        arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
+        self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
+
+        arena_info_message = message.ArenaInfo(seed, self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
 
         self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, WAITING_TO_INIT_ARENA)
@@ -164,7 +169,7 @@ class ServerManager(PackageQueue):
         player = self._room.get_player_with_endpoint(endpoint)
         if player:
             player.set_endpoint(None)
-            logger.info("Player '{}' disconected".format(player.get_character()))
+            logger.info("Player '{}' disconnected".format(player.get_character()))
 
 
     def _server_signal(self, signal, time):
@@ -184,3 +189,12 @@ class ServerManager(PackageQueue):
                 if player.get_character() == entity.get_character():
                     return entity
         return None
+
+    @staticmethod
+    def compute_random_seed(size):
+        char_list = string.ascii_uppercase + string.digits
+        choice_list = []
+        for i in range(0, size):
+            choice_list.append(random.choice(char_list))
+
+        return "".join(choice_list)
