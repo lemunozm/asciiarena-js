@@ -11,15 +11,16 @@ class GameWindow:
         self._seed = seed
         self._character_list = character_list
 
+        self._frame_counter = 0
+        self._fps_time_stamp = 0
+        self._fps = 0
+
 
     def update(self, entity_list, spell_list):
-
         self._screen.clear()
-
         self._draw_ground()
         self._draw_entities(entity_list)
         self._draw_debug_info()
-
         self._screen.render()
 
 
@@ -47,7 +48,16 @@ class GameWindow:
 
     def _draw_debug_info(self):
         pencil = self._screen.create_pencil(self._get_debug_origin())
-        pencil.draw(Vec2(0, 0), "FPS: {}".format(0))
+
+        current_time = time.time()
+        self._frame_counter += 1
+        if current_time - self._fps_time_stamp > 1.0:
+            self._fps = self._frame_counter
+            self._fps_time_stamp = current_time
+            self._frame_counter = 0
+
+
+        pencil.draw(Vec2(0, 0), "FPS: {} - Seed: {}".format(self._fps, self._seed))
 
 
     def _get_arena_origin(self):
