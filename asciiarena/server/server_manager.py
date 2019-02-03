@@ -6,6 +6,7 @@ from .arena import Arena
 
 import enum
 import threading
+import time
 
 WAITING_TO_INIT_ARENA = 1.0 #seconds
 FRAME_MAX_RATE = 60 #per second
@@ -137,6 +138,7 @@ class ServerManager(PackageQueue):
 
 
     def _compute_frame_signal(self):
+        frame_time_stamp = time.time()
         self._arena.update()
 
         frame_entity_list = []
@@ -148,7 +150,8 @@ class ServerManager(PackageQueue):
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
         if not self._arena.has_finished():
-            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 1 / FRAME_MAX_RATE)
+            frame_time = time.time() - frame_time_stamp
+            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 1 / FRAME_MAX_RATE - frame_time)
 
         elif [] == self._room.get_winner_list():
             self._server_signal(ServerSignal.NEW_ARENA_SIGNAL, 0)
@@ -165,13 +168,13 @@ class ServerManager(PackageQueue):
 
 
     def _server_signal(self, signal, time):
-        future_signal = lambda: self._input_queue.put(InputPack(signal, None))
+        queue_signal = lambda: self._input_queue.put(InputPack(signal, None))
         if time > 0:
-            timer = threading.Timer(time, future_signal)
+            timer = threading.Timer(time, queue_signal)
             timer.daemon = True
             timer.start()
         else:
-            future_signal()
+            queue_signal()
 
 
     def _get_entity_from_endpoint(self, endpoint):
