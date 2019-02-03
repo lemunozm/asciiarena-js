@@ -32,6 +32,8 @@ package server {
     ServerManager *-- Arena
     PlayersRoom *--"0..*" Player
     Arena *-- Ground
+    Arena *--"0..*" Entity
+    Arena *--"0..*" Spell
 }
 
 package client {
@@ -43,7 +45,12 @@ package client {
     Client *-- ClientManager
     MessageQueue -left-|> PackageQueue
     ClientManager -right-|> MessageQueue
-
+    ClientManager --> TermScreen
+    ClientManager --> Keyboard
+    ClientManager --> GameScene
+    GameScene o-- TermScreen
+    TermScreen --> Pencil
+    GameScene --> Pencil
 }
 
 @enduml
