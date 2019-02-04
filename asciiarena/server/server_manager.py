@@ -120,11 +120,16 @@ class ServerManager(PackageQueue):
 
 
     def _player_movement_request(self, player_movement_message, endpoint):
-        entity = self._get_entity_from_endpoint(endpoint)
+        player = self._room.get_player_with_endpoint(endpoint)
+        if 1 != player_movement_message.direction.get_length():
+            logger.error("Unexpected movement value from player '{}'".format(player.get_character()))
+            return
+
+        entity = self._get_entity_from_player(player)
         if entity:
-            moved = entity.move(player_movement_message.direction)
+            moved = entity.try_to_move(player_movement_message.direction)
             if moved:
-                logger.debug("Player '{}' moves {}".format(entity.get_character(), player_movement_message.direction))
+                logger.debug("Player '{}' tried moves {}".format(entity.get_character(), player_movement_message.direction))
 
 
     def _player_cast_request(self, player_cast_message, endpoint):
@@ -133,7 +138,7 @@ class ServerManager(PackageQueue):
 
     def _new_arena_signal(self):
         seed = self._seed if "" != self._seed else ServerManager.compute_random_seed(RANDOM_SEED_SIZE)
-        logger.info("Start arena (seed: {})".format(seed))
+        logger.info("Start arena => size: {} - seed: {}".format(self._arena_size, seed))
 
         self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
 
@@ -184,8 +189,7 @@ class ServerManager(PackageQueue):
             queue_signal()
 
 
-    def _get_entity_from_endpoint(self, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
+    def _get_entity_from_player(self, player):
         if player:
             for entity in self._arena.get_entity_list():
                 if player.get_character() == entity.get_character():
@@ -195,8 +199,6 @@ class ServerManager(PackageQueue):
     @staticmethod
     def compute_random_seed(size):
         char_list = string.ascii_uppercase + string.digits
-        choice_list = []
-        for i in range(0, size):
-            choice_list.append(random.choice(char_list))
+        random_char_list = random.choices(char_list, k = size)
+        return "".join(random_char_list)
 
-        return "".join(choice_list)

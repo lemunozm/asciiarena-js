@@ -75,13 +75,13 @@ class Style:
 class Pencil:
     def __init__(self, stdscr, position):
         self._stdscr = stdscr
-        self._origin = position
+        self._origin = position.as_int()
         self._color = 15
         self._style = Style.NORMAL
 
 
     def set_origin(self, origin):
-        self._origin = origin
+        self._origin = origin.as_int()
 
 
     def set_color(self, color):
@@ -93,11 +93,10 @@ class Pencil:
 
 
     def draw(self, position, string, color = None, style = None):
-        x_pos = int(self._origin.x + position.x)
-        y_pos = int(self._origin.y + position.y)
+        screen_pos = self._origin + position.as_int()
 
         color = color if color != None else self._color
         style = style if style != None else self._style
 
-        self._stdscr.addstr(y_pos, x_pos, string, curses.color_pair(color) | style)
+        self._stdscr.addstr(screen_pos.y, screen_pos.x, string, curses.color_pair(color) | style)
 

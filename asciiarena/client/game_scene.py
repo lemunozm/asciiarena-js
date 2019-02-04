@@ -29,7 +29,7 @@ class GameScene:
         pencil = self._screen.create_pencil(self._get_arena_origin())
 
         for i, terrain in enumerate(self._ground):
-            position = Vec2(i % self._arena_size * 2, i / self._arena_size)
+            position = Vec2((i % self._arena_size) * 2, i / self._arena_size)
             if terrain == Terrain.EMPTY:
                 pass
             elif terrain == Terrain.BORDER_WALL:
@@ -57,14 +57,12 @@ class GameScene:
             self._fps_time_stamp = current_time
             self._frame_counter = 0
 
-
-        pencil.draw(Vec2(0, 0), "FPS: {} - Seed: '{}'".format(self._fps, self._seed))
+        pencil.draw(Vec2(0, 0), "FPS: {:2d} - Seed: '{}'".format(self._fps, self._seed))
 
 
     def _get_arena_origin(self):
         x = (self._screen.get_width() - self._arena_size * 2) / 2
         y = (self._screen.get_height() - self._arena_size) / 2
-
         return Vec2(x, y)
 
 

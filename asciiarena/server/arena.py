@@ -1,54 +1,6 @@
 from .ground import Ground
+from .entity import Entity
 from common.util.vec2 import Vec2
-
-import time
-
-class Entity:
-    def __init__(self, ground, entity_list, character, position):
-        self._const_ground = ground
-        self._const_entity_list = entity_list
-
-        self._character = character
-        self._position = position
-        self._direction = Vec2(0, 0)
-        self._speed = 8
-
-        self._last_move_timestamp = 0
-
-
-    def get_character(self):
-        return self._character
-
-
-    def get_position(self):
-        return self._position
-
-
-    def set_position(self, position):
-        self._position = position
-
-
-    def displace(self, displacement):
-        self._position += displacement
-
-
-    def move(self, direction):
-        current = time.time()
-        if self._direction != direction:
-            self._direction = direction
-            new_position = self._position + self._direction
-            #check collisions
-            self._position = new_position
-            self._last_move_timestamp = current
-
-        elif current - self._last_move_timestamp > 1 / self._speed:
-            new_position = self._position + self._direction
-            #check collisions
-            self._position = new_position
-            self._last_move_timestamp = current
-
-        return current == self._last_move_timestamp
-
 
 class Arena:
     def __init__(self, size, seed, character_list):
@@ -57,7 +9,7 @@ class Arena:
 
         position_list = self._ground.find_separated_positions(len(character_list), 5) #check the minimum distance
         for i, character in enumerate(character_list):
-            entity = Entity(self._ground, self._entity_list, character, position_list[i])
+            entity = Entity(character, position_list[i])
             self._entity_list.append(entity)
 
 
@@ -73,5 +25,21 @@ class Arena:
         return False
 
 
+    def entity_at(self, position):
+        for entity in self._entity_list:
+            if entity.get_position() == position:
+                return entity
+        return None
+
+
     def update(self):
-        pass
+        # Check entity movements
+        for entity in self._entity_list:
+            if Vec2.zero() != entity.get_last_attempt_to_move():
+                expected_position = entity.get_position() + entity.get_last_attempt_to_move()
+                if not self._ground.is_blocked(expected_position) and not self.entity_at(expected_position):
+                    entity.set_position(expected_position)
+
+        # Clear last actions
+        for entity in self._entity_list:
+            entity.clear_last_attemps()

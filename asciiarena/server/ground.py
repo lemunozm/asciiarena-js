@@ -30,6 +30,11 @@ class Ground:
         return self._grid[position.y * self._size + position.x]
 
 
+    def is_blocked(self, position):
+        terrain = self.get_at(position)
+        return terrain == Terrain.BLOCKED or terrain == Terrain.BORDER_WALL
+
+
     def fill_at(self, position, dimension, terrain):
         for x in range(position.x, position.x + dimension.x):
             for y in range(position.y, position.y + dimension.y):
@@ -47,8 +52,9 @@ class Ground:
     def get_seed(self):
         return self._seed
 
+
     def get_grid_coordinates(self, index):
-        return Vec2(index % self._size, index / self._size)
+        return Vec2(index % self._size, int(index / self._size))
 
 
     def find_separated_positions(self, amount, min_distance):
@@ -74,30 +80,6 @@ class Ground:
                     break
 
         return position_list
-
-    """
-    def find_separated_positions(self, amount, free_distance):
-        random.seed(None)
-        position_list = []
-        free_terrain = []
-        for i, terrain in enumerate(self._grid):
-            if Terrain.EMPTY == terrain:
-                free_terrain.append(self.get_grid_coordinates(i))
-
-        index = random.randrange(0, len(free_terrain))
-        new_position = free_terrain[index]
-        position_list.append(new_position)
-
-        while len(position_list) < amount:
-            far_position = None
-            max_distance = 0
-            for position in free_terrain:
-                if Vec2.distance(position, new_position) > max_distance:
-                    far_position = position
-                    position_list.append(new_position)
-                    del free_terrain[index]
-                    break
-    """
 
 
     def _create_border(self):

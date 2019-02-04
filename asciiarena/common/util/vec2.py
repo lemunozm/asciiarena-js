@@ -41,11 +41,18 @@ class Vec2:
         return self
 
 
-    def length(self):
+    def as_int(self):
+        return Vec2(int(self.x), int(self.y))
+
+
+    def get_length(self):
         return math.sqrt(self.x**2 + self.y**2)
 
 
     @staticmethod
     def distance(v1, v2):
-        return (v1 - v2).length()
+        return (v1 - v2).get_length()
 
+    @staticmethod
+    def zero():
+        return Vec2(0, 0)
