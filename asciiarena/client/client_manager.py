@@ -108,16 +108,19 @@ class ClientManager(MessageQueue):
 
         with TermScreen() as screen:
             keyboard = Keyboard()
-            game_scene = GameScene(screen, self._arena_size, arena_info_message.ground, arena_info_message.seed, self._character_list)
+            game_scene = GameScene(screen, self._character, self._arena_size, arena_info_message.ground, arena_info_message.seed, self._character_list)
+
+            player_direction = Vec2(0, 1)
 
             while True:
                 frame_message = self._receive_message([message.Frame])
-                game_scene.update(frame_message.entity_list, [])
+                game_scene.update(frame_message.entity_list, [], player_direction)
                 keyboard.update_key_events(screen.get_event_list())
 
-                direction = self._ask_player_movement_direction(keyboard)
-                if Vec2(0, 0) != direction:
-                    player_movement_message = message.PlayerMovement(direction)
+                last_movement_direction = self._ask_player_movement_direction(keyboard)
+                if Vec2.zero() != last_movement_direction:
+                    player_direction = last_movement_direction
+                    player_movement_message = message.PlayerMovement(last_movement_direction)
                     self._send_message(player_movement_message)
 
 
@@ -146,7 +149,7 @@ class ClientManager(MessageQueue):
         elif keyboard.is_key_down(Key.D):
             return Vec2(1, 0)
         else:
-            return Vec2(0, 0)
+            return Vec2.zero()
 
 
     @staticmethod

@@ -5,8 +5,10 @@ from .screen import Style
 import time
 
 class GameScene:
-    def __init__(self, screen, arena_size, ground, seed, character_list):
+    def __init__(self, screen, character, arena_size, ground, seed, character_list):
         self._screen = screen
+        self._player_character = character
+        self._last_player_direction = Vec2.zero()
         self._arena_size = arena_size
         self._ground = ground
         self._seed = seed
@@ -17,8 +19,9 @@ class GameScene:
         self._fps = 0
 
 
-    def update(self, entity_list, spell_list):
+    def update(self, entity_list, spell_list, player_direction):
         self._screen.clear()
+        self._draw_player_direction(entity_list, player_direction)
         self._draw_ground()
         self._draw_entities(entity_list)
         self._draw_debug_info()
@@ -33,7 +36,7 @@ class GameScene:
             if terrain == Terrain.EMPTY:
                 pass
             elif terrain == Terrain.BORDER_WALL:
-                pencil.draw(position, "X")
+                pencil.draw(position, "X", 33)
             elif terrain == Terrain.BLOCKED:
                 pencil.draw(position, ".")
             else:
@@ -45,6 +48,19 @@ class GameScene:
 
         for entity in entity_list:
             pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character, style = Style.BOLD)
+
+
+    def _draw_player_direction(self, entity_list, direction):
+        pencil = self._screen.create_pencil(self._get_arena_origin())
+
+        if Vec2.zero() == direction:
+            return
+
+        for entity in entity_list:
+            if entity.character == self._player_character:
+                point = entity.position + direction
+                pencil.draw(Vec2(point.x * 2, point.y), "·", 240, Style.BOLD)
+                return
 
 
     def _draw_debug_info(self):
