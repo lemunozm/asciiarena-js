@@ -1,6 +1,5 @@
 @startuml
 
-left to right direction
 
 package common {
     class NetworkManager
@@ -8,6 +7,10 @@ package common {
     class PackageQueue
     class InputPack
     class OutputPack
+    class GameSpec
+    class SkillSpec
+    class SpellSpec
+    class BuffSpec
 
     NetworkManager *-- PackageFactory
     NetworkManager o-- PackageQueue
@@ -15,31 +18,54 @@ package common {
     PackageQueue o--"0..*" OutputPack
     PackageFactory --> InputPack
     PackageFactory --> OutputPack
+    GameSpec *--"0..*" SkillSpec
+    GameSpec *--"0..*" SpellSpec
+    GameSpec *--"0..*" BuffSpec
+    SkillSpec o-- SpellSpec
+    SpellSpec o-- "0..n" SpellSpec
+    SpellSpec o-- "0..*" BuffSpec
 }
 
 package server {
     class Server
     class ServerManager
-    class Arena
     class PlayersRoom
     class Player
+    class Arena
     class Ground
+    class Entity
+    abstract class Behavior
+    class Skill
+    abstract class Spell
+    class Buff
 
     Server *-right- NetworkManager
     Server *-- ServerManager
     ServerManager -right-|> PackageQueue
     ServerManager *-- PlayersRoom
     ServerManager *-- Arena
+    ServerManager o-right-"0..*" SkillSpec
     PlayersRoom *--"0..*" Player
     Arena *-- Ground
     Arena *--"0..*" Entity
-    Arena *--"0..*" Spell
+    Arena *-right-"0..*" Spell
+    Entity --> Behavior
+    Entity *-right-"0..*" Buff
+    Entity *--"0..*" Skill
+    Skill o-up- SkillSpec
+    Spell o-right- SpellSpec
+    Buff o-right- BuffSpec
+    Behavior o-- Entity
 }
 
 package client {
     class MessageQueue
     class Client
     class ClientManager
+    class TermScreen
+    class Keyboard
+    class GameScene
+    class Pencil
 
     Client *-left- NetworkManager
     Client *-- ClientManager
