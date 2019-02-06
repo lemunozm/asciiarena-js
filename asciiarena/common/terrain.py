@@ -1,4 +1,5 @@
 class Terrain:
     EMPTY = 0
-    BLOCKED = 1
-    BORDER_WALL = 2
+    EMPTY_BLOCKED = 1
+    WALL = 2
+    BORDER_WALL = 3
