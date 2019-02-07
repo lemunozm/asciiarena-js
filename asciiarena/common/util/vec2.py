@@ -41,10 +41,6 @@ class Vec2:
         return self
 
 
-    def as_int(self):
-        return Vec2(int(self.x), int(self.y))
-
-
     def get_length(self):
         return math.sqrt(self.x**2 + self.y**2)
 

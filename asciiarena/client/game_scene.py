@@ -1,8 +1,8 @@
-from common.terrain import Terrain
+from .pencil import TermPencil
+from .box_drawing import BoxLine, BoxLineDrawing
+
 from common.util.vec2 import Vec2
-from .screen import Style
-from . import gui_utils
-from .gui_utils import PathFragment
+from common.terrain import Terrain
 
 import time
 
@@ -12,6 +12,7 @@ class GameScene:
         self._player_character = character
         self._last_player_direction = Vec2.zero()
         self._arena_size = arena_size
+        self._arena_dimension = Vec2(arena_size, arena_size)
         self._ground = ground
         self._seed = seed
         self._character_list = character_list
@@ -24,67 +25,21 @@ class GameScene:
     def update(self, entity_list, spell_list, player_direction):
         self._screen.clear()
         self._draw_player_direction(entity_list, player_direction)
-        self._draw_ground_border()
         self._draw_ground_walls()
         self._draw_entities(entity_list)
         self._draw_debug_info()
         self._screen.render()
 
 
-    def _draw_ground_border(self):
-        pencil = self._screen.create_pencil(self._get_arena_origin())
-        pencil.set_color(33)
-        pencil.set_style(Style.DIM)
-
-        border_image = gui_utils.create_path_image([Terrain.BORDER_WALL], self._ground, Vec2(self._arena_size, self._arena_size))
-
-        for i, border in enumerate(border_image):
-            position = Vec2((i % self._arena_size) * 2, int(i / self._arena_size))
-            if PathFragment.includes(border, PathFragment.VERTICAL):
-                pencil.draw(position, "│")
-            elif PathFragment.includes(border, PathFragment.HORIZONTAL):
-                pencil.draw(position, "──")
-            elif border == PathFragment.CORNER_LEFT_UP:
-                pencil.draw(position, "╭─")
-            elif border == PathFragment.CORNER_LEFT_DOWN:
-                pencil.draw(position, "╰─")
-            elif border == PathFragment.CORNER_RIGHT_UP:
-                pencil.draw(position, "╮")
-            elif border == PathFragment.CORNER_RIGHT_DOWN:
-                pencil.draw(position, "╯")
-
-
     def _draw_ground_walls(self):
         pencil = self._screen.create_pencil(self._get_arena_origin())
-        pencil.set_color(139)
-        pencil.set_style(Style.DIM)
+        pencil.set_color(33)
+        pencil.set_style(TermPencil.Style.DIM)
 
-        wall_image = gui_utils.create_path_image([Terrain.WALL], self._ground, Vec2(self._arena_size, self._arena_size))
+        box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
 
-        for i, wall in enumerate(wall_image):
-            position = Vec2((i % self._arena_size) * 2, int(i / self._arena_size))
-            if wall == PathFragment.ALL:
-                continue
-            elif wall == PathFragment.CORNER_LEFT_UP_EXTEND:
-                pencil.draw(position, "╭─")
-            elif wall == PathFragment.CORNER_LEFT_DOWN_EXTEND:
-                pencil.draw(position, "╰─")
-            elif wall == PathFragment.CORNER_RIGHT_UP_EXTEND:
-                pencil.draw(position, "╮")
-            elif wall == PathFragment.CORNER_RIGHT_DOWN_EXTEND:
-                pencil.draw(position, "╯")
-            elif PathFragment.includes(wall, PathFragment.VERTICAL):
-                pencil.draw(position, "│")
-            elif PathFragment.includes(wall, PathFragment.HORIZONTAL):
-                pencil.draw(position, "──")
-            elif PathFragment.includes(wall, PathFragment.CORNER_LEFT_UP):
-                pencil.draw(position, "╭─")
-            elif PathFragment.includes(wall, PathFragment.CORNER_LEFT_DOWN):
-                pencil.draw(position, "╰─")
-            elif PathFragment.includes(wall, PathFragment.CORNER_RIGHT_UP):
-                pencil.draw(position, "╮")
-            elif PathFragment.includes(wall, PathFragment.CORNER_RIGHT_DOWN):
-                pencil.draw(position, "╯")
+        line_table = BoxLine.parse([Terrain.BORDER_WALL, Terrain.WALL], self._ground, self._arena_dimension)
+        box_drawing.draw(line_table, self._arena_dimension, Vec2(2, 1))
 
 
     def _draw_entities(self, entity_list):
@@ -103,7 +58,7 @@ class GameScene:
         for entity in entity_list:
             if entity.character == self._player_character:
                 point = entity.position + direction
-                pencil.draw(Vec2(point.x * 2, point.y), "·", 240, Style.BOLD)
+                pencil.draw(Vec2(point.x * 2, point.y), "·", 240, TermPencil.Style.BOLD)
                 return
 
 

@@ -1,5 +1,5 @@
-from common.terrain import Terrain
 from common.util.vec2 import Vec2
+from common.terrain import Terrain
 
 import random
 
@@ -99,10 +99,10 @@ class Ground:
         self.set_at(Vec2(2, 2), Terrain.WALL)
         self.set_at(Vec2(3, 2), Terrain.WALL)
 
-        self.set_at(Vec2(5, 5), Terrain.WALL)
-        self.set_at(Vec2(6, 5), Terrain.WALL)
-        self.set_at(Vec2(5, 6), Terrain.WALL)
-        self.set_at(Vec2(6, 6), Terrain.WALL)
+        self.set_at(Vec2(5, 2), Terrain.WALL)
+        self.set_at(Vec2(5, 3), Terrain.WALL)
+        self.set_at(Vec2(6, 2), Terrain.WALL)
+        self.set_at(Vec2(6, 3), Terrain.WALL)
 
         self.set_at(Vec2(8, 5), Terrain.WALL)
         self.set_at(Vec2(9, 5), Terrain.WALL)

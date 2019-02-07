@@ -1,5 +1,4 @@
-from common.terrain import Terrain
-from common.util.vec2 import Vec2
+from .pencil import TermPencil
 
 import curses
 import enum
@@ -54,7 +53,7 @@ class TermScreen:
 
 
     def create_pencil(self, position):
-        return Pencil(self._stdscr, position)
+        return TermPencil(self._stdscr, position)
 
 
     def clear(self):
@@ -63,40 +62,4 @@ class TermScreen:
 
     def render(self):
         self._stdscr.refresh()
-
-
-class Style:
-    NORMAL = curses.A_NORMAL
-    DIM = curses.A_DIM
-    BOLD = curses.A_BOLD
-    UNDERLINE = curses.A_UNDERLINE
-
-
-class Pencil:
-    def __init__(self, stdscr, position):
-        self._stdscr = stdscr
-        self._origin = position.as_int()
-        self._color = 15
-        self._style = Style.NORMAL
-
-
-    def set_origin(self, origin):
-        self._origin = origin.as_int()
-
-
-    def set_color(self, color):
-        self._color = color
-
-
-    def set_style(self, style):
-        self._style = style
-
-
-    def draw(self, position, string, color = None, style = None):
-        screen_pos = self._origin + position.as_int()
-
-        color = color if color != None else self._color
-        style = style if style != None else self._style
-
-        self._stdscr.addstr(screen_pos.y, screen_pos.x, string, curses.color_pair(color) | style)
 
