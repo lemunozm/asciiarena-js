@@ -3,8 +3,8 @@ from .entity import Entity
 from common.util.vec2 import Vec2
 
 class Arena:
-    def __init__(self, size, seed, character_list):
-        self._ground = Ground.fromSeed(size, seed)
+    def __init__(self, dimension, seed, character_list):
+        self._ground = Ground.fromSeed(dimension, seed)
         self._entity_list = []
 
         position_list = self._ground.find_separated_positions(len(character_list), 5) #check the minimum distance

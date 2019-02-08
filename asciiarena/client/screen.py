@@ -57,7 +57,7 @@ class TermScreen:
 
 
     def clear(self):
-        self._stdscr.clear()
+        self._stdscr.erase()
 
 
     def render(self):

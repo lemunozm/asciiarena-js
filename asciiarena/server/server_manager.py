@@ -123,13 +123,14 @@ class ServerManager(PackageQueue):
         player = self._room.get_player_with_endpoint(endpoint)
         if 1 != player_movement_message.direction.get_length():
             logger.error("Unexpected movement value from player '{}'".format(player.get_character()))
+            self._output_queue.put(OutputPack("", endpoint))
             return
 
         entity = self._get_entity_from_player(player)
         if entity:
-            moved = entity.try_to_move(player_movement_message.direction)
-            if moved:
-                logger.debug("Player '{}' tried moves {}".format(entity.get_character(), player_movement_message.direction))
+            tried_to_move = entity.try_to_move(player_movement_message.direction)
+            if tried_to_move:
+                logger.debug("Player '{}' tried to move {}".format(entity.get_character(), player_movement_message.direction))
 
 
     def _player_cast_request(self, player_cast_message, endpoint):

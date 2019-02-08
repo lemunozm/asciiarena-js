@@ -65,13 +65,28 @@ class BoxLine:
         return False
 
 
-NOT_DRAWABLE = "?"
+TILES_INDEX = {
+    BoxLine.NONE: 0,
+    BoxLine.VERTICAL: 1,
+    BoxLine.HORIZONTAL: 2,
+    BoxLine.CORNER_LEFT_UP: 3,
+    BoxLine.CORNER_LEFT_DOWN: 4,
+    BoxLine.CORNER_RIGHT_UP: 5,
+    BoxLine.CORNER_RIGHT_DOWN: 6,
+    BoxLine.VERTICAL_LEFT: 7,
+    BoxLine.VERTICAL_RIGHT: 8,
+    BoxLine.HORIZONTAL_UP: 9,
+    BoxLine.HORIZONTAL_DOWN: 10,
+    BoxLine.CROSS: 11,
+}
+
+NO_TILE_AVAILABLE = len(TILES_INDEX)
 
 class BoxLineDrawing:
     class Style:
-        SINGLE =       ["", "│", "─", "┌", "└", "┐", "┘", "┤", "├", "┴", "┬", "┼"]
-        SINGLE_ROUND = ["", "│", "─", "╭", "╰", "╮", "╯", "┤", "├", "┴", "┬", "┼"]
-        DOUBLE =       ["", "║", "═", "╔", "╚", "╗", "╝", "╣", "╠", "╩", "╦", "╬"]
+        SINGLE =       ["", "│", "─", "┌", "└", "┐", "┘", "┤", "├", "┴", "┬", "┼", "?"]
+        SINGLE_ROUND = ["", "│", "─", "╭", "╰", "╮", "╯", "┤", "├", "┴", "┬", "┼", "?"]
+        DOUBLE =       ["", "║", "═", "╔", "╚", "╗", "╝", "╣", "╠", "╩", "╦", "╬", "?"]
 
 
     def __init__(self, pencil, tile_set):
@@ -80,32 +95,17 @@ class BoxLineDrawing:
 
 
     def _get_line_tiles(self, box_line, scale):
-        tiles_index = {
-            BoxLine.NONE: 0,
-            BoxLine.VERTICAL: 1,
-            BoxLine.HORIZONTAL: 2,
-            BoxLine.CORNER_LEFT_UP: 3,
-            BoxLine.CORNER_LEFT_DOWN: 4,
-            BoxLine.CORNER_RIGHT_UP: 5,
-            BoxLine.CORNER_RIGHT_DOWN: 6,
-            BoxLine.VERTICAL_LEFT: 7,
-            BoxLine.VERTICAL_RIGHT: 8,
-            BoxLine.HORIZONTAL_UP: 9,
-            BoxLine.HORIZONTAL_DOWN: 10,
-            BoxLine.CROSS: 11,
-        }
-
         tile_line_list = []
 
         extend = BoxLine.HORIZONTAL if BoxLine.includes(box_line, BoxLine.RIGHT) else BoxLine.NONE
-        tile_line = self._tile_set[tiles_index.get(box_line, NOT_DRAWABLE)]
-        tile_line += self._tile_set[tiles_index.get(extend, NOT_DRAWABLE)] * (scale.x - 1)
+        tile_line = self._tile_set[TILES_INDEX.get(box_line, NO_TILE_AVAILABLE)]
+        tile_line += self._tile_set[TILES_INDEX.get(extend, NO_TILE_AVAILABLE)] * (scale.x - 1)
         tile_line_list.append(tile_line)
 
         for i in range(1, scale.y):
             extend = BoxLine.VERTICAL if BoxLine.includes(box_line, BoxLine.DOWN) else BoxLine.NONE
-            tile_line = self._tile_set[tiles_index.get(extend, NOT_DRAWABLE)]
-            tile_line += self._tile_set[tiles_index.get(BoxLine.NONE, NOT_DRAWABLE)] * (scale.x - 1)
+            tile_line = self._tile_set[TILES_INDEX.get(extend, NO_TILE_AVAILABLE)]
+            tile_line += self._tile_set[TILES_INDEX.get(BoxLine.NONE, NO_TILE_AVAILABLE)] * (scale.x - 1)
             tile_line_list.append(tile_line)
 
         return tile_line_list
@@ -116,11 +116,11 @@ class BoxLineDrawing:
             tile_line_list = self._get_line_tiles(box_line, scale)
 
             for offset_y, tile_line in enumerate(tile_line_list):
-                if tile_line != "" and tile_line != NOT_DRAWABLE:
+                if tile_line != "":
                     position = Vec2((i % dimension.x) * scale.x, int(i / dimension.x) * scale.y + offset_y)
 
-                    if position.y <= (dimension.y - 1) * scale.y: #skip last line if scales
-                        if position.x == (dimension.x - 1) * scale.x: #skip last line scales
+                    if position.y <= (dimension.y - 1) * scale.y: #skip last line if scale > 1
+                        if position.x == (dimension.x - 1) * scale.x: #skip last line if scale > 1
                             tile_line = tile_line[0]
 
                         self._pencil.draw(position, tile_line)
