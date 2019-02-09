@@ -9,9 +9,11 @@ class Key(enum.Enum):
     S = enum.auto()
     W = enum.auto()
 
+
 class TypeEvent(enum.Enum):
     PRESSED = enum.auto()
     RELEASED = enum.auto()
+
 
 class Keyboard:
     def __init__(self):
@@ -20,8 +22,8 @@ class Keyboard:
         self._mutex = threading.Lock()
         self._global_key_pressed_list = []
         self._global_key_released_list = []
-        self._global_key_dict = {}
-        self._local_key_dict = {}
+        self._global_key_set = set()
+        self._local_key_set = set()
 
 
     def close(self):
@@ -29,36 +31,37 @@ class Keyboard:
 
 
     def is_key_down(self, key):
-        return self._local_key_dict.get(key, False)
+        return key in self._local_key_set
 
 
     def update_key_events(self, local_key_list):
-        # Update local dict
+        # Update local set
         for local_key in local_key_list:
             key = Keyboard._local_key_to_common_key(local_key)
             if key:
-                self._local_key_dict[key] = True
+                self._local_key_set.add(key)
 
         with self._mutex:
-            # Update global dict with pressed events
+            # Update global set with pressed events
             for key in self._global_key_pressed_list:
-                self._global_key_dict[key] = True
+                self._global_key_set.add(key)
 
             # Update local with global information
             local_key_to_remove_list = []
-            for key in self._local_key_dict.keys():
-                if not self._global_key_dict.get(key, False):
+            for key in self._local_key_set:
+                if not key in self._global_key_set:
                     local_key_to_remove_list.append(key)
 
             for key in local_key_to_remove_list:
-                self._local_key_dict.pop(key)
+                self._local_key_set.remove(key)
 
-            # Update global dict with released events
+            # Update global set with released events
             for key in self._global_key_released_list:
-                self._global_key_dict[key] = False
+                self._global_key_set.remove(key)
 
             self._global_key_pressed_list = []
             self._global_key_released_list = []
+
 
     def _on_press(self, global_key):
         key = Keyboard._global_key_to_common_key(global_key)
@@ -76,26 +79,31 @@ class Keyboard:
 
     @staticmethod
     def _local_key_to_common_key(local_key):
-        switcher = {
-            97:  Key.A,
-            100: Key.D,
-            115: Key.S,
-            119: Key.W,
-        }
-        return switcher.get(local_key, None)
+        return _LOCAL_KEY_DICT.get(local_key, None)
 
 
     @staticmethod
     def _global_key_to_common_key(global_key):
         try:
-            switcher_chars = {
-                'a': Key.A,
-                'd': Key.D,
-                's': Key.S,
-                'w': Key.W,
-            }
-            return switcher_chars.get(global_key.char, None)
+            return _GLOBAL_KEY_DICT.get(global_key.char, None)
 
         except AttributeError:
             return None
+
+
+# From curses lib
+_LOCAL_KEY_DICT = {
+    97:  Key.A,
+    100: Key.D,
+    115: Key.S,
+    119: Key.W,
+}
+
+# From keylogger lib
+_GLOBAL_KEY_DICT = {
+    'a': Key.A,
+    'd': Key.D,
+    's': Key.S,
+    'w': Key.W,
+}
 
