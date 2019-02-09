@@ -36,10 +36,19 @@ class GameScene:
         pencil.set_color(33)
         pencil.set_style(TermPencil.Style.DIM)
 
-        box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
-
         line_table = BoxLine.parse([Terrain.BORDER_WALL, Terrain.WALL], self._ground, self._arena_dimension)
+
+        box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
+        #box_drawing = BoxLineDrawing(pencil, [""] + ["X"]*12)
         box_drawing.draw(line_table, self._arena_dimension, Vec2(2, 1))
+
+        """
+        line_table = BoxLine.parse([Terrain.WALL_SEED], self._ground, self._arena_dimension)
+
+        #box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
+        box_drawing = BoxLineDrawing(pencil, [""] + ["·"]*12)
+        box_drawing.draw(line_table, self._arena_dimension, Vec2(2, 1))
+        """
 
 
     def _draw_entities(self, entity_list):

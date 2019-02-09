@@ -73,7 +73,7 @@ class ServerManager(PackageQueue):
         players = self._room.get_size()
         points = self._room.get_points_to_win()
 
-        game_info_message = message.GameInfo(character_list, players, points, self._arena_size, self._seed, WAITING_TO_INIT_ARENA)
+        game_info_message = message.GameInfo(character_list, players, points, self._arena_size, self._seed)
         self._output_queue.put(OutputPack(game_info_message, endpoint))
 
 
@@ -141,12 +141,14 @@ class ServerManager(PackageQueue):
         seed = self._seed if "" != self._seed else ServerManager.compute_random_seed(RANDOM_SEED_SIZE)
         logger.info("Start arena => size: {} - seed: {}".format(self._arena_size, seed))
 
+        pre_time_stamp = time.time()
         self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
+        post_time_stamp = time.time()
 
         arena_info_message = message.ArenaInfo(seed, self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
 
-        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, WAITING_TO_INIT_ARENA)
+        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, WAITING_TO_INIT_ARENA - (post_time_stamp - pre_time_stamp))
 
 
     def _compute_frame_signal(self):

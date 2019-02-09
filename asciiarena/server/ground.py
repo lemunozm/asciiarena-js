@@ -4,7 +4,9 @@ from common.direction import Direction
 
 import random
 
-FREE_SPACE_PROPORTION = 0.1
+GEN_MIN_BLOCK_DISTANCE = 3
+GEN_MAX_BLOCK_LEN = 10
+GEN_MAX_BLOCK_CHUNK = 5
 
 class Ground:
     def __init__(self, size, seed):
@@ -31,7 +33,10 @@ class Ground:
 
 
     def get_at(self, position):
-        return self._grid[position.y * self._dimension + position.x]
+        if self.is_inside(position):
+            return self._grid[position.y * self._dimension + position.x]
+        else:
+            return Terrain.OUTSIDE
 
 
     def fill_at(self, position, dimension, terrain):
@@ -40,7 +45,7 @@ class Ground:
                 self.set_at(Vec2(x, y), terrain)
 
 
-    def get_grid_coordinates(self, index):
+    def get_grid_coordinates_of(self, index):
         return Vec2(index % self._dimension, int(index / self._dimension))
 
 
@@ -85,44 +90,82 @@ class Ground:
         return Terrain.is_any(self.get_at(position), filter_terrain_list)
 
 
-    def is_empty_square(self, center, half_side, filter_terrain_list):
-        for x in range(-half_side, half_side + 1):
-            for y in range(-half_side, half_side + 1):
+    def get_neighbour_list(self, position, filter_terrain_list, direction_list):
+        neighbour_list = []
+
+        for direction_vec in Direction.as_vector_list(direction_list):
+            neighbour = position + direction_vec
+            if self.is_terrain(neighbour, filter_terrain_list):
+                neighbour_list.append(neighbour)
+
+        return neighbour_list
+
+
+    def has_neighbours(self, position, filter_terrain_list, direction_list):
+        check_list = [False] * len(filter_terrain_list)
+
+        neighbour_list = self.get_neighbour_list(position, filter_terrain_list, direction_list)
+        for neighbour in neighbour_list:
+            terrain = self.get_at(neighbour)
+            check_list[filter_terrain_list.index(terrain)] = True
+
+        return check_list.count(False) == 0
+
+
+    def has_any_neighbours(self, position, filter_terrain_list, direction_list):
+        for direction_vec in Direction.as_vector_list(direction_list):
+            neighbour = position + direction_vec
+            if self.is_terrain(neighbour, filter_terrain_list):
+                return True
+
+        return False
+
+
+    def has_all_neighbours(self, position, filter_terrain_list, direction_list):
+        for direction_vec in Direction.as_vector_list(direction_list):
+            neighbour = position + direction_vec
+            if not self.is_terrain(neighbour, filter_terrain_list):
+                return False
+
+        return True
+
+
+    def has_all_neighbours_distance(self, center, filter_terrain_list, distance, direction = None):
+        left = -distance * int(direction != Direction.RIGHT)
+        right = distance * int(direction != Direction.LEFT) + 1
+        up = -distance * int(direction != Direction.DOWN)
+        down = distance * int(direction != Direction.UP) + 1
+
+        for x in range(left, right):
+            for y in range(up, down):
+                if x == 0 and y == 0:
+                    continue
+
                 position = center + Vec2(x, y)
-                if self.is_inside(position) and self.is_terrain(position, filter_terrain_list):
+                if not self.is_terrain(position, filter_terrain_list):
                     return False
 
         return True
 
 
     def get_position_list(self, filter_terrain_list):
-        empty_position_list = []
+        position_list = []
         for i, terrain in enumerate(self._grid):
             if Terrain.is_any(terrain, filter_terrain_list):
-                position = self.get_grid_coordinates(i)
-                empty_position_list.append(position)
+                position = self.get_grid_coordinates_of(i)
+                position_list.append(position)
 
-        return empty_position_list
-
-
-    def get_neighbour_list(self, position, filter_terrain_list, directions):
-        neighbour_list = []
-
-        for direction_vec in Direction.as_vector_list(directions):
-            neighbour = position + direction_vec
-            if self.is_inside(neighbour) and self.is_terrain(neighbour, filter_terrain_list):
-                neighbour_list.append(neighbour)
-
-        return neighbour_list
+        return position_list
 
 
-    def has_neighbours(self, position, filter_terrain_list, directions):
-        for direction_vec in Direction.as_vector_list(directions):
-            neighbour = position + direction_vec
-            if self.is_inside(neighbour) and self.is_terrain(neighbour, filter_terrain_list):
-                return True
+    def get_position_list_distance(self, filter_terrain_list, distance):
+        position_list = []
+        for i, terrain in enumerate(self._grid):
+            position = self.get_grid_coordinates_of(i)
+            if self.has_all_neighbours_distance(position, filter_terrain_list, distance):
+                position_list.append(position)
 
-        return False
+        return position_list
 
 
     def find_separated_positions(self, amount, min_distance):
@@ -131,7 +174,7 @@ class Ground:
         free_terrain = []
         for i, terrain in enumerate(self._grid):
             if terrain == Terrain.EMPTY:
-                free_terrain.append(self.get_grid_coordinates(i))
+                free_terrain.append(self.get_grid_coordinates_of(i))
 
         index = random.randrange(0, len(free_terrain))
         new_position = free_terrain[index]
@@ -156,42 +199,35 @@ class Ground:
         self.fill_at(Vec2(0, 1), Vec2(1, self._dimension - 1), Terrain.BORDER_WALL)
         self.fill_at(Vec2(self._dimension - 1, 1), Vec2(1, self._dimension - 1), Terrain.BORDER_WALL)
 
-
     def _generate(self):
         random_engine = random.Random(self._seed)
 
-        available_coordinates_list = self.get_position_list([Terrain.EMPTY])
+        available_coordinates_list = self.get_position_list_distance([Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE)
 
-        while 0.5 < len(available_coordinates_list) / self.get_size():
-            wall_size = random_engine.randrange(0, 20)
+        while 0.2 < len(available_coordinates_list) / self.get_size():
+            wall_size_list = random_engine.sample(range(1, GEN_MAX_BLOCK_LEN), random_engine.randrange(1, GEN_MAX_BLOCK_CHUNK))
+            wall_direction = random_engine.choice(Direction.ORTHOGONAL_LIST)
+            direction = wall_direction
             position = random_engine.choice(available_coordinates_list)
             self.set_at(position, Terrain.WALL_SEED)
 
-            remaining_wall_size = len(available_coordinates_list) - int(self.get_size() * FREE_SPACE_PROPORTION)
-            if remaining_wall_size < 0:
-                break
+            for wall_size in wall_size_list:
+                direction = wall_direction if direction != wall_direction else random_engine.choice(Direction.get_orthogonal_list(direction))
+                direction_vec = Direction.as_vector(direction)
+                for i in range(0, wall_size):
+                    new_position = position + direction_vec
+                    if self.is_inside(new_position) and self.has_all_neighbours_distance(new_position, [Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE, direction):
+                        position = new_position
+                        self.set_at(position, Terrain.WALL_SEED)
+                    else:
+                        break
 
-            valid_wall_size = wall_size if wall_size < remaining_wall_size else remaining_wall_size
 
-            for i in range(0, valid_wall_size):
-                neighbour_list = self.get_neighbour_list(position, [Terrain.EMPTY], Direction.ANY)
-                if neighbour_list:
-                    position = random_engine.choice(neighbour_list)
-                    self.set_at(position, Terrain.WALL_SEED)
-                else:
-                    break
+            available_coordinates_list = self.get_position_list_distance([Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE)
 
-            for i, terrain in enumerate(self._grid):
-                if Terrain.is_any(terrain, [Terrain.EMPTY]):
-                    position = self.get_grid_coordinates(i)
-                    if self.has_neighbours(position, [Terrain.WALL_SEED], Direction.ANY):
-                        self.set_at(position, Terrain.WALL)
-
-            for i, terrain in enumerate(self._grid):
-                if Terrain.is_any(terrain, [Terrain.WALL_SEED]):
+        for i, terrain in enumerate(self._grid):
+            if Terrain.is_any(terrain, [Terrain.EMPTY]):
+                position = self.get_grid_coordinates_of(i)
+                if self.has_any_neighbours(position, [Terrain.WALL_SEED], Direction.ALL_LIST):
                     self._grid[i] = Terrain.WALL
 
-            available_coordinates_list = self.get_position_list([Terrain.EMPTY])
-
-        print(self.get_empty_size())
-        print(len(available_coordinates_list) / self.get_size())

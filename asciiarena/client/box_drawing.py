@@ -94,21 +94,12 @@ class BoxLineDrawing:
         self._tile_set = tile_set
 
 
-    def _get_line_tiles(self, box_line, scale):
-        tile_line_list = []
+    def set_tile_line_style(self, box_line, tile):
+        self._tile_set[TILES_INDEX.get(box_line, NO_TILE_AVAILABLE)] = tile
 
-        extend = BoxLine.HORIZONTAL if BoxLine.includes(box_line, BoxLine.RIGHT) else BoxLine.NONE
-        tile_line = self._tile_set[TILES_INDEX.get(box_line, NO_TILE_AVAILABLE)]
-        tile_line += self._tile_set[TILES_INDEX.get(extend, NO_TILE_AVAILABLE)] * (scale.x - 1)
-        tile_line_list.append(tile_line)
 
-        for i in range(1, scale.y):
-            extend = BoxLine.VERTICAL if BoxLine.includes(box_line, BoxLine.DOWN) else BoxLine.NONE
-            tile_line = self._tile_set[TILES_INDEX.get(extend, NO_TILE_AVAILABLE)]
-            tile_line += self._tile_set[TILES_INDEX.get(BoxLine.NONE, NO_TILE_AVAILABLE)] * (scale.x - 1)
-            tile_line_list.append(tile_line)
-
-        return tile_line_list
+    def get_tile_line_style(self, box_line):
+        return self._tile_set[TILES_INDEX.get(box_line, NO_TILE_AVAILABLE)]
 
 
     def draw(self, line_table, dimension, scale):
@@ -124,4 +115,22 @@ class BoxLineDrawing:
                             tile_line = tile_line[0]
 
                         self._pencil.draw(position, tile_line)
+
+
+    def _get_line_tiles(self, box_line, scale):
+        tile_line_list = []
+
+        extend = BoxLine.HORIZONTAL if BoxLine.includes(box_line, BoxLine.RIGHT) else BoxLine.NONE
+        tile_line = self.get_tile_line_style(box_line)
+        tile_line += self.get_tile_line_style(extend) * (scale.x - 1)
+        tile_line_list.append(tile_line)
+
+        for i in range(1, scale.y):
+            extend = BoxLine.VERTICAL if BoxLine.includes(box_line, BoxLine.DOWN) else BoxLine.NONE
+            tile_line = self.get_tile_line_style(extend)
+            tile_line += self.get_tile_line_style(BoxLine.NONE) * (scale.x - 1)
+            tile_line_list.append(tile_line)
+
+        return tile_line_list
+
 

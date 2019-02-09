@@ -57,7 +57,6 @@ class ClientManager(MessageQueue):
         self._points_to_win = game_info_message.points
         self._arena_size = game_info_message.arena_size
         self._seed = game_info_message.seed
-        self._waiting_time_to_arena = game_info_message.waiting_arena
         printable_seed = "<random>" if "" == self._seed else self._seed
 
         print("\nGame: Points to win: {} | arena size: {} x {} | seed: {}".format(self._points_to_win, self._arena_size, self._arena_size, printable_seed))
@@ -90,8 +89,6 @@ class ClientManager(MessageQueue):
 
             elif message.LoginStatus.RECONNECTION == login_status_message.status:
                 print("      Reconnected with character '" + self._character + "'.")
-                if len(self._character_list) == self._players:
-                    self._waiting_time_to_arena = 0
                 return True
 
 
@@ -103,8 +100,8 @@ class ClientManager(MessageQueue):
 
 
     def _init_game(self):
-        arena_info_message = self._receive_message([message.ArenaInfo])
         self._wait_to_start_game(0.20)
+        arena_info_message = self._receive_message([message.ArenaInfo])
 
         with TermScreen() as screen:
             keyboard = Keyboard()
@@ -129,11 +126,12 @@ class ClientManager(MessageQueue):
 
         last_point_time = 0
         while 0 == self._input_queue.qsize():
-            time.sleep(0.001)
             current_time = time.time()
             if current_time - last_point_time > point_interval:
                 print(".", end = "", flush = True)
                 last_point_time = current_time
+
+            time.sleep(0.001)
 
         print("")
 

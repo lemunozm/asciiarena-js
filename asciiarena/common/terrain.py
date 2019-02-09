@@ -2,8 +2,9 @@ class Terrain:
     EMPTY = 0
     WALL = 1
     BORDER_WALL = 2
+    WALL_SEED = 3
 
-    WALL_SEED = 100
+    OUTSIDE = 255
 
     @staticmethod
     def is_blocked(terrain):
