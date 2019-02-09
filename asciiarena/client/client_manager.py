@@ -123,7 +123,7 @@ class ClientManager(MessageQueue):
 
 
     def _wait_to_start_game(self, point_interval):
-        print("Starting game ", end = "", flush = True)
+        print("Starting game", end = "", flush = True)
 
         last_point_time = 0
         while 0 == self._input_queue.qsize():

@@ -213,7 +213,6 @@ class ServerManager(PackageQueue):
         pass
 
 
-
     def _get_entity_from_player(self, player):
         if player:
             for entity in self._arena.get_entity_list():

@@ -127,7 +127,7 @@ class NetworkManager:
                     except OSError:
                         pass
             else:
-                for connection in output.endpoint_list:
+                for connection in output_pack.endpoint_list:
                     self._close_connection(connection)
 
 
