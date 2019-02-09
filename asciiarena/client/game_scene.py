@@ -6,14 +6,16 @@ from common.terrain import Terrain
 
 import time
 
+FILL_BORDER = True
+FILL_WALLS = True
+
 class GameScene:
     def __init__(self, screen, character, arena_size, ground, seed, character_list):
         self._screen = screen
         self._player_character = character
         self._last_player_direction = Vec2.zero()
         self._arena_size = arena_size
-        self._arena_dimension = Vec2(arena_size, arena_size)
-        self._ground = ground
+        self._ground, self._ground_dimension = GameScene._init_ground(ground, arena_size)
         self._seed = seed
         self._character_list = character_list
 
@@ -32,23 +34,18 @@ class GameScene:
 
 
     def _draw_ground_walls(self):
-        pencil = self._screen.create_pencil(self._get_arena_origin())
+        pencil = self._screen.create_pencil(self._get_ground_origin())
         pencil.set_color(33)
         pencil.set_style(TermPencil.Style.DIM)
 
-        line_table = BoxLine.parse([Terrain.BORDER_WALL, Terrain.WALL], self._ground, self._arena_dimension)
+        wall_list = [Terrain.BORDER_WALL, Terrain.WALL]
+        if FILL_WALLS:
+            wall_list.append(Terrain.WALL_SEED)
+
+        line_table = BoxLine.parse(wall_list, self._ground, self._ground_dimension)
 
         box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
-        #box_drawing = BoxLineDrawing(pencil, [""] + ["X"]*12)
-        box_drawing.draw(line_table, self._arena_dimension, Vec2(2, 1))
-
-        """
-        line_table = BoxLine.parse([Terrain.WALL_SEED], self._ground, self._arena_dimension)
-
-        #box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
-        box_drawing = BoxLineDrawing(pencil, [""] + ["·"]*12)
-        box_drawing.draw(line_table, self._arena_dimension, Vec2(2, 1))
-        """
+        box_drawing.draw(line_table, self._ground_dimension, Vec2(2, 1))
 
 
     def _draw_entities(self, entity_list):
@@ -84,12 +81,30 @@ class GameScene:
         pencil.draw(Vec2(0, 0), "FPS: {:2d} - Seed: '{}'".format(self._fps, self._seed))
 
 
+    def _get_ground_origin(self):
+        x = (self._screen.get_width() - self._ground_dimension.x * 2) / 2
+        y = (self._screen.get_height() - self._ground_dimension.y) / 2
+        return Vec2(int(x), int(y))
+
+
     def _get_arena_origin(self):
         x = (self._screen.get_width() - self._arena_size * 2) / 2
         y = (self._screen.get_height() - self._arena_size) / 2
-        return Vec2(x, y)
+        return Vec2(int(x), int(y))
 
 
     def _get_debug_origin(self):
         return Vec2(0, 0)
 
+
+    @staticmethod
+    def _init_ground(ground, ground_size):
+        terrain_base = Terrain.BORDER_WALL if FILL_BORDER else [Terrain.EMPTY]
+        extended_ground_size = ground_size + 2
+        extended_ground = [terrain_base] * (extended_ground_size * extended_ground_size)
+
+        for y in range(0, ground_size):
+            for x in range(0, ground_size):
+                extended_ground[(y + 1) * extended_ground_size + (x + 1)] = ground[y * ground_size + x]
+
+        return extended_ground, Vec2(extended_ground_size, extended_ground_size)

@@ -18,7 +18,11 @@ class TermPencil:
 
 
     def set_origin(self, origin):
-        self._origin = origin()
+        self._origin = origin
+
+
+    def set_move(self, movement):
+        self._origin += movement
 
 
     def set_color(self, color):

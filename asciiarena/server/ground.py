@@ -4,9 +4,12 @@ from common.direction import Direction
 
 import random
 
+GEN_WALL_PROPORTION = 0.75
 GEN_MIN_BLOCK_DISTANCE = 3
+GEN_MIN_BLOCK_LEN = 1
 GEN_MAX_BLOCK_LEN = 10
-GEN_MAX_BLOCK_CHUNK = 5
+GEN_MIN_BLOCK_CHUNK = 1
+GEN_MAX_BLOCK_CHUNK = 8
 
 class Ground:
     def __init__(self, size, seed):
@@ -204,15 +207,15 @@ class Ground:
 
         available_coordinates_list = self.get_position_list_distance([Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE)
 
-        while 0.2 < len(available_coordinates_list) / self.get_size():
-            wall_size_list = random_engine.sample(range(1, GEN_MAX_BLOCK_LEN), random_engine.randrange(1, GEN_MAX_BLOCK_CHUNK))
+        while 1 - GEN_WALL_PROPORTION < len(available_coordinates_list) / self.get_size():
+            block_len_list = range(GEN_MIN_BLOCK_LEN, GEN_MAX_BLOCK_LEN)
+            wall_size_list = random_engine.sample(block_len_list, random_engine.randrange(GEN_MIN_BLOCK_CHUNK, GEN_MAX_BLOCK_CHUNK))
             wall_direction = random_engine.choice(Direction.ORTHOGONAL_LIST)
             direction = wall_direction
             position = random_engine.choice(available_coordinates_list)
             self.set_at(position, Terrain.WALL_SEED)
 
             for wall_size in wall_size_list:
-                direction = wall_direction if direction != wall_direction else random_engine.choice(Direction.get_orthogonal_list(direction))
                 direction_vec = Direction.as_vector(direction)
                 for i in range(0, wall_size):
                     new_position = position + direction_vec
@@ -222,6 +225,7 @@ class Ground:
                     else:
                         break
 
+                direction = wall_direction if direction != wall_direction else random_engine.choice(Direction.get_orthogonal_list(direction))
 
             available_coordinates_list = self.get_position_list_distance([Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE)
 
