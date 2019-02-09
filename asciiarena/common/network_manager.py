@@ -138,7 +138,7 @@ class NetworkManager:
         try:
             ip, port = connection.getpeername()
             connection.close()
-            logger.info("Connection closed with {}:{}".format(ip, port))
+            logger.debug("Connection closed with {}:{}".format(ip, port))
         except:
             pass
 

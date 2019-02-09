@@ -94,7 +94,7 @@ class PlayersRoom(Room):
     def get_endpoint_list(self):
         endpoint_list = []
         for player in self._participant_dict.values():
-            if None != player.get_endpoint():
+            if player.get_endpoint() != None:
                 endpoint_list.append(player.get_endpoint())
         return endpoint_list
 
@@ -109,3 +109,11 @@ class PlayersRoom(Room):
                 return player
         return None
 
+
+    def get_character_list_with_endpoints(self):
+        character_list = []
+        for player in self._participant_dict.values():
+            if player.get_endpoint() != None:
+                character_list.append(player.get_character())
+
+        return character_list

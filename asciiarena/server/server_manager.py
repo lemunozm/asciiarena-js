@@ -29,6 +29,8 @@ class ServerManager(PackageQueue):
         self._arena = None
         self._last_frame_time_stamp = 0
 
+        logger.info("Required players: {} - Points to win: {}".format(players, points))
+
 
     def process_requests(self):
         while self._active:
@@ -83,6 +85,9 @@ class ServerManager(PackageQueue):
         login_status_message = message.LoginStatus(status)
         self._output_queue.put(OutputPack(login_status_message, endpoint))
 
+        if message.LoginStatus.LOGGED == status or message.LoginStatus.RECONNECTION == status:
+            self._log_players()
+
         if message.LoginStatus.LOGGED == status:
             players_info_message = message.PlayersInfo(self._room.get_character_list())
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
@@ -119,6 +124,21 @@ class ServerManager(PackageQueue):
             return message.LoginStatus.ALREADY_EXISTS
 
 
+    def new_arena(self):
+        seed = self._seed if "" != self._seed else ServerManager.compute_random_seed(RANDOM_SEED_SIZE)
+        logger.info("Load arena - size: {}, seed: {}".format(self._arena_size, seed))
+
+        pre_time_stamp = time.time()
+        self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
+        post_time_stamp = time.time()
+
+        arena_info_message = message.ArenaInfo(seed, self._arena.get_ground().get_grid())
+        self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
+
+        logger.info("Load arena - done! {0:.2}s".format(post_time_stamp - pre_time_stamp))
+        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 0)
+
+
     def _player_movement_request(self, player_movement_message, endpoint):
         player = self._room.get_player_with_endpoint(endpoint)
         if 1 != player_movement_message.direction.get_length():
@@ -138,17 +158,9 @@ class ServerManager(PackageQueue):
 
 
     def _new_arena_signal(self):
-        seed = self._seed if "" != self._seed else ServerManager.compute_random_seed(RANDOM_SEED_SIZE)
-        logger.info("Start arena => size: {} - seed: {}".format(self._arena_size, seed))
-
-        pre_time_stamp = time.time()
-        self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
-        post_time_stamp = time.time()
-
-        arena_info_message = message.ArenaInfo(seed, self._arena.get_ground().get_grid())
-        self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
-
-        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, WAITING_TO_INIT_ARENA - (post_time_stamp - pre_time_stamp))
+        thread = threading.Thread(target = self.new_arena)
+        thread.daemon = True
+        thread.start()
 
 
     def _compute_frame_signal(self):
@@ -180,6 +192,7 @@ class ServerManager(PackageQueue):
         if player:
             player.set_endpoint(None)
             logger.info("Player '{}' disconnected".format(player.get_character()))
+            self._log_players()
 
 
     def _server_signal(self, signal, time):
@@ -192,12 +205,18 @@ class ServerManager(PackageQueue):
             queue_signal()
 
 
+    def _log_players(self):
+        connected_players = self._room.get_character_list_with_endpoints()
+        logger.info("Logged players: {} - Connected players: {}".format(self._room.get_character_list(), connected_players))
+
+
     def _get_entity_from_player(self, player):
         if player:
             for entity in self._arena.get_entity_list():
                 if player.get_character() == entity.get_character():
                     return entity
         return None
+
 
     @staticmethod
     def compute_random_seed(size):
