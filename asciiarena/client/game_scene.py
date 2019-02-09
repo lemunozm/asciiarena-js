@@ -2,6 +2,7 @@ from .pencil import TermPencil
 from .box_drawing import BoxLine, BoxLineDrawing
 
 from common.util.vec2 import Vec2
+from common.direction import Direction
 from common.terrain import Terrain
 
 import time
@@ -58,12 +59,12 @@ class GameScene:
     def _draw_player_direction(self, entity_list, direction):
         pencil = self._screen.create_pencil(self._get_arena_origin())
 
-        if Vec2.zero() == direction:
+        if Direction.NONE == direction:
             return
 
         for entity in entity_list:
             if entity.character == self._player_character:
-                point = entity.position + direction
+                point = entity.position + Direction.as_vector(direction)
                 pencil.draw(Vec2(point.x * 2, point.y), "·", 240, TermPencil.Style.BOLD)
                 return
 

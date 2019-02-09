@@ -38,12 +38,12 @@ class Direction:
 
     @staticmethod
     def is_orthogonal(direction):
-        return Direction._ANY_ORTHOGONAL | direction == Direction._ANY_ORTHOGONAL
+        return direction != Direction.NONE and Direction._ANY_ORTHOGONAL | direction == Direction._ANY_ORTHOGONAL
 
 
     @staticmethod
     def is_diagonal(direction):
-        return Direction._ANY_DIAGONAL | direction == Direction._ANY_DIAGONAL
+        return direction != Direction.NONE and Direction._ANY_DIAGONAL | direction == Direction._ANY_DIAGONAL
 
 
     @staticmethod

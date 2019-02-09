@@ -2,8 +2,9 @@ from .message_queue import MessageQueue, ReceiveMessageError
 from .screen import TermScreen
 from .game_scene import GameScene
 from .keyboard import Keyboard, Key
-from common.logging import logger
-from common import version, message
+
+from common import version as Version, message as Message
+from common.direction import Direction
 from common.util.vec2 import Vec2
 
 import string
@@ -39,18 +40,18 @@ class ClientManager(MessageQueue):
 
 
     def _server_info_request(self):
-        version_message = message.Version(version.CURRENT)
+        version_message = Message.Version(Version.CURRENT)
 
         self._send_message(version_message)
-        checked_version_message = self._receive_message([message.CheckedVersion])
+        checked_version_message = self._receive_message([Message.CheckedVersion])
 
         compatibility = "compatible" if checked_version_message.validation else "incompatible"
-        print("Client version: {} - server version: {} - {}".format(version.CURRENT, checked_version_message.value, compatibility))
+        print("Client version: {} - server version: {} - {}".format(Version.CURRENT, checked_version_message.value, compatibility))
 
         if not compatibility:
             self._end_communication()
 
-        game_info_message = self._receive_message([message.GameInfo])
+        game_info_message = self._receive_message([Message.GameInfo])
 
         self._character_list = game_info_message.character_list
         self._players = game_info_message.players
@@ -69,55 +70,55 @@ class ClientManager(MessageQueue):
             if "" == self._character:
                 self._character = ClientManager._ask_user_for_character()
 
-            login_message = message.Login(self._character)
+            login_message = Message.Login(self._character)
             self._send_message(login_message)
 
-            login_status_message = self._receive_message([message.LoginStatus])
+            login_status_message = self._receive_message([Message.LoginStatus])
 
-            if message.LoginStatus.ALREADY_EXISTS == login_status_message.status:
+            if Message.LoginStatus.ALREADY_EXISTS == login_status_message.status:
                 print("      Character '" + self._character + "' already exists.")
                 self._character = ""
                 continue
 
-            elif message.LoginStatus.ROOM_COMPLETED == login_status_message.status:
+            elif Message.LoginStatus.ROOM_COMPLETED == login_status_message.status:
                 print("      Sorry, the game is already started. Try again later.")
                 return False
 
-            elif message.LoginStatus.LOGGED == login_status_message.status:
+            elif Message.LoginStatus.LOGGED == login_status_message.status:
                 print("      Logged with character '" + self._character + "'.")
                 return True
 
-            elif message.LoginStatus.RECONNECTION == login_status_message.status:
+            elif Message.LoginStatus.RECONNECTION == login_status_message.status:
                 print("      Reconnected with character '" + self._character + "'.")
                 return True
 
 
     def _wait_game(self):
         while len(self._character_list) != self._players:
-            player_info_message = self._receive_message([message.PlayersInfo])
+            player_info_message = self._receive_message([Message.PlayersInfo])
             self._character_list = player_info_message.character_list
             ClientManager._print_player_list(self._character_list, self._players)
 
 
     def _init_game(self):
         self._wait_to_start_game(0.20)
-        arena_info_message = self._receive_message([message.ArenaInfo])
+        arena_info_message = self._receive_message([Message.ArenaInfo])
 
         with TermScreen() as screen:
             keyboard = Keyboard()
             game_scene = GameScene(screen, self._character, self._arena_size, arena_info_message.ground, arena_info_message.seed, self._character_list)
 
-            player_direction = Vec2(0, 1)
+            player_direction = Direction.DOWN
 
             while True:
-                frame_message = self._receive_message([message.Frame])
+                frame_message = self._receive_message([Message.Frame])
                 game_scene.update(frame_message.entity_list, [], player_direction)
                 keyboard.update_key_events(screen.get_event_list())
 
                 last_movement_direction = self._ask_player_movement_direction(keyboard)
-                if Vec2.zero() != last_movement_direction:
+                if Direction.NONE != last_movement_direction:
                     player_direction = last_movement_direction
-                    player_movement_message = message.PlayerMovement(last_movement_direction)
+                    player_movement_message = Message.PlayerMovement(last_movement_direction)
                     self._send_message(player_movement_message)
 
 
@@ -139,15 +140,15 @@ class ClientManager(MessageQueue):
     @staticmethod
     def _ask_player_movement_direction(keyboard):
         if keyboard.is_key_down(Key.W):
-            return Vec2(0, -1)
+            return Direction.UP
         elif keyboard.is_key_down(Key.A):
-            return Vec2(-1, 0)
+            return Direction.LEFT
         elif keyboard.is_key_down(Key.S):
-            return Vec2(0, 1)
+            return Direction.DOWN
         elif keyboard.is_key_down(Key.D):
-            return Vec2(1, 0)
+            return Direction.RIGHT
         else:
-            return Vec2.zero()
+            return Direction.NONE
 
 
     @staticmethod

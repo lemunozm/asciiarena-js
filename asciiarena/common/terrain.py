@@ -8,8 +8,7 @@ class Terrain:
 
     @staticmethod
     def is_blocked(terrain):
-        return (terrain == Terrain.WALL
-             or terrain == Terrain.BORDER_WALL)
+        return terrain == Terrain.WALL or terrain == Terrain.BORDER_WALL
 
 
     @staticmethod

@@ -1,8 +1,10 @@
-from common.package_queue import PackageQueue, InputPack, OutputPack
-from common.logging import logger
-from common import version, message
 from .room import PlayersRoom
 from .arena import Arena
+
+from common.package_queue import PackageQueue, InputPack, OutputPack
+from common.logging import logger
+from common.direction import Direction
+from common import version as Version , message as Message
 
 import enum
 import threading
@@ -36,16 +38,16 @@ class ServerManager(PackageQueue):
         while self._active:
             input_pack = self._input_queue.get()
             if input_pack.message:
-                if isinstance(input_pack.message, message.Version):
+                if isinstance(input_pack.message, Message.Version):
                     self._info_server_request(input_pack.message, input_pack.endpoint)
 
-                elif isinstance(input_pack.message, message.Login):
+                elif isinstance(input_pack.message, Message.Login):
                     self._login_request(input_pack.message, input_pack.endpoint)
 
-                elif isinstance(input_pack.message, message.PlayerMovement):
+                elif isinstance(input_pack.message, Message.PlayerMovement):
                     self._player_movement_request(input_pack.message, input_pack.endpoint)
 
-                elif isinstance(input_pack.message, message.PlayerCast):
+                elif isinstance(input_pack.message, Message.PlayerCast):
                     self._player_cast_request(input_pack.message, input_pack.endpoint)
 
                 elif isinstance(input_pack.message, ServerSignal):
@@ -63,9 +65,9 @@ class ServerManager(PackageQueue):
 
 
     def _info_server_request(self, version_message, endpoint):
-        validation = version.check(version_message.value)
+        validation = Version.check(version_message.value)
 
-        checked_version_message = message.CheckedVersion(version.CURRENT, validation)
+        checked_version_message = Message.CheckedVersion(Version.CURRENT, validation)
         self._output_queue.put(OutputPack(checked_version_message, endpoint))
 
         compatibility = "compatible" if validation else "incompatible"
@@ -75,32 +77,32 @@ class ServerManager(PackageQueue):
         players = self._room.get_size()
         points = self._room.get_points_to_win()
 
-        game_info_message = message.GameInfo(character_list, players, points, self._arena_size, self._seed)
+        game_info_message = Message.GameInfo(character_list, players, points, self._arena_size, self._seed)
         self._output_queue.put(OutputPack(game_info_message, endpoint))
 
 
     def _login_request(self, login_message, endpoint):
         status = self._register_player(login_message.character, endpoint)
 
-        login_status_message = message.LoginStatus(status)
+        login_status_message = Message.LoginStatus(status)
         self._output_queue.put(OutputPack(login_status_message, endpoint))
 
-        if message.LoginStatus.LOGGED == status or message.LoginStatus.RECONNECTION == status:
+        if Message.LoginStatus.LOGGED == status or Message.LoginStatus.RECONNECTION == status:
             self._log_players()
 
-        if message.LoginStatus.LOGGED == status:
-            players_info_message = message.PlayersInfo(self._room.get_character_list())
+        if Message.LoginStatus.LOGGED == status:
+            players_info_message = Message.PlayersInfo(self._room.get_character_list())
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
 
             if self._room.is_complete():
                 self._input_queue.put(InputPack(ServerSignal.NEW_ARENA_SIGNAL, None))
 
-        elif message.LoginStatus.RECONNECTION == status:
-            players_info_message = message.PlayersInfo(self._room.get_character_list())
+        elif Message.LoginStatus.RECONNECTION == status:
+            players_info_message = Message.PlayersInfo(self._room.get_character_list())
             self._output_queue.put(OutputPack(players_info_message, endpoint))
 
             if self._arena:
-                arena_info_message = message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
+                arena_info_message = Message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
                 self._output_queue.put(OutputPack(arena_info_message, endpoint))
 
 
@@ -109,19 +111,19 @@ class ServerManager(PackageQueue):
 
         if PlayersRoom.ADDITION_SUCCESSFUL == status:
             logger.info("Player '{}' registered successfully".format(character))
-            return message.LoginStatus.LOGGED
+            return Message.LoginStatus.LOGGED
 
         elif PlayersRoom.ADDITION_REUSE == status:
             logger.info("Player '{}' reconnected".format(character))
-            return message.LoginStatus.RECONNECTION
+            return Message.LoginStatus.RECONNECTION
 
         elif PlayersRoom.ADDITION_ERR_COMPLETE == status:
             logger.debug("Player '{}' tried to register: room complete".format(character))
-            return message.LoginStatus.ROOM_COMPLETED
+            return Message.LoginStatus.ROOM_COMPLETED
 
         elif PlayersRoom.ADDITION_ERR_ALREADY_EXISTS == status:
             logger.debug("Player '{}' tried to register: already exists".format(character))
-            return message.LoginStatus.ALREADY_EXISTS
+            return Message.LoginStatus.ALREADY_EXISTS
 
 
     def new_arena(self):
@@ -132,29 +134,11 @@ class ServerManager(PackageQueue):
         self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
         post_time_stamp = time.time()
 
-        arena_info_message = message.ArenaInfo(seed, self._arena.get_ground().get_grid())
+        arena_info_message = Message.ArenaInfo(seed, self._arena.get_ground().get_grid())
         self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
 
         logger.info("Load arena - done! {0:.2}s".format(post_time_stamp - pre_time_stamp))
         self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 0)
-
-
-    def _player_movement_request(self, player_movement_message, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
-        if 1 != player_movement_message.direction.get_length():
-            logger.error("Unexpected movement value from player '{}'".format(player.get_character()))
-            self._output_queue.put(OutputPack("", endpoint))
-            return
-
-        entity = self._get_entity_from_player(player)
-        if entity:
-            tried_to_move = entity.try_to_move(player_movement_message.direction)
-            if tried_to_move:
-                logger.debug("Player '{}' tried to move {}".format(entity.get_character(), player_movement_message.direction))
-
-
-    def _player_cast_request(self, player_cast_message, endpoint):
-        pass
 
 
     def _new_arena_signal(self):
@@ -168,10 +152,10 @@ class ServerManager(PackageQueue):
 
         frame_entity_list = []
         for entity in self._arena.get_entity_list():
-            frame_entity = message.Frame.Entity(entity.get_character(), entity.get_position())
+            frame_entity = Message.Frame.Entity(entity.get_character(), entity.get_position())
             frame_entity_list.append(frame_entity)
 
-        frame_message = message.Frame(frame_entity_list)
+        frame_message = Message.Frame(frame_entity_list)
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
         if not self._arena.has_finished():
@@ -208,6 +192,26 @@ class ServerManager(PackageQueue):
     def _log_players(self):
         connected_players = self._room.get_character_list_with_endpoints()
         logger.info("Logged players: {} - Connected players: {}".format(self._room.get_character_list(), connected_players))
+
+
+    def _player_movement_request(self, player_movement_message, endpoint):
+        player = self._room.get_player_with_endpoint(endpoint)
+        if not Direction.is_orthogonal(player_movement_message.direction):
+            logger.error("Unexpected movement value from player '{}'".format(player.get_character()))
+            self._output_queue.put(OutputPack("", endpoint))
+            return
+
+        direction = Direction.as_vector(player_movement_message.direction)
+        entity = self._get_entity_from_player(player)
+        if entity:
+            tried_to_move = entity.try_to_move(direction)
+            if tried_to_move:
+                logger.debug("Player '{}' tried to move {}".format(entity.get_character(), direction))
+
+
+    def _player_cast_request(self, player_cast_message, endpoint):
+        pass
+
 
 
     def _get_entity_from_player(self, player):
