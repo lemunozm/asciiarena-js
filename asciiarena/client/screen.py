@@ -62,4 +62,5 @@ class TermScreen:
 
     def render(self):
         self._stdscr.refresh()
+        self._stdscr.move(self.get_height() - 2, 0) #Allow using print function afther the render
 
