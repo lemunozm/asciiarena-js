@@ -152,7 +152,7 @@ class ServerManager(PackageQueue):
 
         frame_entity_list = []
         for entity in self._arena.get_entity_list():
-            frame_entity = Message.Frame.Entity(entity.get_character(), entity.get_position())
+            frame_entity = Message.Frame.Entity(entity.get_character(), entity.get_position(), entity.get_direction())
             frame_entity_list.append(frame_entity)
 
         frame_message = Message.Frame(frame_entity_list)
@@ -201,12 +201,11 @@ class ServerManager(PackageQueue):
             self._output_queue.put(OutputPack("", endpoint))
             return
 
-        direction = Direction.as_vector(player_movement_message.direction)
         entity = self._get_entity_from_player(player)
         if entity:
-            tried_to_move = entity.try_to_move(direction)
+            tried_to_move = entity.try_to_move(player_movement_message.direction)
             if tried_to_move:
-                logger.debug("Player '{}' tried to move {}".format(entity.get_character(), direction))
+                logger.debug("Player '{}' tried to move {}".format(entity.get_character(), entity.get_last_attempt_to_move()))
 
 
     def _player_cast_request(self, player_cast_message, endpoint):

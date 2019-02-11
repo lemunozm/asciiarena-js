@@ -1,10 +1,8 @@
 from .message_queue import MessageQueue, ReceiveMessageError
 from .screen import TermScreen
-from .game_scene import GameScene
-from .keyboard import Keyboard, Key
+from .game_scene import GameScene, GameSceneEvent
 
 from common import version as Version, message as Message
-from common.direction import Direction
 from common.util.vec2 import Vec2
 
 import string
@@ -105,21 +103,24 @@ class ClientManager(MessageQueue):
         arena_info_message = self._receive_message([Message.ArenaInfo])
 
         with TermScreen() as screen:
-            keyboard = Keyboard()
-            game_scene = GameScene(screen, self._character, self._arena_size, arena_info_message.ground, arena_info_message.seed, self._character_list)
-
-            player_direction = Direction.DOWN
+            game_scene = GameScene(screen, self._character, self._character_list, self._arena_size, arena_info_message.ground, arena_info_message.seed)
 
             while True:
                 frame_message = self._receive_message([Message.Frame])
-                game_scene.update(frame_message.entity_list, [], player_direction)
-                keyboard.update_key_events(screen)
 
-                last_movement_direction = self._ask_player_movement_direction(keyboard)
-                if Direction.NONE != last_movement_direction:
-                    player_direction = last_movement_direction
-                    player_movement_message = Message.PlayerMovement(last_movement_direction)
-                    self._send_message(player_movement_message)
+                event_list = game_scene.compute_events()
+
+                for kind, event in event_list:
+                    if kind == GameSceneEvent.PLAYER_MOVEMENT:
+                        player_movement_message = Message.PlayerMovement(event)
+                        self._send_message(player_movement_message)
+
+                    elif kind == GameSceneEvent.PLAYER_CAST:
+                        pass
+
+                screen.clear()
+                game_scene.render(frame_message.entity_list, [])
+                screen.draw()
 
 
     def _wait_to_start_game(self, point_interval):
@@ -136,19 +137,6 @@ class ClientManager(MessageQueue):
 
         print("")
 
-
-    @staticmethod
-    def _ask_player_movement_direction(keyboard):
-        if keyboard.is_key_down(Key.W):
-            return Direction.UP
-        elif keyboard.is_key_down(Key.A):
-            return Direction.LEFT
-        elif keyboard.is_key_down(Key.S):
-            return Direction.DOWN
-        elif keyboard.is_key_down(Key.D):
-            return Direction.RIGHT
-        else:
-            return Direction.NONE
 
 
     @staticmethod

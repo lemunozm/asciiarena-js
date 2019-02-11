@@ -1,5 +1,7 @@
 from .ground import Ground
 from .entity import Entity
+
+from common.direction import Direction
 from common.util.vec2 import Vec2
 
 class Arena:
@@ -10,6 +12,7 @@ class Arena:
         position_list = self._ground.find_separated_positions(len(character_list), 5) #check the minimum distance
         for i, character in enumerate(character_list):
             entity = Entity(character, position_list[i])
+            entity.set_direction(Direction.DOWN)
             self._entity_list.append(entity)
 
 

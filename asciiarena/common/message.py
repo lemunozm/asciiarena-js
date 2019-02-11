@@ -45,9 +45,10 @@ class ArenaInfo:
 
 class Frame:
     class Entity:
-        def __init__(self, character, position):
+        def __init__(self, character, position, direction):
             self.character = character
             self.position = position
+            self.direction = direction
 
 
     def __init__(self, entity_list):

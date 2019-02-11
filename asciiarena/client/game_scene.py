@@ -1,4 +1,5 @@
 from .pencil import TermPencil
+from .keyboard import Keyboard, Key
 from .box_drawing import BoxLine, BoxLineDrawing
 
 from common.util.vec2 import Vec2
@@ -6,32 +7,66 @@ from common.direction import Direction
 from common.terrain import Terrain
 
 import time
+import enum
 
-FILL_BORDER = True
-FILL_WALLS = True
+VISUAL_FILL_BORDER = True
+VISUAL_FILL_WALLS = True
+
+
+class GameSceneEvent(enum.Enum):
+    PLAYER_MOVEMENT = enum.auto()
+    PLAYER_CAST = enum.auto()
+
 
 class GameScene:
-    def __init__(self, screen, character, arena_size, ground, seed, character_list):
+    def __init__(self, screen, character, character_list, arena_size, ground, seed):
         self._screen = screen
+        self._keyboard = Keyboard(screen)
+
         self._player_character = character
-        self._last_player_direction = Vec2.zero()
+        self._character_list = character_list
         self._arena_size = arena_size
         self._ground, self._ground_dimension = GameScene._init_ground(ground, arena_size)
         self._seed = seed
-        self._character_list = character_list
 
         self._frame_counter = 0
         self._fps_time_stamp = 0
         self._fps = 0
 
 
-    def update(self, entity_list, spell_list, player_direction):
-        self._screen.clear()
-        self._draw_player_direction(entity_list, player_direction)
+    def compute_events(self):
+        self._keyboard.update_key_events()
+
+        player_event_list = []
+
+        direction = self._check_player_movement_direction()
+        if Direction.NONE != direction:
+            player_event_list.append((GameSceneEvent.PLAYER_MOVEMENT, direction))
+
+        return player_event_list
+
+
+    def _check_player_movement_direction(self):
+        if self._keyboard.is_key_down(Key.W):
+            return Direction.UP
+
+        elif self._keyboard.is_key_down(Key.A):
+            return Direction.LEFT
+
+        elif self._keyboard.is_key_down(Key.S):
+            return Direction.DOWN
+
+        elif self._keyboard.is_key_down(Key.D):
+            return Direction.RIGHT
+
+        else:
+            return Direction.NONE
+
+
+    def render(self, entity_list, spell_list):
         self._draw_ground_walls()
         self._draw_entities(entity_list)
         self._draw_debug_info()
-        self._screen.render()
 
 
     def _draw_ground_walls(self):
@@ -40,7 +75,7 @@ class GameScene:
         pencil.set_style(TermPencil.Style.DIM)
 
         wall_list = [Terrain.BORDER_WALL, Terrain.WALL]
-        if FILL_WALLS:
+        if VISUAL_FILL_WALLS:
             wall_list.append(Terrain.WALL_SEED)
 
         line_table = BoxLine.parse(wall_list, self._ground, self._ground_dimension)
@@ -53,20 +88,12 @@ class GameScene:
         pencil = self._screen.create_pencil(self._get_arena_origin())
 
         for entity in entity_list:
-            pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character)
-
-
-    def _draw_player_direction(self, entity_list, direction):
-        pencil = self._screen.create_pencil(self._get_arena_origin())
-
-        if Direction.NONE == direction:
-            return
+            if Direction.NONE != entity.direction:
+                point = entity.position + Direction.as_vector(entity.direction)
+                pencil.draw(Vec2(point.x * 2, point.y), "·", 240, TermPencil.Style.BOLD)
 
         for entity in entity_list:
-            if entity.character == self._player_character:
-                point = entity.position + Direction.as_vector(direction)
-                pencil.draw(Vec2(point.x * 2, point.y), "·", 240, TermPencil.Style.BOLD)
-                return
+            pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character)
 
 
     def _draw_debug_info(self):
@@ -100,7 +127,7 @@ class GameScene:
 
     @staticmethod
     def _init_ground(ground, ground_size):
-        terrain_base = Terrain.BORDER_WALL if FILL_BORDER else [Terrain.EMPTY]
+        terrain_base = Terrain.BORDER_WALL if VISUAL_FILL_BORDER else [Terrain.EMPTY]
         extended_ground_size = ground_size + 2
         extended_ground = [terrain_base] * (extended_ground_size * extended_ground_size)
 
@@ -109,3 +136,5 @@ class GameScene:
                 extended_ground[(y + 1) * extended_ground_size + (x + 1)] = ground[y * ground_size + x]
 
         return extended_ground, Vec2(extended_ground_size, extended_ground_size)
+
+

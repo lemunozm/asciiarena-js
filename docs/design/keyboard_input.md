@@ -17,23 +17,4 @@ With the key logger approach, any key, can affect to the game, even when it has 
 This approach focused into getting the key pressed events from *curses* and the key released events from the key logger.
 With this method, we only process the real application key events comming from the *curses* and we are able to know when the key is released.
 
-### 3.1º approach: avoiding the temporal problem
-The 3º approach seems to works well but has a temporal problem:
-The key released events can be process before the curses gives us the key pressed event.
-For example:
-
-The user press key 'A'. The user maintain the key 'A' presed during 5 seconds.
-During this time, more key pressed 'A' events comming from the *curses* because more characters have been "written"
-(curses manages the input keys as characters from the stdin, so if you hold down a key, after a while, new events are generated).
-After the 5 seconds, the released key event comes and is process.
-However, the last key pressed event from *curses* has not processed yet, and when is it processed, no key released event will come later.
-
-This is because the logger generates an interrupt for the key events whereas the curses gives the keys on demand.
-For that, it is necessary to combine the *key pressed* information from both, the key logger and the *curses* library,
-because the first ones always gives the events in order.
-You have two types of information:
-* key pressed events ordered respect the key released events but with global information (the key logger).
-* key pressed events that not have temporal correlation with the released events but locals to the current application.
-
-From the combination on this two types of key pressed events we can construct a table with the "real" key values of the current application.
 For implementation details, see the [keyboard.py](../../asciiarena/client/keyboard.py) module

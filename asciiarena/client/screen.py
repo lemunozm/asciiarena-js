@@ -60,7 +60,7 @@ class TermScreen:
         self._stdscr.erase()
 
 
-    def render(self):
+    def draw(self):
         self._stdscr.refresh()
-        self._stdscr.move(self.get_height() - 2, 0) #Allow using print function afther the render
+        self._stdscr.move(self.get_height() - 2, 0) #Allow using print function after drawing
 

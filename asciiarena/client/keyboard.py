@@ -15,8 +15,9 @@ class TypeEvent(enum.Enum):
     RELEASED = enum.auto()
 
 
-class Keyboard:
-    def __init__(self):
+class Keyboard():
+    def __init__(self, screen):
+        self._screen = screen
         self._mutex = threading.Lock()
         self._global_key_released_list = []
         self._key_set = set()
@@ -34,10 +35,10 @@ class Keyboard:
         return key in self._key_set
 
 
-    def update_key_events(self, screen):
+    def update_key_events(self):
         with self._mutex:
             local_key_pressed_list = []
-            for local_key in screen.get_event_list():
+            for local_key in self._screen.get_event_list():
                 pressed_key = Keyboard._local_key_to_common_key(local_key)
                 if pressed_key:
                     local_key_pressed_list.append(pressed_key)
@@ -46,7 +47,7 @@ class Keyboard:
                 self._persistant_key_set.add(pressed_key)
 
             for released_key in self._global_key_released_list:
-                self._persistant_key_set.remove(released_key)
+                self._persistant_key_set.discard(released_key)
 
             self._global_key_released_list.clear()
 
