@@ -44,20 +44,15 @@ class GameScene:
 
 
     def _check_player_movement_direction(self):
-        if self._keyboard.is_key_down(Key.W):
-            return Direction.UP
+        movement_keys = {
+            Key.W: Direction.UP,
+            Key.A: Direction.LEFT,
+            Key.S: Direction.DOWN,
+            Key.D: Direction.RIGHT,
+        }
 
-        elif self._keyboard.is_key_down(Key.A):
-            return Direction.LEFT
-
-        elif self._keyboard.is_key_down(Key.S):
-            return Direction.DOWN
-
-        elif self._keyboard.is_key_down(Key.D):
-            return Direction.RIGHT
-
-        else:
-            return Direction.NONE
+        key = self._keyboard.get_last_key_down(list(movement_keys))
+        return movement_keys.get(key, Direction.NONE)
 
 
     def render(self, entity_list, spell_list):

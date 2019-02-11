@@ -3,8 +3,10 @@ import sys
 import enum
 import threading
 import time
+import math
 
 class Key(enum.Enum):
+    NONE = enum.auto()
     A = enum.auto()
     D = enum.auto()
     S = enum.auto()
@@ -32,8 +34,34 @@ class Keyboard():
         self._listener.stop()
 
 
-    def is_key_down(self, key):
-        return self._key_dict.get(key, None)
+    def is_key_down(self, key, default = 0):
+        return self._key_dict.get(key, default)
+
+
+    def is_key_list_down(self, key_list, default = 0):
+        time_stamp_list = []
+        for key in key_list:
+            time_stamp_list.append(self._key_dict.get(key, default))
+
+        return time_stamp_list
+
+
+    def get_first_key_down(self, key_list):
+        time_stamp_list = self.is_key_list_down(key_list, math.inf)
+        min_time = min(time_stamp_list)
+        if min_time < math.inf:
+            return key_list[time_stamp_list.index(min_time)]
+
+        return Key.NONE
+
+
+    def get_last_key_down(self, key_list):
+        time_stamp_list = self.is_key_list_down(key_list)
+        max_time = max(time_stamp_list)
+        if max_time > 0:
+            return key_list[time_stamp_list.index(max_time)]
+
+        return Key.NONE
 
 
     def update_key_events(self):
