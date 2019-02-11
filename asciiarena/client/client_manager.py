@@ -113,7 +113,7 @@ class ClientManager(MessageQueue):
             while True:
                 frame_message = self._receive_message([Message.Frame])
                 game_scene.update(frame_message.entity_list, [], player_direction)
-                keyboard.update_key_events(screen.get_event_list())
+                keyboard.update_key_events(screen)
 
                 last_movement_direction = self._ask_player_movement_direction(keyboard)
                 if Direction.NONE != last_movement_direction:

@@ -17,13 +17,13 @@ class TypeEvent(enum.Enum):
 
 class Keyboard:
     def __init__(self):
-        self._listener = pynput.keyboard.Listener(on_press = self._on_press, on_release = self._on_release)
-        self._listener.start()
         self._mutex = threading.Lock()
-        self._global_key_pressed_list = []
         self._global_key_released_list = []
-        self._global_key_set = set()
-        self._local_key_set = set()
+        self._key_set = set()
+        self._persistant_key_set = set()
+
+        self._listener = pynput.keyboard.Listener(on_release = self._on_release)
+        self._listener.start()
 
 
     def close(self):
@@ -31,43 +31,28 @@ class Keyboard:
 
 
     def is_key_down(self, key):
-        return key in self._local_key_set
+        return key in self._key_set
 
 
-    def update_key_events(self, local_key_list):
-        # Update local set
-        for local_key in local_key_list:
-            key = Keyboard._local_key_to_common_key(local_key)
-            if key:
-                self._local_key_set.add(key)
-
+    def update_key_events(self, screen):
         with self._mutex:
-            # Update global set with pressed events
-            for key in self._global_key_pressed_list:
-                self._global_key_set.add(key)
+            local_key_pressed_list = []
+            for local_key in screen.get_event_list():
+                pressed_key = Keyboard._local_key_to_common_key(local_key)
+                if pressed_key:
+                    local_key_pressed_list.append(pressed_key)
 
-            # Update local with global information
-            local_key_to_remove_list = []
-            for key in self._local_key_set:
-                if not key in self._global_key_set:
-                    local_key_to_remove_list.append(key)
+            for pressed_key in local_key_pressed_list:
+                self._persistant_key_set.add(pressed_key)
 
-            for key in local_key_to_remove_list:
-                self._local_key_set.remove(key)
+            for released_key in self._global_key_released_list:
+                self._persistant_key_set.remove(released_key)
 
-            # Update global set with released events
-            for key in self._global_key_released_list:
-                self._global_key_set.remove(key)
+            self._global_key_released_list.clear()
 
-            self._global_key_pressed_list = []
-            self._global_key_released_list = []
-
-
-    def _on_press(self, global_key):
-        key = Keyboard._global_key_to_common_key(global_key)
-        if key:
-            with self._mutex:
-                self._global_key_pressed_list.append(key)
+            self._key_set = self._persistant_key_set.copy()
+            for pressed_key in local_key_pressed_list:
+                self._key_set.add(pressed_key)
 
 
     def _on_release(self, global_key):
