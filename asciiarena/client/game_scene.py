@@ -21,6 +21,7 @@ class GameSceneEvent(enum.Enum):
 class GameScene:
     def __init__(self, screen, character, character_list, arena_size, ground, seed):
         self._screen = screen
+        self._screen.enable_fps_counter(Vec2(0, 0))
         self._keyboard = Keyboard(screen)
 
         self._player_character = character
@@ -28,10 +29,6 @@ class GameScene:
         self._arena_size = arena_size
         self._ground, self._ground_dimension = GameScene._init_ground(ground, arena_size)
         self._seed = seed
-
-        self._frame_counter = 0
-        self._fps_time_stamp = 0
-        self._fps = 0
 
 
     def compute_events(self):
@@ -66,7 +63,7 @@ class GameScene:
     def render(self, entity_list, spell_list):
         self._draw_ground_walls()
         self._draw_entities(entity_list)
-        self._draw_debug_info()
+        self._draw_info()
 
 
     def _draw_ground_walls(self):
@@ -96,17 +93,9 @@ class GameScene:
             pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character)
 
 
-    def _draw_debug_info(self):
-        pencil = self._screen.create_pencil(self._get_debug_origin())
-
-        current_time = time.time()
-        self._frame_counter += 1
-        if current_time - self._fps_time_stamp > 1.0:
-            self._fps = self._frame_counter
-            self._fps_time_stamp = current_time
-            self._frame_counter = 0
-
-        pencil.draw(Vec2(0, 0), "FPS: {:2d} - Seed: '{}'".format(self._fps, self._seed))
+    def _draw_info(self):
+        pencil = self._screen.create_pencil(self._get_info_origin())
+        pencil.draw(Vec2(0, 0), "Seed: '{}'".format(self._seed))
 
 
     def _get_ground_origin(self):
@@ -121,8 +110,8 @@ class GameScene:
         return Vec2(int(x), int(y))
 
 
-    def _get_debug_origin(self):
-        return Vec2(0, 0)
+    def _get_info_origin(self):
+        return Vec2(0, 1)
 
 
     @staticmethod

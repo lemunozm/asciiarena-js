@@ -2,6 +2,7 @@ import pynput
 import sys
 import enum
 import threading
+import time
 
 class Key(enum.Enum):
     A = enum.auto()
@@ -20,8 +21,8 @@ class Keyboard():
         self._screen = screen
         self._mutex = threading.Lock()
         self._global_key_released_list = []
-        self._key_set = set()
-        self._persistant_key_set = set()
+        self._key_dict = {}
+        self._persistant_key_dict = {}
 
         self._listener = pynput.keyboard.Listener(on_release = self._on_release)
         self._listener.start()
@@ -32,7 +33,7 @@ class Keyboard():
 
 
     def is_key_down(self, key):
-        return key in self._key_set
+        return self._key_dict.get(key, None)
 
 
     def update_key_events(self):
@@ -44,16 +45,20 @@ class Keyboard():
                     local_key_pressed_list.append(pressed_key)
 
             for pressed_key in local_key_pressed_list:
-                self._persistant_key_set.add(pressed_key)
+                if pressed_key not in self._persistant_key_dict:
+                    self._persistant_key_dict[pressed_key] = time.time()
 
             for released_key in self._global_key_released_list:
-                self._persistant_key_set.discard(released_key)
+                self._persistant_key_dict.pop(released_key, None)
 
             self._global_key_released_list.clear()
 
-            self._key_set = self._persistant_key_set.copy()
-            for pressed_key in local_key_pressed_list:
-                self._key_set.add(pressed_key)
+        # Compute the keys that were pressed and released
+        # into the interval between two updates
+        self._key_dict = self._persistant_key_dict.copy()
+        for pressed_key in local_key_pressed_list:
+            if pressed_key not in self._key_dict:
+                self._key_dict[pressed_key] = time.time()
 
 
     def _on_release(self, global_key):
