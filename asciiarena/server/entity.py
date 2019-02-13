@@ -35,6 +35,10 @@ class Entity:
         return self._last_attempt_to_move
 
 
+    def get_last_attempt_to_cast(self):
+        return self._last_attempt_to_cast
+
+
     def set_position(self, position):
         self._position = position
 
@@ -54,10 +58,12 @@ class Entity:
             self._last_attempt_to_move = Direction.as_vector(self._direction)
             self._last_move_attempt_time_stamp = current
 
-        return current == self._last_move_attempt_time_stamp
+        return self._last_attempt_to_move
+
 
     def try_to_cast(self, skill_spec):
-        pass
+        return self._last_attempt_to_cast
+
 
     def clear_last_attemps(self):
         self._last_attempt_to_move = Vec2.zero()

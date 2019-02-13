@@ -4,7 +4,8 @@ from .arena import Arena
 from common.package_queue import PackageQueue, InputPack, OutputPack
 from common.logging import logger
 from common.direction import Direction
-from common import version as Version , message as Message
+from common import version as Version, message as Message
+from common.util.vec2 import Vec2
 
 import enum
 import threading
@@ -107,6 +108,10 @@ class ServerManager(PackageQueue):
 
 
     def _register_player(self, character, endpoint):
+        if 1 > len(character) or -1 == string.ascii_uppercase.find(character):
+            logger.warning("Login attempt with invalid character: {}".format(character))
+            return Message.LoginStatus.INVALID_CHARACTER
+
         status = self._room.add_player(character, endpoint)
 
         if PlayersRoom.ADDITION_SUCCESSFUL == status:
@@ -203,13 +208,24 @@ class ServerManager(PackageQueue):
 
         entity = self._get_entity_from_player(player)
         if entity:
-            tried_to_move = entity.try_to_move(player_movement_message.direction)
-            if tried_to_move:
-                logger.debug("Player '{}' tried to move {}".format(entity.get_character(), entity.get_last_attempt_to_move()))
+            movement = entity.try_to_move(player_movement_message.direction)
+            if movement != Vec2.zero():
+                logger.debug("Player '{}' moves {}".format(entity.get_character(), movement))
 
 
     def _player_cast_request(self, player_cast_message, endpoint):
-        pass
+        player = self._room.get_player_with_endpoint(endpoint)
+        if False: #Check that the skill exists
+            logger.error("Unexpected skill from player '{}'".format(player.get_character()))
+            self._output_queue.put(OutputPack("", endpoint))
+            return
+
+        # Check unexpected
+        entity = self._get_entity_from_player(player)
+        if entity:
+            cast = entity.try_to_cast(player_cast_message.skill_id)
+            if cast:
+                logger.debug("Player '{}' casts {}".format(entity.get_character(), cast))
 
 
     def _get_entity_from_player(self, player):

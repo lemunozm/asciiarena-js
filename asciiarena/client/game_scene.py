@@ -37,8 +37,12 @@ class GameScene:
         player_event_list = []
 
         direction = self._check_player_movement_direction()
-        if Direction.NONE != direction:
+        if direction != Direction.NONE:
             player_event_list.append((GameSceneEvent.PLAYER_MOVEMENT, direction))
+
+        skill_id = self._check_player_cast_skill()
+        if skill_id != 0:
+            player_event_list.append((GameSceneEvent.PLAYER_CAST, skill_id))
 
         return player_event_list
 
@@ -53,6 +57,16 @@ class GameScene:
 
         key = self._keyboard.get_last_key_down(list(movement_keys))
         return movement_keys.get(key, Direction.NONE)
+
+
+    def _check_player_cast_skill(self):
+        skill_keys = {
+            Key.J: 1,
+            Key.K: 2,
+        }
+
+        key = self._keyboard.get_last_key_down(list(skill_keys))
+        return skill_keys.get(key, 0)
 
 
     def render(self, entity_list, spell_list):

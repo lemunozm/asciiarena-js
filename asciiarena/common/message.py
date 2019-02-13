@@ -28,6 +28,8 @@ class LoginStatus:
     RECONNECTION = 2
     ROOM_COMPLETED = 3
     ALREADY_EXISTS = 4
+    INVALID_CHARACTER = 5
+
     def __init__(self, status):
         self.status = status
 
@@ -61,7 +63,7 @@ class PlayerMovement:
 
 
 class PlayerCast:
-    def __init(self, skill_id):
+    def __init__(self, skill_id):
         self.skill_id = skill_id
 
 

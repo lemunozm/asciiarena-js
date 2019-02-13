@@ -8,9 +8,31 @@ import math
 class Key(enum.Enum):
     NONE = enum.auto()
     A = enum.auto()
+    B = enum.auto()
+    C = enum.auto()
     D = enum.auto()
+    E = enum.auto()
+    F = enum.auto()
+    G = enum.auto()
+    H = enum.auto()
+    I = enum.auto()
+    J = enum.auto()
+    K = enum.auto()
+    L = enum.auto()
+    M = enum.auto()
+    N = enum.auto()
+    O = enum.auto()
+    P = enum.auto()
+    Q = enum.auto()
+    R = enum.auto()
     S = enum.auto()
+    T = enum.auto()
+    U = enum.auto()
+    V = enum.auto()
     W = enum.auto()
+    X = enum.auto()
+    Y = enum.auto()
+    Z = enum.auto()
 
 
 class TypeEvent(enum.Enum):
@@ -112,17 +134,61 @@ class Keyboard():
 
 # From curses lib
 _LOCAL_KEY_DICT = {
-    97:  Key.A,
-    100: Key.D,
-    115: Key.S,
-    119: Key.W,
+    ord('a'): Key.A,
+    ord('b'): Key.B,
+    ord('c'): Key.C,
+    ord('d'): Key.D,
+    ord('e'): Key.E,
+    ord('f'): Key.F,
+    ord('g'): Key.G,
+    ord('h'): Key.H,
+    ord('i'): Key.I,
+    ord('j'): Key.J,
+    ord('k'): Key.K,
+    ord('l'): Key.L,
+    ord('m'): Key.M,
+    ord('n'): Key.N,
+    ord('o'): Key.O,
+    ord('p'): Key.P,
+    ord('q'): Key.Q,
+    ord('r'): Key.R,
+    ord('s'): Key.S,
+    ord('t'): Key.T,
+    ord('u'): Key.U,
+    ord('v'): Key.V,
+    ord('w'): Key.W,
+    ord('x'): Key.X,
+    ord('y'): Key.Y,
+    ord('z'): Key.Z,
 }
 
 # From keylogger lib
 _GLOBAL_KEY_DICT = {
     'a': Key.A,
+    'b': Key.B,
+    'c': Key.C,
     'd': Key.D,
+    'e': Key.E,
+    'f': Key.F,
+    'g': Key.G,
+    'h': Key.H,
+    'i': Key.I,
+    'j': Key.J,
+    'k': Key.K,
+    'l': Key.L,
+    'm': Key.M,
+    'n': Key.N,
+    'o': Key.O,
+    'p': Key.P,
+    'q': Key.Q,
+    'r': Key.R,
     's': Key.S,
+    't': Key.T,
+    'u': Key.U,
+    'v': Key.V,
     'w': Key.W,
+    'x': Key.X,
+    'y': Key.Y,
+    'z': Key.Z,
 }
 

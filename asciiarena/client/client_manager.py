@@ -65,7 +65,7 @@ class ClientManager(MessageQueue):
 
     def _login_request(self):
         while True:
-            if "" == self._character:
+            if not self._character:
                 self._character = ClientManager._ask_user_for_character()
 
             login_message = Message.Login(self._character)
@@ -73,7 +73,20 @@ class ClientManager(MessageQueue):
 
             login_status_message = self._receive_message([Message.LoginStatus])
 
-            if Message.LoginStatus.ALREADY_EXISTS == login_status_message.status:
+            if Message.LoginStatus.LOGGED == login_status_message.status:
+                print("      Logged with character '" + self._character + "'.")
+                return True
+
+            elif Message.LoginStatus.RECONNECTION == login_status_message.status:
+                print("      Reconnected with character '" + self._character + "'.")
+                return True
+
+            elif Message.LoginStatus.INVALID_CHARACTER == login_status_message.status:
+                print("      Character '" + self._character + "' is invalid.")
+                self._character = ""
+                continue
+
+            elif Message.LoginStatus.ALREADY_EXISTS == login_status_message.status:
                 print("      Character '" + self._character + "' already exists.")
                 self._character = ""
                 continue
@@ -81,14 +94,6 @@ class ClientManager(MessageQueue):
             elif Message.LoginStatus.ROOM_COMPLETED == login_status_message.status:
                 print("      Sorry, the game is already started. Try again later.")
                 return False
-
-            elif Message.LoginStatus.LOGGED == login_status_message.status:
-                print("      Logged with character '" + self._character + "'.")
-                return True
-
-            elif Message.LoginStatus.RECONNECTION == login_status_message.status:
-                print("      Reconnected with character '" + self._character + "'.")
-                return True
 
 
     def _wait_game(self):
@@ -110,13 +115,14 @@ class ClientManager(MessageQueue):
 
                 event_list = game_scene.compute_events()
 
-                for kind, event in event_list:
+                for kind, info in event_list:
                     if kind == GameSceneEvent.PLAYER_MOVEMENT:
-                        player_movement_message = Message.PlayerMovement(event)
+                        player_movement_message = Message.PlayerMovement(info)
                         self._send_message(player_movement_message)
 
                     elif kind == GameSceneEvent.PLAYER_CAST:
-                        pass
+                        player_cast_message = Message.PlayerCast(info)
+                        self._send_message(player_cast_message)
 
                 screen.clear()
                 game_scene.render(frame_message.entity_list, [])
