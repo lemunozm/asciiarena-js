@@ -1,41 +1,5 @@
 from enum import Enum
 
-class Room:
-    ADDITION_SUCCESSFUL = 1
-    ADDITION_ERR_COMPLETE = 2
-    ADDITION_ERR_ALREADY_EXISTS = 3
-
-    def __init__(self, size):
-        self._participant_dict = {}
-        self._size = size
-
-
-    def add_participant(self, name, participant):
-        if self.is_complete():
-            return Room.ADDITION_ERR_COMPLETE
-        if self.get_participant(name):
-            return Room.ADDITION_ERR_ALREADY_EXISTS
-
-        self._participant_dict[name] = participant
-        return Room.ADDITION_SUCCESSFUL
-
-
-    def is_complete(self):
-        return len(self._participant_dict) == self._size
-
-
-    def get_participant(self, name):
-        return self._participant_dict.get(name, None)
-
-
-    def get_participant_list(self):
-        return self._participant_dict.values()
-
-
-    def get_size(self):
-        return self._size
-
-
 class Player:
     def __init__(self, character, endpoint):
         self._character = character
@@ -59,33 +23,63 @@ class Player:
         return self._endpoint
 
 
-class PlayersRoom(Room):
+class Room:
+    ADDITION_SUCCESSFUL = 1
+    ADDITION_ERR_COMPLETE = 2
+    ADDITION_ERR_ALREADY_EXISTS = 3
     ADDITION_REUSE = 4
+
     def __init__(self, size, points_to_win):
-        Room.__init__(self, size)
+        self._player_dict = {}
+        self._size = size
         self._points_to_win = points_to_win
 
 
     def add_player(self, character, endpoint):
-        player = self.get_participant(character)
-        if player and None == player.get_endpoint():
+        player = self.get_player(character)
+        if player:
+            if None == player.get_endpoint():
                 player.set_endpoint(endpoint)
-                return PlayersRoom.ADDITION_REUSE
+                return Room.ADDITION_REUSE
+
+            else:
+                return Room.ADDITION_ERR_ALREADY_EXISTS
+
+        if self.is_complete():
+            return Room.ADDITION_ERR_COMPLETE
+
         else:
             new_player = Player(character, endpoint)
-            return self.add_participant(character, new_player)
+            self._player_dict[character] = new_player
+            return Room.ADDITION_SUCCESSFUL
+
+
+    def is_complete(self):
+        return len(self._player_dict) == self._size
+
+
+    def get_player(self, character):
+        return self._player_dict.get(character, None)
+
+
+    def get_player_list(self):
+        return self._player_dict.values()
+
+
+    def get_size(self):
+        return self._size
 
 
     def get_character_list(self):
         character_list = []
-        for character in self._participant_dict.keys():
+        for character in self._player_dict.keys():
             character_list.append(character)
         return character_list
 
 
     def get_winner_list(self):
         winner_list = []
-        for player in self._participant_dict.values():
+        for player in self._player_dict.values():
             if player.get_points() >= self._points_to_win:
                 winner_list.append(player)
         return winner_list
@@ -93,7 +87,7 @@ class PlayersRoom(Room):
 
     def get_endpoint_list(self):
         endpoint_list = []
-        for player in self._participant_dict.values():
+        for player in self._player_dict.values():
             if player.get_endpoint() != None:
                 endpoint_list.append(player.get_endpoint())
         return endpoint_list
@@ -104,7 +98,7 @@ class PlayersRoom(Room):
 
 
     def get_player_with_endpoint(self, endpoint):
-        for player in self._participant_dict.values():
+        for player in self._player_dict.values():
             if player.get_endpoint() == endpoint:
                 return player
         return None
@@ -112,7 +106,7 @@ class PlayersRoom(Room):
 
     def get_character_list_with_endpoints(self):
         character_list = []
-        for player in self._participant_dict.values():
+        for player in self._player_dict.values():
             if player.get_endpoint() != None:
                 character_list.append(player.get_character())
 

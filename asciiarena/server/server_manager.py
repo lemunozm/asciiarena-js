@@ -1,4 +1,4 @@
-from .room import PlayersRoom
+from .room import Room
 from .arena import Arena
 
 from common.package_queue import PackageQueue, InputPack, OutputPack
@@ -26,7 +26,7 @@ class ServerManager(PackageQueue):
     def __init__(self, players, points, arena_size, seed):
         PackageQueue.__init__(self)
         self._active = True
-        self._room = PlayersRoom(players, points)
+        self._room = Room(players, points)
         self._arena_size = arena_size
         self._seed = seed
         self._arena = None
@@ -114,19 +114,19 @@ class ServerManager(PackageQueue):
 
         status = self._room.add_player(character, endpoint)
 
-        if PlayersRoom.ADDITION_SUCCESSFUL == status:
+        if Room.ADDITION_SUCCESSFUL == status:
             logger.info("Player '{}' registered successfully".format(character))
             return Message.LoginStatus.LOGGED
 
-        elif PlayersRoom.ADDITION_REUSE == status:
+        elif Room.ADDITION_REUSE == status:
             logger.info("Player '{}' reconnected".format(character))
             return Message.LoginStatus.RECONNECTION
 
-        elif PlayersRoom.ADDITION_ERR_COMPLETE == status:
+        elif Room.ADDITION_ERR_COMPLETE == status:
             logger.debug("Player '{}' tried to register: room complete".format(character))
             return Message.LoginStatus.ROOM_COMPLETED
 
-        elif PlayersRoom.ADDITION_ERR_ALREADY_EXISTS == status:
+        elif Room.ADDITION_ERR_ALREADY_EXISTS == status:
             logger.debug("Player '{}' tried to register: already exists".format(character))
             return Message.LoginStatus.ALREADY_EXISTS
 
@@ -209,8 +209,8 @@ class ServerManager(PackageQueue):
         entity = self._get_entity_from_player(player)
         if entity:
             movement = entity.try_to_move(player_movement_message.direction)
-            if movement != Vec2.zero():
-                logger.debug("Player '{}' moves {}".format(entity.get_character(), movement))
+            if movement:
+                logger.debug("Player '{}' moves {}".format(entity.get_character(), player_movement_message.direction))
 
 
     def _player_cast_request(self, player_cast_message, endpoint):
@@ -225,7 +225,7 @@ class ServerManager(PackageQueue):
         if entity:
             cast = entity.try_to_cast(player_cast_message.skill_id)
             if cast:
-                logger.debug("Player '{}' casts {}".format(entity.get_character(), cast))
+                logger.debug("Player '{}' casts {}".format(entity.get_character(), player_cast_message.skill_id))
 
 
     def _get_entity_from_player(self, player):

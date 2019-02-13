@@ -30,6 +30,8 @@ class GameScene:
         self._ground, self._ground_dimension = GameScene._init_ground(ground, arena_size)
         self._seed = seed
 
+        self._last_skill_key = Key.NONE
+
 
     def compute_events(self):
         self._keyboard.update_key_events()
@@ -66,7 +68,11 @@ class GameScene:
         }
 
         key = self._keyboard.get_last_key_down(list(skill_keys))
-        return skill_keys.get(key, 0)
+        if key != self._last_skill_key:
+            self._last_skill_key = key
+            return skill_keys.get(key, 0)
+
+        return 0
 
 
     def render(self, entity_list, spell_list):
