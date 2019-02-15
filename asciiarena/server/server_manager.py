@@ -17,6 +17,7 @@ WAITING_TO_INIT_ARENA = 1.0 #seconds
 FRAME_MAX_RATE = 60 #per second
 RANDOM_SEED_SIZE = 6
 
+
 class ServerSignal(enum.Enum):
     NEW_ARENA_SIGNAL = enum.auto()
     COMPUTE_FRAME_SIGNAL = enum.auto()
@@ -136,7 +137,15 @@ class ServerManager(PackageQueue):
         logger.info("Load arena - size: {}, seed: {}".format(self._arena_size, seed))
 
         pre_time_stamp = time.time()
-        self._arena = Arena(self._arena_size, seed, self._room.get_character_list())
+
+        self._arena = Arena(self._arena_size, seed)
+
+        position_list = self._arena.compute_player_origins(self._room.get_size())
+
+        for i, player in enumerate(self._room.get_player_list()):
+            control = self._arena.create_player(player.get_character(), position_list[i])
+            player.set_control(control)
+
         post_time_stamp = time.time()
 
         arena_info_message = Message.ArenaInfo(seed, self._arena.get_ground().get_grid())
@@ -147,6 +156,7 @@ class ServerManager(PackageQueue):
 
 
     def _new_arena_signal(self):
+        # We run in another thread because creating an Arena is expensive and could block the server.
         thread = threading.Thread(target = self.new_arena)
         thread.daemon = True
         thread.start()
@@ -206,11 +216,9 @@ class ServerManager(PackageQueue):
             self._output_queue.put(OutputPack("", endpoint))
             return
 
-        entity = self._get_entity_from_player(player)
-        if entity:
-            movement = entity.try_to_move(player_movement_message.direction)
-            if movement:
-                logger.debug("Player '{}' moves {}".format(entity.get_character(), player_movement_message.direction))
+        control = player.get_control()
+        if control:
+            control.move(player_movement_message.direction)
 
 
     def _player_cast_request(self, player_cast_message, endpoint):
@@ -220,20 +228,9 @@ class ServerManager(PackageQueue):
             self._output_queue.put(OutputPack("", endpoint))
             return
 
-        # Check unexpected
-        entity = self._get_entity_from_player(player)
-        if entity:
-            cast = entity.try_to_cast(player_cast_message.skill_id)
-            if cast:
-                logger.debug("Player '{}' casts {}".format(entity.get_character(), player_cast_message.skill_id))
-
-
-    def _get_entity_from_player(self, player):
-        if player:
-            for entity in self._arena.get_entity_list():
-                if player.get_character() == entity.get_character():
-                    return entity
-        return None
+        control = player.get_control()
+        if control:
+            control.cast(player_cast_message.skill_id)
 
 
     @staticmethod

@@ -1,20 +1,30 @@
 from .ground import Ground
 from .entity import Entity
+from .control import ArenaState, PlayerControl
 
 from common.direction import Direction
-from common.util.vec2 import Vec2
 
 class Arena:
-    def __init__(self, dimension, seed, character_list):
+    def __init__(self, dimension, seed):
         self._ground = Ground.fromSeed(dimension, seed)
         self._entity_list = []
         self._spell_list = []
+        self._step = 0
 
-        position_list = self._ground.find_separated_positions(len(character_list), 5) # TODO: check the minimum distance
-        for i, character in enumerate(character_list):
-            entity = Entity(character, position_list[i])
-            entity.set_direction(Direction.DOWN)
-            self._entity_list.append(entity)
+
+    def compute_player_origins(self, size):
+        return self._ground.find_separated_positions(size, 5) # TODO: check the minimum distance
+
+
+    def create_player(self, character, position):
+        entity = Entity(character, position)
+        entity.set_direction(Direction.DOWN)
+
+        control = PlayerControl(entity)
+        entity.set_control(control)
+
+        self._entity_list.append(entity)
+        return control
 
 
     def get_ground(self):
@@ -29,55 +39,20 @@ class Arena:
         return False
 
 
-    def entity_at(self, position):
-        for entity in self._entity_list:
-            if entity.get_position() == position:
-                return entity
-        return None
+    def get_step_number():
+        return self._step
 
 
     def update(self):
-        # Check entity movements
-        for entity in self._entity_list:
-            if entity.get_last_attempt_to_move() != Vec2.zero():
-                expected_position = entity.get_position() + entity.get_last_attempt_to_move()
-                if not self._ground.is_blocked(expected_position) and not self.entity_at(expected_position):
-                    entity.set_position(expected_position)
+        state = ArenaState(self._step, self._ground, self._entity_list.copy(), self._spell_list.copy())
 
-        """
-        # Check spells movements
-        for spell in self._spell_list:
-            if spell.get_last_attempt_to_move() != Vec2.zero():
-                expected_position = spell.get_position() + spell.get_last_attempt_to_move()
-                if not self._ground.is_blocked(expected_position) and not self.entity_at(expected_position):
-                    spell.set_position(expected_position)
+        for controllable in self._entity_list + self._spell_list:
+            control = controllable.get_control()
+            if control:
+                control.update(state)
 
-        # Check entity cast
-        for entity in self._entity_list:
-            spell = entity.get_last_attempt_to_cast()
-            if spell:
-                self._spell_list.append(spell)
+        self._entity_list = state.get_entity_list()
+        self._spell_list = state.get_spell_list()
 
-        # Check spells actions
-        for spell in self._spell_list:
-            if True: #time event
-                pass
+        self._step += 1
 
-            elif self._ground.is_blocked(spell.get_position()):
-                spell.wall_collision()
-
-            else:
-                entity = self.entity_at(expected_position)
-                if entity:
-                    spell.entity_collision(entity)
-
-        """
-        # Clear entity last actions
-        for entity in self._entity_list:
-            entity.clear_last_attemps()
-
-        """
-        # Clear spell last actions
-        for spell in self._spell_list:
-            spell.clear_last_attemps()
-        """

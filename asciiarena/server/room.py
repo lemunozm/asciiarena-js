@@ -4,15 +4,12 @@ class Player:
     def __init__(self, character, endpoint):
         self._character = character
         self._endpoint = endpoint
+        self._control = None
         self._points = 0
 
 
     def get_character(self):
         return self._character
-
-
-    def get_points(self):
-        return self._points
 
 
     def set_endpoint(self, endpoint):
@@ -21,6 +18,18 @@ class Player:
 
     def get_endpoint(self):
         return self._endpoint
+
+
+    def get_control(self):
+        return self._control
+
+
+    def set_control(self, control):
+        self._control = control
+
+
+    def get_points(self):
+        return self._points
 
 
 class Room:
