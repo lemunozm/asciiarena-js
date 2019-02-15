@@ -25,7 +25,7 @@ class Entity(Mobile):
 
 
     def cast(self, skill):
-        self._last_skill = skill
+        return True
 
 
     def add_buff(self, buff):

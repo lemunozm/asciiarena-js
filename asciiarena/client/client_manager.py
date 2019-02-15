@@ -10,7 +10,7 @@ import time
 
 class ClientManager(MessageQueue):
     def __init__(self, character):
-        MessageQueue.__init__(self)
+        super().__init__()
         self._character = character
         self._character_list = []
         self._players = 0

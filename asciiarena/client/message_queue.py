@@ -7,7 +7,7 @@ class ReceiveMessageError(Exception):
 class MessageQueue(PackageQueue):
 
     def __init__(self):
-        PackageQueue.__init__(self)
+        super().__init__()
 
     def _attach_endpoint(self, endpoint):
         self._endpoint = endpoint

@@ -40,13 +40,16 @@ class ArenaState:
 
 
 class Control():
+    def __init__(self, controllable):
+        self._controllable = controllable
+
     def update(self, state):
         pass
 
 
 class MobileControl(Control):
     def __init__(self, mobile):
-        self._controllable = mobile
+        super().__init__(mobile)
         self._last_movement_time_stamp = 0
 
 
@@ -72,7 +75,7 @@ class MobileControl(Control):
 
 class EntityControl(MobileControl):
     def __init__(self, entity):
-        MobileControl.__init__(self, entity)
+        super().__init__(entity)
 
 
     def update(self, state):
@@ -81,7 +84,7 @@ class EntityControl(MobileControl):
 
 class SpellControl(MobileControl):
     def __init__(self, spell):
-        MobileControl.__init__(self, spell)
+        super().__init__(spell)
 
 
     def update(self, state):
@@ -90,8 +93,8 @@ class SpellControl(MobileControl):
 
 class PlayerControl(MobileControl):
     def __init__(self, entity):
-        EntityControl.__init__(self, entity)
-        self._last_cast_skill_action = None
+        super().__init__(entity)
+        self._last_cast_skill = None
 
 
     def move(self, direction):
@@ -102,8 +105,7 @@ class PlayerControl(MobileControl):
 
 
     def cast(self, skill):
-        self._last_cast_skill_action = skill
-        logger.debug("Player '{}' casts {}".format(self._controllable.get_character(), skill))
+        self._last_cast_skill = skill
 
 
     def update(self, state):
@@ -111,9 +113,14 @@ class PlayerControl(MobileControl):
 
         super().update(state)
         self._controllable.walk(False)
+        if self._last_cast_skill != None:
+            spell = self._controllable.cast(self._last_cast_skill)
+            if spell:
+                logger.debug("Player '{}' at step {} casts {}".format(self._controllable.get_character(), state.get_step(), self._last_cast_skill))
+            self._last_cast_skill = None
 
         new_position = self._controllable.get_position()
         if previous_position != new_position:
-            logger.debug("Player '{}' moves {}".format(self._controllable.get_character(), new_position - previous_position))
+            logger.debug("Player '{}' at step {} moves {}".format(self._controllable.get_character(), state.get_step(), new_position - previous_position))
 
 
