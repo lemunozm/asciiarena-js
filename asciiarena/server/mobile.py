@@ -8,7 +8,7 @@ class Mobile:
         self._position = position
         self._direction = Direction.NONE
         self._speed = DEFAULT_SPEED
-        self._walking = False
+        self._moving = False
 
     def get_position(self):
         return self._position
@@ -22,8 +22,8 @@ class Mobile:
         return self._speed
 
 
-    def is_walking(self):
-        return self._walking
+    def is_moving(self):
+        return self._moving
 
 
     def set_direction(self, direction):
@@ -38,5 +38,6 @@ class Mobile:
         self._position += displacement
 
 
-    def walk(self, value):
-        self._walking = value
+    def enable_moving(self, value):
+        self._moving = value
+

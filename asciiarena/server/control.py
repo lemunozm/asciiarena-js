@@ -53,8 +53,8 @@ class MobileControl(Control):
         self._last_movement_time_stamp = 0
 
 
-    def _compute_walking(self):
-        if self._controllable.is_walking():
+    def _compute_movement(self):
+        if self._controllable.is_moving():
             current = time.time()
             if current - self._last_movement_time_stamp > 1.0 / self._controllable.get_speed():
                 self._last_movement_time_stamp = current
@@ -66,7 +66,7 @@ class MobileControl(Control):
     def update(self, state):
         super().update(state)
 
-        movement = self._compute_walking()
+        movement = self._compute_movement()
         if movement != Vec2.zero():
             new_position = self._controllable.get_position() + movement
             if not state.get_ground().is_blocked(new_position) and not state.get_entity_at(new_position):
@@ -98,9 +98,9 @@ class PlayerControl(MobileControl):
 
 
     def move(self, direction):
-        self._controllable.set_direction(direction)
-        self._controllable.walk(True)
+        self._controllable.enable_moving(True)
         if direction != self._controllable.get_direction():
+            self._controllable.set_direction(direction)
             self._last_movement_time_stamp = 0
 
 
@@ -112,7 +112,7 @@ class PlayerControl(MobileControl):
         previous_position = self._controllable.get_position()
 
         super().update(state)
-        self._controllable.walk(False)
+        self._controllable.enable_moving(False)
         if self._last_cast_skill != None:
             spell = self._controllable.cast(self._last_cast_skill)
             if spell:
