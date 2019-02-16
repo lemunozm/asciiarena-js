@@ -3,23 +3,18 @@
 Arena *-left-> Ground
 Arena *--> "0..n" Entity
 Arena *--> "0..n" Spell
-
-Mobile <|-- Entity
-Mobile <|-- Spell
-Entity -->"0..n" Skill
-Entity *--"0..n" Buff
-
-Control <|-- MobileControl
-MobileControl <|-- EntityControl
-MobileControl <|-- SpellControl
-EntityControl <|-- PlayerControl
-
-MobileControl o-left- Mobile
-Entity o-right- EntityControl
-Spell *-right- SpellControl
-
-Control -left-> ArenaState
 Arena -right-> ArenaState
+
+Mobile <|-right- Entity
+Mobile <|-left- Spell
+Entity o-- "0..n" Skill
+Entity *-- "0..n" Buff
+
+EntityControl <|-- PlayerControl
+EntityControl -left-> ArenaState
+
+Entity o-right-* EntityControl
+
 
 Skill o-- SkillSpec
 Spell o-- SpellSpec
@@ -31,12 +26,12 @@ SkillSpec o-- SpellSpec
 SkillSpec o-- BuffSpec
 SpellSpec o-right- BuffSpec
 
-class Mobile {
+abstract Mobile {
     - position @set @get
     - direction @set @get
     - speed @set @get
     - moving @set @get
-    + move(bool)
+    + update_movement(ground, mobile_list)
 }
 
 class Entity {
@@ -44,10 +39,12 @@ class Entity {
     - skill_list @get
     - buff_list @add @remove @get
     + Spell cast(skill)
+    + update(state) = 0
 }
 
-class Spell {
+abstract Spell {
     - control @get
+    + update(state) = 0
 }
 
 class ArenaState {
@@ -57,26 +54,13 @@ class ArenaState {
     - spell_list @get @add @remove
 }
 
-abstract Control {
+abstract EntityControl {
+    # entity
     + update(state) = 0
 }
 
-class MobileControl {
-    # controllable
-    + update(state)
-}
-
-class EntityControl {
-    + update(state)
-}
-
-class SpellControl {
-    + update(state)
-}
-
 class PlayerControl {
-    - last_movement_action
-    - last_cast_skill_action
+    - last_skill_action
     + update(state)
     + move(direction)
     + cast(skill)

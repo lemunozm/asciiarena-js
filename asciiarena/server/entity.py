@@ -35,3 +35,8 @@ class Entity(Mobile):
     def remove_buff(self, buff):
         pass
 
+
+    def update(self, state):
+        super().update_movement(state.get_ground(), state.get_entity_list())
+        if self._control:
+            self._control.update(state)

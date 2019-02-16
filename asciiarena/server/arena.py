@@ -46,10 +46,8 @@ class Arena:
     def update(self):
         state = ArenaState(self._step, self._ground, self._entity_list.copy(), self._spell_list.copy())
 
-        for controllable in self._entity_list + self._spell_list:
-            control = controllable.get_control()
-            if control:
-                control.update(state)
+        for updatable in self._entity_list + self._spell_list:
+            updatable = updatable.update(state)
 
         self._entity_list = state.get_entity_list()
         self._spell_list = state.get_spell_list()

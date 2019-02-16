@@ -1,14 +1,18 @@
 from common.direction import Direction
+from common.util.vec2 import Vec2
+
+import time
 
 DEFAULT_SPEED = 8
 
+
 class Mobile:
     def __init__(self, position):
-        self._control = None
         self._position = position
         self._direction = Direction.NONE
         self._speed = DEFAULT_SPEED
-        self._moving = False
+        self._has_movement = False
+        self._last_movement_time_stamp = 0
 
     def get_position(self):
         return self._position
@@ -22,8 +26,8 @@ class Mobile:
         return self._speed
 
 
-    def is_moving(self):
-        return self._moving
+    def has_movement(self):
+        return self._has_movement
 
 
     def set_direction(self, direction):
@@ -38,6 +42,32 @@ class Mobile:
         self._position += displacement
 
 
-    def enable_moving(self, value):
-        self._moving = value
+    def enable_movement(self, value):
+        self._has_movement = value
+
+
+    def reset_movement_time_stamp(self):
+        self._last_movement_time_stamp = 0
+
+
+    def _compute_movement(self):
+        if self._has_movement:
+            current = time.time()
+            if current - self._last_movement_time_stamp > 1.0 / self._speed:
+                self._last_movement_time_stamp = current
+                return Direction.as_vector(self._direction)
+
+        return Vec2.zero()
+
+    def update_movement(self, ground, mobile_list):
+        movement = self._compute_movement()
+
+        if movement != Vec2.zero():
+            new_position = self._position + movement
+            for mobile in mobile_list:
+                if mobile.get_position() == new_position:
+                    return
+
+            if not ground.is_blocked(new_position):
+                self._position = new_position
 
