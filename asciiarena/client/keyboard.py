@@ -63,7 +63,7 @@ class Keyboard():
     def is_key_list_down(self, key_list, default = 0):
         time_stamp_list = []
         for key in key_list:
-            time_stamp_list.append(self._key_dict.get(key, default))
+            time_stamp_list.append(self.is_key_down(key, default))
 
         return time_stamp_list
 
@@ -72,18 +72,18 @@ class Keyboard():
         time_stamp_list = self.is_key_list_down(key_list, math.inf)
         min_time = min(time_stamp_list)
         if min_time < math.inf:
-            return key_list[time_stamp_list.index(min_time)]
+            return key_list[time_stamp_list.index(min_time)], min_time
 
-        return Key.NONE
+        return Key.NONE, 0
 
 
     def get_last_key_down(self, key_list):
         time_stamp_list = self.is_key_list_down(key_list)
         max_time = max(time_stamp_list)
         if max_time > 0:
-            return key_list[time_stamp_list.index(max_time)]
+            return key_list[time_stamp_list.index(max_time)], max_time
 
-        return Key.NONE
+        return Key.NONE, 0
 
 
     def update_key_events(self):
@@ -103,12 +103,7 @@ class Keyboard():
 
             self._global_key_released_list.clear()
 
-        # Compute the keys that were pressed and released
-        # into the interval between two updates
         self._key_dict = self._persistant_key_dict.copy()
-        for pressed_key in local_key_pressed_list:
-            if pressed_key not in self._key_dict:
-                self._key_dict[pressed_key] = time.time()
 
 
     def _on_release(self, global_key):

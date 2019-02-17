@@ -9,9 +9,6 @@ from common.terrain import Terrain
 import time
 import enum
 
-VISUAL_FILL_BORDER = True
-VISUAL_FILL_WALLS = True
-
 
 class GameSceneEvent(enum.Enum):
     PLAYER_MOVEMENT = enum.auto()
@@ -30,7 +27,7 @@ class GameScene:
         self._ground, self._ground_dimension = GameScene._init_ground(ground, arena_size)
         self._seed = seed
 
-        self._last_skill_key = Key.NONE
+        self._last_time_stamp_skill_key = 0
 
 
     def compute_events(self):
@@ -57,7 +54,7 @@ class GameScene:
             Key.D: Direction.RIGHT,
         }
 
-        key = self._keyboard.get_last_key_down(list(movement_keys))
+        key, time_stamp = self._keyboard.get_last_key_down(list(movement_keys))
         return movement_keys.get(key, Direction.NONE)
 
 
@@ -67,9 +64,9 @@ class GameScene:
             Key.K: 2,
         }
 
-        key = self._keyboard.get_last_key_down(list(skill_keys))
-        if key != self._last_skill_key:
-            self._last_skill_key = key
+        key, time_stamp = self._keyboard.get_last_key_down(list(skill_keys))
+        if key != Key.NONE and time_stamp > self._last_time_stamp_skill_key:
+            self._last_time_stamp_skill_key = time_stamp
             return skill_keys.get(key, 0)
 
         return 0
@@ -86,9 +83,7 @@ class GameScene:
         pencil.set_color(33)
         pencil.set_style(TermPencil.Style.DIM)
 
-        wall_list = [Terrain.BORDER_WALL, Terrain.WALL]
-        if VISUAL_FILL_WALLS:
-            wall_list.append(Terrain.WALL_SEED)
+        wall_list = [Terrain.BORDER_WALL, Terrain.WALL, Terrain.WALL_SEED]
 
         line_table = BoxLine.parse(wall_list, self._ground, self._ground_dimension)
 
@@ -131,9 +126,8 @@ class GameScene:
 
     @staticmethod
     def _init_ground(ground, ground_size):
-        terrain_base = Terrain.BORDER_WALL if VISUAL_FILL_BORDER else [Terrain.EMPTY]
         extended_ground_size = ground_size + 2
-        extended_ground = [terrain_base] * (extended_ground_size * extended_ground_size)
+        extended_ground = [Terrain.BORDER_WALL] * (extended_ground_size * extended_ground_size)
 
         for y in range(0, ground_size):
             for x in range(0, ground_size):

@@ -178,9 +178,10 @@ class ServerManager(PackageQueue):
         if not self._arena.has_finished():
             current_time = time.time()
             last_frame_time = current_time - self._last_frame_time_stamp
-            self._last_frame_time_stamp = current_time
             last_computation_time = last_frame_time - self._last_waiting_time
+            self._last_frame_time_stamp = current_time
             self._last_waiting_time = max(0, 1 / FRAME_MAX_RATE - last_computation_time)
+
             self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, self._last_waiting_time)
 
         elif [] == self._room.get_winner_list():
