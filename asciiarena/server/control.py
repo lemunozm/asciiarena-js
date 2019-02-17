@@ -6,40 +6,14 @@ from common.logging import logger
 from common.direction import Direction
 from common.util.vec2 import Vec2
 
-class ArenaState:
-    def __init__(self, step, ground, entity_list, spell_list):
-        self._step = step
-        self._ground = ground
-        self._entity_list = entity_list
-        self._spell_list = spell_list
-
-    def get_step(self):
-        return self._step
-
-
-    def get_ground(self):
-        return self._ground
-
-
-    def get_entity_list(self):
-        return self._entity_list
-
-
-    def get_spell_list(self):
-        return self._spell_list
-
-
-    def get_entity_at(self, position):
-        for entity in self._entity_list:
-            if entity.get_position() == position:
-                return entity
-
-        return None
-
-
 class EntityControl():
     def __init__(self, entity):
         self._entity = entity
+
+
+    def get_entity():
+        self._entity
+
 
     def update(self, state):
         raise NotImplementedError()

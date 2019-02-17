@@ -1,12 +1,14 @@
 from .ground import Ground
 from .entity import Entity
-from .control import ArenaState, PlayerControl
+from .control import PlayerControl
+from .arena_element import ArenaState
 
 from common.direction import Direction
 
 class Arena:
     def __init__(self, dimension, seed):
         self._ground = Ground.fromSeed(dimension, seed)
+        self._player_list = []
         self._entity_list = []
         self._spell_list = []
         self._step = 0
@@ -24,6 +26,7 @@ class Arena:
         entity.set_control(control)
 
         self._entity_list.append(entity)
+        self._player_list.append(entity)
         return control
 
 
@@ -36,7 +39,7 @@ class Arena:
 
 
     def has_finished(self):
-        return False
+        return False #Check the player_list
 
 
     def get_step_number():
@@ -46,11 +49,11 @@ class Arena:
     def update(self):
         state = ArenaState(self._step, self._ground, self._entity_list.copy(), self._spell_list.copy())
 
-        for updatable in self._entity_list + self._spell_list:
-            updatable = updatable.update(state)
+        for arena_element in self._entity_list + self._spell_list:
+            arena_element.update(state)
 
-        self._entity_list = state.get_entity_list()
-        self._spell_list = state.get_spell_list()
+        self._entity_list = [entity for entity in state.get_entity_list() if not entity.must_be_removed()]
+        self._spell_list = [spell for spell in state.get_spell_list() if not spell.must_be_removed()]
 
         self._step += 1
 

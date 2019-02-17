@@ -5,16 +5,17 @@ Arena *--> "0..n" Entity
 Arena *--> "0..n" Spell
 Arena -right-> ArenaState
 
-Mobile <|-right- Entity
-Mobile <|-left- Spell
+Mobile <|-- ArenaElement
+ArenaElement <|-- Entity
+ArenaElement <|-- Spell
 Entity o-- "0..n" Skill
 Entity *-- "0..n" Buff
+ArenaElement -right-> ArenaState
 
 EntityControl <|-- PlayerControl
 EntityControl -left-> ArenaState
 
 Entity o-right-* EntityControl
-
 
 Skill o-- SkillSpec
 Spell o-- SpellSpec
@@ -34,6 +35,12 @@ abstract Mobile {
     + update_movement(ground, mobile_list)
 }
 
+abstract ArenaElement {
+    - remove
+    + must_be_removed()
+    + update(state) = 0
+}
+
 class Entity {
     - control @set @get
     - skill_list @get
@@ -50,8 +57,8 @@ abstract Spell {
 class ArenaState {
     - step @get
     - ground @get
-    - entity_list @get @add @remove
-    - spell_list @get @add @remove
+    - entity_list @get @add
+    - spell_list @get @add
 }
 
 abstract EntityControl {

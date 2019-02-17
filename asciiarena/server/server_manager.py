@@ -177,36 +177,15 @@ class ServerManager(PackageQueue):
             current_time = time.time()
             last_frame_time = current_time - self._last_frame_time_stamp
             self._last_frame_time_stamp = current_time
-            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 2 / FRAME_MAX_RATE - last_frame_time)
+            time_to_wait = 1 / FRAME_MAX_RATE - (last_frame_time - 1 / FRAME_MAX_RATE)
+            print(time_to_wait)
+            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, time_to_wait)
 
         elif [] == self._room.get_winner_list():
             self._server_signal(ServerSignal.NEW_ARENA_SIGNAL, 0)
 
         else:
             pass #TODO: reset signal => clear the room
-
-
-    def _lost_connection(self, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
-        if player:
-            player.set_endpoint(None)
-            logger.info("Player '{}' disconnected".format(player.get_character()))
-            self._log_players()
-
-
-    def _server_signal(self, signal, time):
-        queue_signal = lambda: self._input_queue.put(InputPack(signal, None))
-        if time > 0:
-            timer = threading.Timer(time, queue_signal)
-            timer.daemon = True
-            timer.start()
-        else:
-            queue_signal()
-
-
-    def _log_players(self):
-        connected_players = self._room.get_character_list_with_endpoints()
-        logger.info("Logged players: {} - Connected players: {}".format(self._room.get_character_list(), connected_players))
 
 
     def _player_movement_request(self, player_movement_message, endpoint):
@@ -231,6 +210,29 @@ class ServerManager(PackageQueue):
         control = player.get_control()
         if control:
             control.cast(player_cast_message.skill_id)
+
+
+    def _lost_connection(self, endpoint):
+        player = self._room.get_player_with_endpoint(endpoint)
+        if player:
+            player.set_endpoint(None)
+            logger.info("Player '{}' disconnected".format(player.get_character()))
+            self._log_players()
+
+
+    def _server_signal(self, signal, time):
+        queue_signal = lambda: self._input_queue.put(InputPack(signal, None))
+        if time > 0:
+            timer = threading.Timer(time, queue_signal)
+            timer.daemon = True
+            timer.start()
+        else:
+            queue_signal()
+
+
+    def _log_players(self):
+        connected_players = self._room.get_character_list_with_endpoints()
+        logger.info("Logged players: {} - Connected players: {}".format(self._room.get_character_list(), connected_players))
 
 
     @staticmethod

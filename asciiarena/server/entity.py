@@ -1,8 +1,9 @@
 from .mobile import Mobile
+from .arena_element import ArenaElement
 
-class Entity(Mobile):
+class Entity(ArenaElement):
     def __init__(self, character, position):
-        Mobile.__init__(self, position)
+        super().__init__(position)
         self._control = None
         self._character = character
         self._buff_list = []
