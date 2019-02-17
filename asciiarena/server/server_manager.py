@@ -31,7 +31,9 @@ class ServerManager(PackageQueue):
         self._arena_size = arena_size
         self._seed = seed
         self._arena = None
+
         self._last_frame_time_stamp = 0
+        self._last_waiting_time = 0
 
         logger.info("Required players: {} - Points to win: {}".format(players, points))
 
@@ -97,7 +99,7 @@ class ServerManager(PackageQueue):
             self._output_queue.put(OutputPack(players_info_message, self._room.get_endpoint_list()))
 
             if self._room.is_complete():
-                self._input_queue.put(InputPack(ServerSignal.NEW_ARENA_SIGNAL, None))
+                self._server_signal(ServerSignal.NEW_ARENA_SIGNAL, 0)
 
         elif Message.LoginStatus.RECONNECTION == status:
             players_info_message = Message.PlayersInfo(self._room.get_character_list())
@@ -177,9 +179,9 @@ class ServerManager(PackageQueue):
             current_time = time.time()
             last_frame_time = current_time - self._last_frame_time_stamp
             self._last_frame_time_stamp = current_time
-            time_to_wait = 1 / FRAME_MAX_RATE - (last_frame_time - 1 / FRAME_MAX_RATE)
-            print(time_to_wait)
-            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, time_to_wait)
+            last_computation_time = last_frame_time - self._last_waiting_time
+            self._last_waiting_time = max(0, 1 / FRAME_MAX_RATE - last_computation_time)
+            self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, self._last_waiting_time)
 
         elif [] == self._room.get_winner_list():
             self._server_signal(ServerSignal.NEW_ARENA_SIGNAL, 0)
