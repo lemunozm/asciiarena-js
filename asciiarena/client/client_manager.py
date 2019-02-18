@@ -125,7 +125,7 @@ class ClientManager(MessageQueue):
                         self._send_message(player_cast_message)
 
                 screen.clear()
-                game_scene.render(frame_message.entity_list, [])
+                game_scene.render(frame_message.entity_list, frame_message.spell_list)
                 screen.draw()
 
 

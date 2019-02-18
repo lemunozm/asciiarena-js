@@ -24,7 +24,8 @@ class GameScene:
         self._player_character = character
         self._character_list = character_list
         self._arena_size = arena_size
-        self._ground, self._ground_dimension = GameScene._init_ground(ground, arena_size)
+        self._arena_dimension = Vec2(arena_size, arena_size)
+        self._ground = ground
         self._seed = seed
 
         self._last_time_stamp_skill_key = 0
@@ -75,20 +76,20 @@ class GameScene:
     def render(self, entity_list, spell_list):
         self._draw_ground_walls()
         self._draw_entities(entity_list)
+        self._draw_spells(spell_list)
         self._draw_info()
 
 
     def _draw_ground_walls(self):
-        pencil = self._screen.create_pencil(self._get_ground_origin())
+        pencil = self._screen.create_pencil(self._get_arena_origin())
         pencil.set_color(33)
         pencil.set_style(TermPencil.Style.DIM)
 
         wall_list = [Terrain.BORDER_WALL, Terrain.WALL, Terrain.WALL_SEED]
-
-        line_table = BoxLine.parse(wall_list, self._ground, self._ground_dimension)
+        line_table = BoxLine.parse(wall_list, self._ground, self._arena_dimension)
 
         box_drawing = BoxLineDrawing(pencil, BoxLineDrawing.Style.SINGLE_ROUND)
-        box_drawing.draw(line_table, self._ground_dimension, Vec2(2, 1))
+        box_drawing.draw(line_table, self._arena_dimension, Vec2(2, 1))
 
 
     def _draw_entities(self, entity_list):
@@ -103,15 +104,16 @@ class GameScene:
             pencil.draw(Vec2(entity.position.x * 2, entity.position.y), entity.character)
 
 
+    def _draw_spells(self, spell_list):
+        pencil = self._screen.create_pencil(self._get_arena_origin())
+
+        for spell in spell_list:
+            pencil.draw(Vec2(spell.position.x * 2, spell.position.y), "o", 208)
+
+
     def _draw_info(self):
         pencil = self._screen.create_pencil(self._get_info_origin())
         pencil.draw(Vec2(0, 0), "Seed: '{}'".format(self._seed))
-
-
-    def _get_ground_origin(self):
-        x = (self._screen.get_width() - self._ground_dimension.x * 2) / 2
-        y = (self._screen.get_height() - self._ground_dimension.y) / 2
-        return Vec2(int(x), int(y))
 
 
     def _get_arena_origin(self):
@@ -122,17 +124,4 @@ class GameScene:
 
     def _get_info_origin(self):
         return Vec2(0, 1)
-
-
-    @staticmethod
-    def _init_ground(ground, ground_size):
-        extended_ground_size = ground_size + 2
-        extended_ground = [Terrain.BORDER_WALL] * (extended_ground_size * extended_ground_size)
-
-        for y in range(0, ground_size):
-            for x in range(0, ground_size):
-                extended_ground[(y + 1) * extended_ground_size + (x + 1)] = ground[y * ground_size + x]
-
-        return extended_ground, Vec2(extended_ground_size, extended_ground_size)
-
 

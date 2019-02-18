@@ -38,11 +38,15 @@ class Arena:
         return self._entity_list
 
 
+    def get_spell_list(self):
+        return self._spell_list
+
+
     def has_finished(self):
         return False #Check the player_list
 
 
-    def get_step_number():
+    def get_step(self):
         return self._step
 
 

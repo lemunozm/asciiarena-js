@@ -22,6 +22,10 @@ class Mobile:
         return self._direction
 
 
+    def get_direction_vec(self):
+        return Direction.as_vector(self._direction)
+
+
     def get_speed(self):
         return self._speed
 
@@ -40,6 +44,10 @@ class Mobile:
 
     def displace(self, displacement):
         self._position += displacement
+
+
+    def set_speed(self, speed):
+        self._speed = speed
 
 
     def enable_movement(self, value):
@@ -66,8 +74,20 @@ class Mobile:
             new_position = self._position + movement
             for mobile in mobile_list:
                 if mobile.get_position() == new_position:
+                    if self.on_mobile_collision(mobile):
+                        return
+
+            if ground.is_blocked(new_position):
+                if self.on_ground_collision(new_position, ground.get_at(new_position)):
                     return
 
-            if not ground.is_blocked(new_position):
-                self._position = new_position
+            self._position = new_position
+
+
+    def on_mobile_collision(self, entity):
+        return False
+
+
+    def on_ground_collision(self, wall_position, terrain):
+        return False
 

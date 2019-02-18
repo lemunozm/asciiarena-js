@@ -15,6 +15,13 @@ class EntityControl():
         self._entity
 
 
+    def register_cast(self, state, skill):
+        spell = self._entity.cast(skill)
+        if spell:
+            state.add_spell(spell)
+        return spell
+
+
     def update(self, state):
         raise NotImplementedError()
 
@@ -45,8 +52,9 @@ class PlayerControl(EntityControl):
             logger.debug("Player '{}' at step {} moves {}".format(self._entity.get_character(), state.get_step(), last_movement))
 
         if self._last_cast_skill != None:
-            spell = self._entity.cast(self._last_cast_skill)
+            spell = super().register_cast(state, self._last_cast_skill)
             if spell:
+                state.add_spell(spell)
                 logger.debug("Player '{}' at step {} casts {}".format(self._entity.get_character(), state.get_step(), self._last_cast_skill))
             self._last_cast_skill = None
 

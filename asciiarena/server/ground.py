@@ -21,8 +21,9 @@ class Ground:
     @staticmethod
     def fromSeed(size, seed):
         ground = Ground(size, seed)
-        ground._generate()
         ground._create_border()
+        ground._generate_internal_walls()
+        ground._wall_wrapping()
         return ground
 
 
@@ -202,7 +203,8 @@ class Ground:
         self.fill_at(Vec2(0, 1), Vec2(1, self._dimension - 1), Terrain.BORDER_WALL)
         self.fill_at(Vec2(self._dimension - 1, 1), Vec2(1, self._dimension - 1), Terrain.BORDER_WALL)
 
-    def _generate(self):
+
+    def _generate_internal_walls(self):
         random_engine = random.Random(self._seed)
 
         available_coordinates_list = self.get_position_list_distance([Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE)
@@ -229,9 +231,11 @@ class Ground:
 
             available_coordinates_list = self.get_position_list_distance([Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE)
 
+
+    def _wall_wrapping(self):
         for i, terrain in enumerate(self._grid):
             if Terrain.is_any(terrain, [Terrain.EMPTY]):
                 position = self.get_grid_coordinates_of(i)
-                if self.has_any_neighbours(position, [Terrain.WALL_SEED], Direction.ALL_LIST):
+                if self.has_any_neighbours(position, [Terrain.WALL_SEED, Terrain.BORDER_WALL], Direction.ALL_LIST):
                     self._grid[i] = Terrain.WALL
 

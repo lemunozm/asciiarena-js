@@ -52,9 +52,16 @@ class Frame:
             self.position = position
             self.direction = direction
 
+    class Spell:
+        def __init__(self, spell_spec_class, position, direction):
+            self.spell_spec_class = spell_spec_class
+            self.position = position
+            self.direction = direction
 
-    def __init__(self, entity_list):
+    def __init__(self, step, entity_list, spell_list):
+        self.step = step
         self.entity_list = entity_list
+        self.spell_list = spell_list
 
 
 class PlayerMovement:

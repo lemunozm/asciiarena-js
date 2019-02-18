@@ -158,7 +158,7 @@ class ServerManager(PackageQueue):
 
 
     def _new_arena_signal(self):
-        # We run in another thread because creating an Arena is expensive and could block the server.
+        # We run in another thread because creating an Arena is expensive and could block the server a time.
         thread = threading.Thread(target = self.new_arena)
         thread.daemon = True
         thread.start()
@@ -167,12 +167,17 @@ class ServerManager(PackageQueue):
     def _compute_frame_signal(self):
         self._arena.update()
 
-        frame_entity_list = []
+        entity_list = []
         for entity in self._arena.get_entity_list():
-            frame_entity = Message.Frame.Entity(entity.get_character(), entity.get_position(), entity.get_direction())
-            frame_entity_list.append(frame_entity)
+            entity = Message.Frame.Entity(entity.get_character(), entity.get_position(), entity.get_direction())
+            entity_list.append(entity)
 
-        frame_message = Message.Frame(frame_entity_list)
+        spell_list = []
+        for spell in self._arena.get_spell_list():
+            spell = Message.Frame.Spell(spell.get_spec().__class__, spell.get_position(), spell.get_direction())
+            spell_list.append(spell)
+
+        frame_message = Message.Frame(self._arena.get_step(), entity_list, spell_list)
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
         if not self._arena.has_finished():
