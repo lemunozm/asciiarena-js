@@ -7,6 +7,10 @@ class Vec2:
         self.y = y
 
 
+    def copy(self):
+        return Vec2(self.x, self.y)
+
+
     def __str__(self):
         return "Vec2({}, {})".format(self.x, self.y)
 
@@ -43,7 +47,6 @@ class Vec2:
 
     def get_length(self):
         return math.sqrt(self.x**2 + self.y**2)
-
 
     @staticmethod
     def distance(v1, v2):

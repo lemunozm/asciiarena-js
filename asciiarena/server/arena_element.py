@@ -7,6 +7,7 @@ class ArenaState:
         self._entity_list = entity_list
         self._spell_list = spell_list
 
+
     def get_step(self):
         return self._step
 
@@ -23,12 +24,14 @@ class ArenaState:
         return self._spell_list
 
 
-    def add_entity(self, entity):
-        self._entity_list.append(entity)
+    def add_entity(self, arena_element):
+        if arena_element.on_added_to_arena(self):
+            self._entity_list.append(arena_element)
 
 
-    def add_spell(self, spell):
-        self._spell_list.append(spell)
+    def add_spell(self, arena_element):
+        if arena_element.on_added_to_arena(self):
+            self._spell_list.append(arena_element)
 
 
     def get_entity_at(self, position):
@@ -54,6 +57,10 @@ class ArenaElement(Mobile):
 
 
     def update(self, arena_state):
+        raise NotImplementedError()
+
+
+    def on_added_to_arena(self, arena_state):
         raise NotImplementedError()
 
 

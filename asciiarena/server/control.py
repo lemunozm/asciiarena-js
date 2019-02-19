@@ -29,7 +29,7 @@ class EntityControl():
 class PlayerControl(EntityControl):
     def __init__(self, entity):
         super().__init__(entity)
-        self._last_step_position = entity.get_position()
+        self._last_step_position = entity.get_position().copy()
         self._last_cast_skill = None
 
 
@@ -48,7 +48,7 @@ class PlayerControl(EntityControl):
         self._entity.enable_movement(False)
         last_movement = self._entity.get_position() - self._last_step_position
         if last_movement != Vec2.zero():
-            self._last_step_position = self._entity.get_position()
+            self._last_step_position = self._entity.get_position().copy()
             logger.debug("Player '{}' at step {} moves {}".format(self._entity.get_character(), state.get_step(), last_movement))
 
         if self._last_cast_skill != None:

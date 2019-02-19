@@ -18,29 +18,22 @@ class Spell(ArenaElement):
         return self._from_entity
 
 
+    def on_mobile_collision(self, mobile):
+        self.on_entity_collision(mobile)
+
+
     def update(self, state):
         super().update_movement(state.get_ground(), state.get_entity_list())
 
 
-    def on_mobile_collision(self, entity):
-        self.on_entity_collision(entity)
-        return True
-
-
-    def on_ground_collision(self, position, terrain):
-        if terrain == Terrain.OUTSIDE or terrain == Terrain.BORDER_WALL or terrain == Terrain.WALL_SEED:
-            self.enable_movement(False)
-            return True
-        else:
-            return self.on_wall_collision(position, terrain)
+    def on_added_to_arena(self, state):
+        return not super().check_collision(state.get_ground(), state.get_entity_list())
 
 
     def on_entity_collision(self, entity):
-        raise NotImplementedError()
+        pass
 
 
     def on_wall_collision(self, wall_position, terrain):
-        raise NotImplementedError()
-
-
+        pass
 

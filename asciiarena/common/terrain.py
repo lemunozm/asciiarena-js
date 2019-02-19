@@ -2,7 +2,7 @@ class Terrain:
     EMPTY = 0
     WALL = 1
     BORDER_WALL = 2
-    WALL_SEED = 3
+    INTERNAL_WALL = 3
 
     OUTSIDE = 255
 

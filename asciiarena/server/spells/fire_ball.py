@@ -20,6 +20,6 @@ class FireBall(Spell):
 
 
     def on_wall_collision(self, wall_position, terrain):
+        super().on_wall_collision(wall_position, terrain)
         super().enable_movement(False)
-        #super().remove()
-        return False
+        super().remove()

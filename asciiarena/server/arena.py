@@ -25,7 +25,6 @@ class Arena:
         control = PlayerControl(entity)
         entity.set_control(control)
 
-        self._entity_list.append(entity)
         self._player_list.append(entity)
         return control
 
@@ -43,7 +42,7 @@ class Arena:
 
 
     def has_finished(self):
-        return False #Check the player_list
+        return False #Check the _player_list
 
 
     def get_step(self):
@@ -56,8 +55,15 @@ class Arena:
         for arena_element in self._entity_list + self._spell_list:
             arena_element.update(state)
 
+        if self._step == 0:
+            for player in self._player_list:
+                state.add_entity(player)
+
+        #print(len(state.get_entity_list()))
+
         self._entity_list = [entity for entity in state.get_entity_list() if not entity.must_be_removed()]
         self._spell_list = [spell for spell in state.get_spell_list() if not spell.must_be_removed()]
 
         self._step += 1
+
 

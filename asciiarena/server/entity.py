@@ -27,9 +27,12 @@ class Entity(ArenaElement):
         return self._buff_list
 
 
+    def get_cast_position(self):
+        return self.get_position() + self.get_direction_vec()
+
+
     def cast(self, skill):
-        cast_position = self.get_position() + self.get_direction_vec()
-        return FireBall(int, self, cast_position)
+        return FireBall(int, self, self.get_cast_position())
 
 
     def add_buff(self, buff):
@@ -46,10 +49,6 @@ class Entity(ArenaElement):
             self._control.update(state)
 
 
-    def on_mobile_collision(self, entity):
-        return True
-
-
-    def on_ground_collision(self, position, terrain):
-        return True
+    def on_added_to_arena(self, state):
+        return not super().check_collision(state.get_ground(), state.get_entity_list())
 

@@ -215,7 +215,7 @@ class Ground:
             wall_direction = random_engine.choice(Direction.ORTHOGONAL_LIST)
             direction = wall_direction
             position = random_engine.choice(available_coordinates_list)
-            self.set_at(position, Terrain.WALL_SEED)
+            self.set_at(position, Terrain.INTERNAL_WALL)
 
             for wall_size in wall_size_list:
                 direction_vec = Direction.as_vector(direction)
@@ -223,7 +223,7 @@ class Ground:
                     new_position = position + direction_vec
                     if self.is_inside(new_position) and self.has_all_neighbours_distance(new_position, [Terrain.EMPTY], GEN_MIN_BLOCK_DISTANCE, direction):
                         position = new_position
-                        self.set_at(position, Terrain.WALL_SEED)
+                        self.set_at(position, Terrain.INTERNAL_WALL)
                     else:
                         break
 
@@ -236,6 +236,6 @@ class Ground:
         for i, terrain in enumerate(self._grid):
             if Terrain.is_any(terrain, [Terrain.EMPTY]):
                 position = self.get_grid_coordinates_of(i)
-                if self.has_any_neighbours(position, [Terrain.WALL_SEED, Terrain.BORDER_WALL], Direction.ALL_LIST):
+                if self.has_any_neighbours(position, [Terrain.INTERNAL_WALL, Terrain.BORDER_WALL], Direction.ALL_LIST):
                     self._grid[i] = Terrain.WALL
 

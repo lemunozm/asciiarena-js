@@ -158,7 +158,7 @@ class ServerManager(PackageQueue):
 
 
     def _new_arena_signal(self):
-        # We run in another thread because creating an Arena is expensive and could block the server a time.
+        # We run in another thread because creating an Arena is expensive and could block the server a while.
         thread = threading.Thread(target = self.new_arena)
         thread.daemon = True
         thread.start()
