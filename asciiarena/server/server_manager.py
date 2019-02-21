@@ -25,7 +25,7 @@ class ServerSignal(enum.Enum):
 
 class ServerManager(PackageQueue):
     def __init__(self, players, points, arena_size, seed):
-        super().__init__()
+        PackageQueue.__init__()
         self._active = True
         self._room = Room(players, points)
         self._arena_size = arena_size

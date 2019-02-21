@@ -43,7 +43,7 @@ class BoxLine:
     def parse(reference_list, table, dimension):
         lines = [BoxLine.NONE] * len(table)
         for i, _ in enumerate(table):
-            pos = Vec2((i % dimension.x), int(i / dimension.x))
+            pos = Vec2((i % dimension.x), i // dimension.x)
 
             if BoxLine._is_reference(reference_list, table, pos, dimension):
                 up = BoxLine._is_reference(reference_list, table, Vec2(pos.x, pos.y - 1), dimension)
@@ -108,7 +108,7 @@ class BoxLineDrawing:
 
             for offset_y, tile_line in enumerate(tile_line_list):
                 if tile_line != "":
-                    position = Vec2((i % dimension.x) * scale.x, int(i / dimension.x) * scale.y + offset_y)
+                    position = Vec2((i % dimension.x) * scale.x, (i // dimension.x) * scale.y + offset_y)
 
                     if position.y <= (dimension.y - 1) * scale.y: #skip last line if scale > 1
                         if position.x == (dimension.x - 1) * scale.x: #skip last line if scale > 1

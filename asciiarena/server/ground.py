@@ -50,7 +50,7 @@ class Ground:
 
 
     def get_grid_coordinates_of(self, index):
-        return Vec2(index % self._dimension, int(index / self._dimension))
+        return Vec2(index % self._dimension, index // self._dimension)
 
 
     def is_inside(self, position):

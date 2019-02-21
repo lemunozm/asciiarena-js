@@ -131,8 +131,8 @@ class GameScene:
 
 
     def get_arena_origin(self):
-        x = (self._screen.get_width() - self._arena_dimension.x * 2) / 2
-        y = (self._screen.get_height() - self._arena_dimension.y) / 2
+        x = (self._screen.get_width() - self._arena_dimension.x * 2) // 2
+        y = (self._screen.get_height() - self._arena_dimension.y) // 2
         return Vec2(int(x), int(y))
 
 

@@ -59,11 +59,8 @@ class Arena:
             for player in self._player_list:
                 state.add_entity(player)
 
-        #print(len(state.get_entity_list()))
-
         self._entity_list = [entity for entity in state.get_entity_list() if not entity.must_be_removed()]
         self._spell_list = [spell for spell in state.get_spell_list() if not spell.must_be_removed()]
 
         self._step += 1
-
 
