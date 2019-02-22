@@ -20,6 +20,7 @@ RANDOM_SEED_SIZE = 6
 
 class ServerSignal(enum.Enum):
     NEW_ARENA_SIGNAL = enum.auto()
+    ARENA_CREATED_SIGNAL = enum.auto()
     COMPUTE_FRAME_SIGNAL = enum.auto()
 
 
@@ -30,7 +31,9 @@ class ServerManager(PackageQueue):
         self._room = Room(players, points)
         self._arena_size = arena_size
         self._seed = seed
+
         self._arena = None
+        self._arena_enabled = False
 
         self._last_frame_time_stamp = 0
         self._last_waiting_time = 0
@@ -60,6 +63,9 @@ class ServerManager(PackageQueue):
 
                     elif ServerSignal.COMPUTE_FRAME_SIGNAL == input_pack.message:
                         self._compute_frame_signal()
+
+                    elif ServerSignal.ARENA_CREATED_SIGNAL == input_pack.message:
+                        self._arena_created_signal()
 
                 else:
                     logger.error("Unknown message type: {} - Rejecting connection...".format(input_pack.message.__class__));
@@ -135,10 +141,9 @@ class ServerManager(PackageQueue):
 
 
     def new_arena(self):
+        pre_time_stamp = time.time()
         seed = self._seed if "" != self._seed else ServerManager.compute_random_seed(RANDOM_SEED_SIZE)
         logger.info("Load arena - size: {}, seed: {}".format(self._arena_size, seed))
-
-        pre_time_stamp = time.time()
 
         self._arena = Arena(self._arena_size, seed)
 
@@ -149,12 +154,9 @@ class ServerManager(PackageQueue):
             player.set_control(control)
 
         post_time_stamp = time.time()
-
-        arena_info_message = Message.ArenaInfo(seed, self._arena.get_ground().get_grid())
-        self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
-
         logger.info("Load arena - done! {0:.2}s".format(post_time_stamp - pre_time_stamp))
-        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 0)
+
+        self._server_signal(ServerSignal.ARENA_CREATED_SIGNAL, 0)
 
 
     def _new_arena_signal(self):
@@ -164,20 +166,18 @@ class ServerManager(PackageQueue):
         thread.start()
 
 
+    def _arena_created_signal(self):
+        arena_info_message = Message.ArenaInfo(self._arena.get_ground().get_seed(), self._arena.get_ground().get_grid())
+        self._output_queue.put(OutputPack(arena_info_message, self._room.get_endpoint_list()))
+
+        self._arena_enabled = True
+        self._server_signal(ServerSignal.COMPUTE_FRAME_SIGNAL, 0)
+
+
     def _compute_frame_signal(self):
         self._arena.update()
 
-        entity_list = []
-        for entity in self._arena.get_entity_list():
-            entity = Message.Frame.Entity(id(entity), entity.get_character(), entity.get_position(), entity.get_direction())
-            entity_list.append(entity)
-
-        spell_list = []
-        for spell in self._arena.get_spell_list():
-            spell = Message.Frame.Spell(id(entity), spell.get_spec().__class__, spell.get_position(), spell.get_direction())
-            spell_list.append(spell)
-
-        frame_message = Message.Frame(self._arena.get_step(), entity_list, spell_list)
+        frame_message = self._create_frame_message()
         self._output_queue.put(OutputPack(frame_message, self._room.get_endpoint_list()))
 
         if not self._arena.has_finished():
@@ -196,8 +196,23 @@ class ServerManager(PackageQueue):
             pass #TODO: reset signal => clear the room
 
 
+    def _create_frame_message(self):
+        entity_list = []
+        for entity in self._arena.get_entity_list():
+            entity = Message.Frame.Entity(id(entity), entity.get_character(), entity.get_position(), entity.get_direction())
+            entity_list.append(entity)
+
+        spell_list = []
+        for spell in self._arena.get_spell_list():
+            spell = Message.Frame.Spell(id(entity), spell.get_spec().__class__, spell.get_position(), spell.get_direction())
+            spell_list.append(spell)
+
+        return Message.Frame(self._arena.get_step(), entity_list, spell_list)
+
+
     def _player_movement_request(self, player_movement_message, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
+        player = self._check_player_for_event(endpoint)
+
         if not Direction.is_orthogonal(player_movement_message.direction):
             logger.error("Unexpected movement value from player '{}'".format(player.get_character()))
             self._output_queue.put(OutputPack("", endpoint))
@@ -209,7 +224,8 @@ class ServerManager(PackageQueue):
 
 
     def _player_cast_request(self, player_cast_message, endpoint):
-        player = self._room.get_player_with_endpoint(endpoint)
+        player = self._check_player_for_event(endpoint)
+
         if False: #Check that the skill exists
             logger.error("Unexpected skill from player '{}'".format(player.get_character()))
             self._output_queue.put(OutputPack("", endpoint))
@@ -218,6 +234,22 @@ class ServerManager(PackageQueue):
         control = player.get_control()
         if control:
             control.cast(player_cast_message.skill_id)
+
+
+    def _check_player_for_event(self, endpoint):
+        player = self._room.get_player_with_endpoint(endpoint)
+
+        if not player:
+            logger.error("Received event from unknown player")
+            self._output_queue.put(OutputPack("", endpoint))
+            return
+
+        if not self._arena_enabled:
+            logger.error("Received player event from '{}' without available arena".format(player.get_character()))
+            self._output_queue.put(OutputPack("", endpoint))
+            return
+
+        return player
 
 
     def _lost_connection(self, endpoint):
