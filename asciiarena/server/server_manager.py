@@ -25,7 +25,7 @@ class ServerSignal(enum.Enum):
 
 class ServerManager(PackageQueue):
     def __init__(self, players, points, arena_size, seed):
-        PackageQueue.__init__()
+        PackageQueue.__init__(self)
         self._active = True
         self._room = Room(players, points)
         self._arena_size = arena_size
@@ -169,12 +169,12 @@ class ServerManager(PackageQueue):
 
         entity_list = []
         for entity in self._arena.get_entity_list():
-            entity = Message.Frame.Entity(entity.get_character(), entity.get_position(), entity.get_direction())
+            entity = Message.Frame.Entity(id(entity), entity.get_character(), entity.get_position(), entity.get_direction())
             entity_list.append(entity)
 
         spell_list = []
         for spell in self._arena.get_spell_list():
-            spell = Message.Frame.Spell(spell.get_spec().__class__, spell.get_position(), spell.get_direction())
+            spell = Message.Frame.Spell(id(entity), spell.get_spec().__class__, spell.get_position(), spell.get_direction())
             spell_list.append(spell)
 
         frame_message = Message.Frame(self._arena.get_step(), entity_list, spell_list)

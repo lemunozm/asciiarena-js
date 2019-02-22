@@ -1,11 +1,10 @@
-from .mobile import Mobile
 from .arena_element import ArenaElement
 
 from .spells.fire_ball import FireBall # remove when skill works properly
 
 class Entity(ArenaElement):
     def __init__(self, character, position):
-        super().__init__(position)
+        ArenaElement.__init__(self, position)
         self._control = None
         self._character = character
         self._buff_list = []
@@ -43,12 +42,34 @@ class Entity(ArenaElement):
         pass
 
 
-    def update(self, state):
-        super().update_movement(state.get_ground(), state.get_entity_list())
-        if self._control:
-            self._control.update(state)
-
-
     def on_added_to_arena(self, state):
-        return not super().check_collision(state.get_ground(), state.get_entity_list())
+        collide = state.get_ground().is_blocked(self._position) or state.get_grid().get_entity(self._position)
+        if not collide:
+            if self._control:
+                return self._control.on_init(state)
+
+            return True
+
+        return False
+
+
+    def update(self, state):
+        previous_position = self._position.copy()
+
+        super().compute_movement()
+        if self._position != previous_position:
+            if state.get_ground().is_blocked(self._position):
+                self._position = previous_position
+                if self._control:
+                    self._control.on_collision(state, self._position)
+
+            else:
+                entity = state.get_grid().get_entity(self._position)
+                if entity:
+                    self._position = previous_position
+                    if self._control:
+                        self._control.on_collision(state, self._position)
+
+        if self._control:
+            self._control.on_update(state)
 

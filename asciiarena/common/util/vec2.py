@@ -1,5 +1,5 @@
-import enum
 import math
+
 
 class Vec2:
     def __init__(self, x, y):
@@ -13,6 +13,10 @@ class Vec2:
 
     def __str__(self):
         return "Vec2({}, {})".format(self.x, self.y)
+
+
+    def __hash__(self):
+        return hash(self.x ^ self.y)
 
 
     def __eq__(self, v):
@@ -48,9 +52,11 @@ class Vec2:
     def get_length(self):
         return math.sqrt(self.x**2 + self.y**2)
 
+
     @staticmethod
     def distance(v1, v2):
         return (v1 - v2).get_length()
+
 
     @staticmethod
     def zero():

@@ -58,40 +58,12 @@ class Mobile:
         self._last_movement_time_stamp = 0
 
 
-    def _compute_movement(self):
+    def compute_movement(self):
         if self._has_movement:
             current = time.time()
+
             if current - self._last_movement_time_stamp > 1.0 / self._speed:
                 self._last_movement_time_stamp = current
                 movement = Direction.as_vector(self._direction)
                 self._position += movement
-
-
-    def check_collision(self, ground, collisionable_mobile_list):
-        for mobile in collisionable_mobile_list:
-            if mobile != self and mobile.get_position() == self._position:
-                self.on_mobile_collision(mobile)
-                return True
-
-        if ground.is_blocked(self._position):
-            self.on_wall_collision(self._position, ground.get_at(self._position))
-            return True
-
-        return False
-
-    def update_movement(self, ground, collisionable_mobile_list):
-        previous_position = self._position.copy()
-
-        self._compute_movement()
-        if self._position != previous_position:
-            if self.check_collision(ground, collisionable_mobile_list):
-                self._position = previous_position
-
-
-    def on_mobile_collision(self, entity):
-        pass
-
-
-    def on_wall_collision(self, wall_position, terrain):
-        pass
 

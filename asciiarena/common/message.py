@@ -47,13 +47,15 @@ class ArenaInfo:
 
 class Frame:
     class Entity:
-        def __init__(self, character, position, direction):
+        def __init__(self, key, character, position, direction):
+            self.key = key
             self.character = character
             self.position = position
             self.direction = direction
 
     class Spell:
-        def __init__(self, spell_spec_class, position, direction):
+        def __init__(self, key, spell_spec_class, position, direction):
+            self.key = key
             self.spell_spec_class = spell_spec_class
             self.position = position
             self.direction = direction

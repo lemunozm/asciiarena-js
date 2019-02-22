@@ -6,7 +6,7 @@ from common.logging import logger
 from common.direction import Direction
 from common.util.vec2 import Vec2
 
-class EntityControl():
+class EntityControl:
     def __init__(self, entity):
         self._entity = entity
 
@@ -22,13 +22,21 @@ class EntityControl():
         return spell
 
 
-    def update(self, state):
+    def on_init(self, state):
+        raise NotImplementedError()
+
+
+    def on_update(self, state):
+        raise NotImplementedError()
+
+
+    def on_collision(self, state, position):
         raise NotImplementedError()
 
 
 class PlayerControl(EntityControl):
     def __init__(self, entity):
-        super().__init__(entity)
+        EntityControl.__init__(self, entity)
         self._last_step_position = entity.get_position().copy()
         self._last_cast_skill = None
 
@@ -44,7 +52,11 @@ class PlayerControl(EntityControl):
         self._last_cast_skill = skill
 
 
-    def update(self, state):
+    def on_init(self, state):
+        return True
+
+
+    def on_update(self, state):
         self._entity.enable_movement(False)
         last_movement = self._entity.get_position() - self._last_step_position
         if last_movement != Vec2.zero():
@@ -56,7 +68,10 @@ class PlayerControl(EntityControl):
             if spell:
                 state.add_spell(spell)
                 logger.debug("Player '{}' at step {} casts {}".format(self._entity.get_character(), state.get_step(), self._last_cast_skill))
+
             self._last_cast_skill = None
 
 
+    def on_collision(self, state, position):
+        pass
 

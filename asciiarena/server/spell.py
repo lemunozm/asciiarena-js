@@ -1,13 +1,12 @@
 from .mobile import Mobile
 from .arena_element import ArenaElement
 
-from common.terrain import Terrain
 
 class Spell(ArenaElement):
-    def __init__(self, spell_spec, from_entity, position):
-        super().__init__(position)
+    def __init__(self, spell_spec, entity, position):
+        ArenaElement.__init__(self, position)
         self._spec = spell_spec
-        self._from_entity = from_entity
+        self._entity = entity
 
 
     def get_spec(self):
@@ -15,25 +14,52 @@ class Spell(ArenaElement):
 
 
     def get_origin_entity(self):
-        return self._from_entity
-
-
-    def on_mobile_collision(self, mobile):
-        self.on_entity_collision(mobile)
-
-
-    def update(self, state):
-        super().update_movement(state.get_ground(), state.get_entity_list())
+        return self._entity
 
 
     def on_added_to_arena(self, state):
-        return not super().check_collision(state.get_ground(), state.get_entity_list())
+        collide = state.get_ground().is_blocked(self._position)
+        if not collide:
+            initialized = self.on_init(state)
+            if initialized:
+                entity = state.get_grid().get_entity(self._position)
+                if entity:
+                    self.on_entity_collision(state, entity)
+
+            return  initialized
+
+        return False
 
 
-    def on_entity_collision(self, entity):
-        pass
+    def update(self, state):
+        previous_position = self._position.copy()
+
+        super().compute_movement()
+        if self._position != previous_position:
+            if state.get_ground().is_blocked(self._position):
+                self._position = previous_position
+                self.on_wall_collision(state, self._position)
+
+            else:
+                entity = state.get_grid().get_entity(self._position)
+                if entity:
+                    self.on_entity_collision(state, entity)
+
+        self.on_update(state)
 
 
-    def on_wall_collision(self, wall_position, terrain):
-        pass
+    def on_init(self, state):
+        raise NotImplementedError()
+
+
+    def on_update(self, state):
+        raise NotImplementedError()
+
+
+    def on_wall_collision(self, state, position):
+        raise NotImplementedError()
+
+
+    def on_entity_collision(self, state, entity):
+        raise NotImplementedError()
 
