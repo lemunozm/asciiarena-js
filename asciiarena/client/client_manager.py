@@ -1,5 +1,6 @@
 from .message_queue import MessageQueue, ReceiveMessageError
 from .screen import TermScreen
+from .keyboard import Keyboard
 from .game_scene import GameScene, GameSceneEvent
 
 from common import version as Version, message as Message
@@ -30,7 +31,6 @@ class ClientManager(MessageQueue):
                 return
 
             self._wait_game();
-
             self._init_game();
 
         except ReceiveMessageError:
@@ -108,7 +108,8 @@ class ClientManager(MessageQueue):
         arena_info_message = self._receive_message([Message.ArenaInfo])
 
         with TermScreen() as screen:
-            game_scene = GameScene(screen, self._character, self._character_list, self._arena_size, arena_info_message.ground, arena_info_message.seed)
+            keyboard = Keyboard(screen)
+            game_scene = GameScene(screen, keyboard, self._character, self._character_list, self._arena_size, arena_info_message.ground, arena_info_message.seed)
 
             while True:
                 frame_message = self._receive_message([Message.Frame])

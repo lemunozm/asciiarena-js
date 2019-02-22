@@ -1,0 +1,23 @@
+@startuml
+
+package common {
+    class GameSpec
+    class SkillSpec
+    class SpellSpec
+    class BuffSpec
+}
+
+GameSpec *-down- "0..n" SkillSpec
+GameSpec *-down- "0..n" SpellSpec
+GameSpec *-down- "0..n" BuffSpec
+SkillSpec o-- SpellSpec
+SpellSpec o-- BuffSpec
+SkillSpec o-- BuffSpec
+Skill o-left- SkillSpec
+Spell o-left- SpellSpec
+Buff o-left- BuffSpec
+
+abstract Spell {
+}
+
+@enduml

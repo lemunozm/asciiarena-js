@@ -1,5 +1,5 @@
 from .pencil import TermPencil
-from .keyboard import Keyboard, Key
+from .keyboard import Key
 from .box_drawing import BoxLine, BoxLineDrawing
 
 from common.util.vec2 import Vec2
@@ -16,10 +16,10 @@ class GameSceneEvent(enum.Enum):
 
 
 class GameScene:
-    def __init__(self, screen, character, character_list, arena_size, ground_grid, seed):
+    def __init__(self, screen, keyboard, character, character_list, arena_size, ground_grid, seed):
         self._screen = screen
         self._screen.enable_fps_counter(Vec2(0, 0))
-        self._keyboard = Keyboard(screen)
+        self._keyboard = keyboard
 
         self._player_character = character
         self._character_list = character_list

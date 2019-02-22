@@ -1,76 +1,40 @@
 @startuml
 
-Arena *-left-> Ground
-Arena *--> "0..n" Entity
-Arena *--> "0..n" Spell
-Arena -right-> ArenaState
+Arena *-- Ground
+Arena *-- ArenaGrid
+Arena *-- "0..n" Entity
+Arena *-- "0..n" Spell
+Arena --> ArenaState
+
+ArenaState o-- Ground
+ArenaState o-- ArenaGrid
+ArenaState o-- "0..n" Entity
+ArenaState o-- "0..n" Spell
 
 Mobile <|-- ArenaElement
 ArenaElement <|-- Entity
 ArenaElement <|-- Spell
 Entity o-- "0..n" Skill
 Entity *-- "0..n" Buff
-ArenaElement -right-> ArenaState
-
+Entity o--* EntityControl
 EntityControl <|-- PlayerControl
-EntityControl -left-> ArenaState
 
-Entity o-right-* EntityControl
-
-Skill o-- SkillSpec
-Spell o-- SpellSpec
-Buff o-- BuffSpec
-GameSpec *-up- "0..n" SkillSpec
-GameSpec *-left- "0..n" SpellSpec
-GameSpec *-up- "0..n" BuffSpec
-SkillSpec o-- SpellSpec
-SkillSpec o-- BuffSpec
-SpellSpec o-right- BuffSpec
-
-abstract Mobile {
-    - position @set @get
-    - direction @set @get
-    - speed @set @get
-    - moving @set @get
-    + update_movement(ground, mobile_list)
-}
 
 abstract ArenaElement {
-    - remove
-    + must_be_removed()
-    + update(state) = 0
-}
-
-class Entity {
-    - control @set @get
-    - skill_list @get
-    - buff_list @add @remove @get
-    + Spell cast(skill)
     + update(state) = 0
 }
 
 abstract Spell {
-    - control @get
-    + update(state) = 0
-}
-
-class ArenaState {
-    - step @get
-    - ground @get
-    - entity_list @get @add
-    - spell_list @get @add
+    + on_init(state) = 0
+    + on_update(state) = 0
+    + on_wall_collision(state, position) = 0
+    + on_entity_collision(state, entity) = 0
 }
 
 abstract EntityControl {
-    # entity
-    + update(state) = 0
-}
-
-class PlayerControl {
-    - last_skill_action
-    + update(state)
-    + move(direction)
-    + cast(skill)
+    + on_init(state) = 0
+    + on_update(state) = 0
+    + on_collision(state, position) = 0
 }
 
 @enduml

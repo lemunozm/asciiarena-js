@@ -7,7 +7,6 @@ package common {
     class PackageQueue
     class InputPack
     class OutputPack
-    'class GameSpec
 
     NetworkManager *-- PackageFactory
     NetworkManager o-- PackageQueue
@@ -20,17 +19,16 @@ package common {
 package server {
     class Server
     class ServerManager
-    class PlayersRoom
+    class Room
     class Player
     class Arena
 
     Server *-right- NetworkManager
     Server *-- ServerManager
     ServerManager -right-|> PackageQueue
-    ServerManager *-- PlayersRoom
+    ServerManager *-- Room
     ServerManager *-- Arena
-    'ServerManager o-left-"0..*" GameSpec
-    PlayersRoom *--"0..*" Player
+    Room *--"0..*" Player
 }
 
 package client {
@@ -40,17 +38,16 @@ package client {
     class TermScreen
     class Keyboard
     class GameScene
-    class Pencil
 
     Client *-left- NetworkManager
     Client *-- ClientManager
     MessageQueue -left-|> PackageQueue
     ClientManager -left-|> MessageQueue
     ClientManager *-- TermScreen
-    ClientManager --> GameScene
+    ClientManager *-- GameScene
+    ClientManager *-- Keyboard
+    GameScene o-left- Keyboard
     GameScene o-- TermScreen
-    TermScreen --> Pencil
-    GameScene --> Pencil
     Keyboard o-- TermScreen
 }
 

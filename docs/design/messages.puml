@@ -15,10 +15,10 @@ Client -[#blue]> Server : Login
 Client <[#blue]- Server : LoginStatus
 
 loop 1..
-Client <-[#green]- Server : PlayersInfo N
+Client <[#green]- Server : PlayersInfo N
 end
 
-Client <-[#green]- Server : ArenaInfo N
+Client <[#green]- Server : ArenaInfo N
 
 loop 1..
     Client -[#blue]-> Server : PlayerMovement
