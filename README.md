@@ -1,5 +1,5 @@
 # asciiarena
-An arcade multiplayer console game
+An arcade multiplayer game for terminals.
 
 Currently in development...
 
